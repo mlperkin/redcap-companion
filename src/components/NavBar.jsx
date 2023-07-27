@@ -34,6 +34,7 @@ export default function NavBar() {
     switch(path) {
       case "/": return 0;
       case "/setupConnections": return 1;
+      case "/execute": return 2;
       default: return 0;
     }
   };
@@ -44,6 +45,7 @@ export default function NavBar() {
     switch(newValue){
       case 0: navigate("/"); break;
       case 1: navigate("/setupConnections"); break;
+      case 2: navigate("/execute"); break;
       default: break;
     }
   };
@@ -52,19 +54,19 @@ export default function NavBar() {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Tabs value={navIdx} onChange={handleChange} aria-label="simple tabs example">
-          <Tab label="Pick Data Dictionary" sx={{ "&.Mui-selected": { color: "#ffffff" } }}/>
-          <Tab label="Setup Connections" sx={{ "&.Mui-selected": { color: "#ffffff" } }}/>
+          <Tab label="Select Data Dictionary" sx={{ "&.Mui-selected": { color: "#ffffff" } }}/>
+          <Tab label="Connections Setup" sx={{ "&.Mui-selected": { color: "#ffffff" } }}/>
           <Tab label="Execute" sx={{ "&.Mui-selected": { color: "#ffffff" } }}/>
         </Tabs>
       </AppBar>
       <TabPanel value={navIdx} index={0}>
-        Pick Data Dictionary
+        {/* Pick Data Dictionary */}
       </TabPanel>
       <TabPanel value={navIdx} index={1}>
-        Setup Connections
+        {/* Setup Connections */}
       </TabPanel>
       <TabPanel value={navIdx} index={2}>
-        Execute
+        {/* Execute */}
       </TabPanel>
     </Box>
   );

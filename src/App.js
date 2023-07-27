@@ -1,12 +1,14 @@
 import React from "react";
-import PickDataDict from "./pages/PickDataDict";
-import SetupConnections from "./pages/SetupConnections";
+import SelectDataDict from "./pages/SelectDataDictPage";
+import ConnectionsSetupPage from "./pages/ConnectionsSetupPage";
+import ExecutePage from "./pages/ExecutePage";
 import { Routes, Route } from "react-router-dom";
 
 const App = () => (
   <Routes>
-    <Route path="/" element={<PickDataDict />} />
-    <Route path="/setupConnections" element={<SetupConnections />} />
+    <Route path="/" element={<SelectDataDict />} />
+    <Route path="/setupConnections" element={<ConnectionsSetupPage />} />
+    <Route path="/execute" element={<ExecutePage />} />
   </Routes>
 );
 

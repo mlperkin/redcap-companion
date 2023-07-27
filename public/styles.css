@@ -1,0 +1,33 @@
+/* Basic styles for the custom title bar */
+.title-bar {
+    background-color: #333;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    -webkit-app-region: drag; /* Enable window dragging from the title bar */
+  }
+  
+  .title {
+    font-size: 16px;
+  }
+  
+  .window-controls {
+    display: flex;
+  }
+  
+  .window-control {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 8px;
+  }
+  
+  .window-control:hover {
+    background-color: #555;
+  }
+  
