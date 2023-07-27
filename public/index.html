@@ -31,14 +31,14 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
 
-    <div class="title-bar">
-      <div class="title">CDE to OMOP Companion Desktop App</div>
-      <div class="window-controls">
+    <!-- <div class="title-bar"> -->
+      <!-- <div class="title">CDE to OMOP Companion Desktop App</div> -->
+      <!-- <div class="window-controls">
         <div id="minimize-btn" class="window-control">-</div>
         <div id="maximize-btn" class="window-control">+</div>
         <div id="close-btn" class="window-control">×</div>
-      </div>
-    </div>
+      </div> -->
+    <!-- </div> -->
 
     <div id="root"></div>
     <!--
@@ -53,7 +53,7 @@
     -->
 
     <!-- Load the necessary JavaScript code inline -->
-    <script>
+    <!-- <script>
       const { remote } = require("electron");
 
       document.getElementById("minimize-btn").addEventListener("click", () => {
@@ -74,6 +74,6 @@
         const window = remote.getCurrentWindow();
         window.close();
       });
-    </script>
+    </script> -->
   </body>
 </html>
