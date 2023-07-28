@@ -6,7 +6,6 @@ import Box from "@mui/material/Box";
 import { useNavigate, useLocation } from "react-router-dom";
 
 function TabPanel(props) {
-
   const { children, value, index, ...other } = props;
   return (
     <div
@@ -28,9 +27,9 @@ export default function NavBar() {
   // Determine tab index based on current route
   const getTabIndex = (path) => {
     switch (path) {
-      case "/":
-        return 0;
       case "/setupConnections":
+        return 0;
+      case "/":
         return 1;
       case "/execute":
         return 2;
@@ -44,10 +43,10 @@ export default function NavBar() {
   const handleChange = (event, newValue) => {
     switch (newValue) {
       case 0:
-        navigate("/");
+        navigate("/setupConnections");
         break;
       case 1:
-        navigate("/setupConnections");
+        navigate("/");
         break;
       case 2:
         navigate("/execute");
@@ -59,7 +58,7 @@ export default function NavBar() {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
+      <AppBar className="navBar" position="fixed">
         <Tabs
           value={navIdx}
           onChange={handleChange}
@@ -67,7 +66,7 @@ export default function NavBar() {
           aria-label="simple tabs example"
         >
           <Tab
-            label="Select Data Dictionary"
+            label="Connections Setup"
             sx={{
               color: "#ffffff", // Default color for inactive tabs
               "&.Mui-selected": {
@@ -77,7 +76,7 @@ export default function NavBar() {
           />
 
           <Tab
-            label="Connections Setup"
+            label="Select Data Dictionary"
             sx={{
               color: "#ffffff", // Default color for inactive tabs
               "&.Mui-selected": {

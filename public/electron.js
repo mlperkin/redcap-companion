@@ -14,11 +14,13 @@ function createWindow() {
     width: 1280,
     height: 720,
     titleBarStyle: "hidden",
+    minWidth: 650, // Set the minimum width here
+    minHeight: 600, // Set the minimum height here
     // titleBarOverlay: true,
     titleBarOverlay: {
       color: "#2f3241",
       symbolColor: "#74b1be",
-      height: 40,
+      height: 49,
     },
     frame: _frame, // Set frame to false for a frameless window
     webPreferences: {

@@ -1,41 +1,50 @@
-/* Basic styles for the custom title bar */
-/* .title-bar {
-    background-color: #333;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px;
-    -webkit-app-region: drag; /* Enable window dragging from the title bar */
+body {
+  -webkit-app-region: drag;
+}
 
-  
-  /* .title {
-    font-size: 16px;
-  } */
-  
-  /* .window-controls {
-    display: flex;
-  } */
-  
-  /* .window-control {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    margin-left: 8px;
-  } */
-  
-  /* .window-control:hover {
-    background-color: #555;
-  } */
-  
+.navBar {
+  /* -webkit-app-region: drag; */
+}
 
-  body {
-    -webkit-app-region: drag;
-  }
+button,
+input,
+span,
+icon, .MuiContainer-root {
+  -webkit-app-region: no-drag;
+}
 
-  button, input, span, icon {
-    -webkit-app-region: no-drag;
-  }
+/* Hide the main scrollbar, but keep scrolling functionality */
+/* ::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+} */
+
+/* styles.css */
+/* Create a modern scrollbar with main color #2f3241 and secondary color #74b1be */
+body {
+  scrollbar-width: thin;
+  scrollbar-color: #74b1be #2f3241; /* secondary color, main color */
+}
+
+/* Hide the default scrollbar */
+body::-webkit-scrollbar {
+  width: 10px; /* Vertical scrollbar width */
+  height: 10px; /* Horizontal scrollbar height */
+  background-color: transparent;
+}
+
+/* Main scrollbar track */
+body::-webkit-scrollbar-track {
+  background-color: #2f3241;
+}
+
+/* Secondary scrollbar thumb */
+body::-webkit-scrollbar-thumb {
+  background-color: #74b1be;
+}
+
+/* When the scrollbar is hovered */
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #4ca5d1;
+}
