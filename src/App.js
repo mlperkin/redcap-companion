@@ -8,7 +8,9 @@ import ExecutePage from "./pages/ExecutePage";
 const App = () => (
   <>
     <Routes>
-      <Route path="/" element={<SelectDataDict />} />
+      {/* set init page */}
+      <Route path="/" element={<ConnectionsSetupPage />} />
+      <Route path="/selectDataDict" element={<SelectDataDict />} />
       <Route path="/setupConnections" element={<ConnectionsSetupPage />} />
       <Route path="/execute" element={<ExecutePage />} />
     </Routes>

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Container, Grid, TextField, Typography } from "@mui/material";
+import { Button, Container, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import CheckIcon from "@mui/icons-material/Check";
 import FormSelect from "./FormSelect";
@@ -16,9 +16,8 @@ function FilePicker(props) {
     const data = await ipcRenderer.invoke("open-file-dialog");
     if (data && data.length > 0) {
       setShowREDCapAPIInput(false);
-      setColumns(
-        Object.keys(data[0]).map((key) => ({ field: key, width: 150 }))
-      );
+      console.log('cols', Object.keys(data[0]).map((key) => ({ field: key, width: 150 })))
+      setColumns(Object.keys(data[0]).map((key) => ({ field: key, width: 150 })));
       setRows(data.map((item, index) => ({ id: index, ...item })));
       setInitialLoad(false);
     }
@@ -59,7 +58,16 @@ function FilePicker(props) {
         </>
       ) : (
         <>
-          <DataGrid rows={rows} columns={columns} pageSize={5} />
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            autoHeight
+            autoWidth
+            initialState={{
+              pagination: { paginationModel: { pageSize: 5 } }, // Set pageSize to 5
+            }}
+            pageSizeOptions={[5, 10, 25]} // Customize pagination options
+          />
         </>
       )}
     </Container>

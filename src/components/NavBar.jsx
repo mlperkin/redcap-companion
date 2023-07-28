@@ -29,7 +29,7 @@ export default function NavBar() {
     switch (path) {
       case "/setupConnections":
         return 0;
-      case "/":
+      case "/selectDataDict":
         return 1;
       case "/execute":
         return 2;
@@ -46,7 +46,7 @@ export default function NavBar() {
         navigate("/setupConnections");
         break;
       case 1:
-        navigate("/");
+        navigate("/selectDataDict");
         break;
       case 2:
         navigate("/execute");
@@ -58,7 +58,7 @@ export default function NavBar() {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar className="navBar" position="fixed">
+      <AppBar className="navBar" position="fixed" sx={{ height: "60px" }}>
         <Tabs
           value={navIdx}
           onChange={handleChange}
@@ -96,6 +96,7 @@ export default function NavBar() {
           />
         </Tabs>
       </AppBar>
+      
       <TabPanel value={navIdx} index={0}>
         {/* Pick Data Dictionary */}
       </TabPanel>
@@ -105,6 +106,7 @@ export default function NavBar() {
       <TabPanel value={navIdx} index={2}>
         {/* Execute */}
       </TabPanel>
+      
     </Box>
   );
 }

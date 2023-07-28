@@ -7,7 +7,7 @@ let win;
 function createWindow() {
   let _frame;
 
-  if (isDev) _frame = true;
+  if (isDev) _frame = false;
   else _frame = false;
 
   win = new BrowserWindow({
@@ -20,9 +20,9 @@ function createWindow() {
     titleBarOverlay: {
       color: "#2f3241",
       symbolColor: "#74b1be",
-      height: 49,
+      height: 60,
     },
-    frame: _frame, // Set frame to false for a frameless window
+    frame: false, // Set frame to false for a frameless window
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -36,16 +36,16 @@ function createWindow() {
   );
 
   // Create an empty menu template to hide the menu bar
-  console.log("isDev?", isDev);
-  if (!isDev) {
-    win.on("closed", () => {
-      win = null;
-    });
+  // console.log("isDev?", isDev);
+  // if (!isDev) {
+  //   win.on("closed", () => {
+  //     win = null;
+  //   });
 
-    const menuTemplate = [];
-    const appMenu = Menu.buildFromTemplate(menuTemplate);
-    Menu.setApplicationMenu(appMenu);
-  }
+  //   const menuTemplate = [];
+  //   const appMenu = Menu.buildFromTemplate(menuTemplate);
+  //   Menu.setApplicationMenu(appMenu);
+  // }
 }
 
 app.whenReady().then(createWindow);

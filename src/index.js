@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import { ThemeProvider } from "@mui/material/styles";
@@ -8,7 +8,10 @@ import theme from "./theme";
 
 import { HashRouter } from "react-router-dom";
 
-ReactDOM.render(
+const root = document.getElementById("root");
+
+// Replace ReactDOM.render with createRoot
+ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <HashRouter>
       <ThemeProvider theme={theme}>
@@ -16,6 +19,5 @@ ReactDOM.render(
         <App />
       </ThemeProvider>
     </HashRouter>
-  </React.StrictMode>,
-  document.getElementById("root")
+  </React.StrictMode>
 );

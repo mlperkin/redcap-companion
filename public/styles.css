@@ -2,35 +2,44 @@ body {
   -webkit-app-region: drag;
 }
 
-.navBar {
-  /* -webkit-app-region: drag; */
-}
-
 button,
 input,
 span,
-icon, .MuiContainer-root {
+icon,
+.MuiContainer-root {
   -webkit-app-region: no-drag;
 }
 
+.navBar {
+  /* border: 1px solid #48545c; */
+  /* overflow-y: hidden; */
+  display: block;
+  position: fixed;
+  height: 56px;
+  /* Compensate for body 1px border */
+  /* width: calc(100% - 2px);  */
+  background: #254053;
+}
+
+
+
 /* Hide the main scrollbar, but keep scrolling functionality */
-/* ::-webkit-scrollbar {
+body::-webkit-scrollbar {
   width: 0;
   height: 0;
   background-color: transparent;
-} */
+}
 
-/* styles.css */
-/* Create a modern scrollbar with main color #2f3241 and secondary color #74b1be */
 body {
   scrollbar-width: thin;
-  scrollbar-color: #74b1be #2f3241; /* secondary color, main color */
+  scrollbar-color: #74b1be #2f3241;
+  padding-top: 64px;
 }
 
 /* Hide the default scrollbar */
 body::-webkit-scrollbar {
-  width: 10px; /* Vertical scrollbar width */
-  height: 10px; /* Horizontal scrollbar height */
+  width: 14px;
+  height: 14px;
   background-color: transparent;
 }
 

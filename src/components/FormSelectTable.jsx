@@ -66,7 +66,7 @@ export default function FormSelectTable({
       })}
       // selectedRows={selectedRows}
       muiTableContainerProps={{
-        sx: { maxHeight: "50vh" },
+        sx: { maxHeight: "30vh" },
       }}
       onSortingChange={setSorting}
       initialState={{
