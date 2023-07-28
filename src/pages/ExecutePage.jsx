@@ -1,11 +1,9 @@
-import React, { useState } from "react";
-import NavBar from "../components/NavBar";
-import { Box, Button, Container, Typography } from "@mui/material";
-
+import React from "react";
+import { Box, Button, Container } from "@mui/material";
+import Paper from "@mui/material/Paper";
 const ExecutePage = () => {
   return (
     <>
-      <NavBar />
       <Container maxWidth="xl">
         <Box
           component="main"
@@ -14,13 +12,17 @@ const ExecutePage = () => {
             flexDirection: "column",
             flexGrow: 1,
             minHeight: "90vh",
-            textAlign: 'center'
+            textAlign: "center",
           }}
         >
           <h1 sx={{ textAlign: "center" }}>Execute</h1>
-          <Button variant="contained" sx={{ alignSelf: "center" }}>
-            Create OMOP Records
-          </Button>
+          <Container>
+            <Paper elevation={3}>
+              <Button variant="contained" sx={{ alignSelf: "center", margin: '10px' }}>
+                Create OMOP Records
+              </Button>
+            </Paper>
+          </Container>
         </Box>
       </Container>
     </>

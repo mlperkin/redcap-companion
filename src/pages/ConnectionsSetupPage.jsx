@@ -1,12 +1,10 @@
-import React, { useState } from "react";
-import NavBar from "../components/NavBar";
-import { Box, Container, Typography } from "@mui/material";
+import React from "react";
+import { Box, Container } from "@mui/material";
 import MyAccountAPIKeys from "../components/MyAccountAPIKeys";
 
 const ConnectionsSetupPage = () => {
   return (
     <>
-      <NavBar />
       <Container maxWidth="xl">
         <Box
           component="main"
@@ -15,7 +13,7 @@ const ConnectionsSetupPage = () => {
             flexDirection: "column",
             flexGrow: 1,
             minHeight: "90vh",
-            textAlign: 'center'
+            textAlign: "center",
           }}
         >
           <h1>Connections Setup</h1>

@@ -1,5 +1,7 @@
 body {
   -webkit-app-region: drag;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
 }
 
 button,
@@ -8,6 +10,26 @@ span,
 icon,
 .MuiContainer-root {
   -webkit-app-region: no-drag;
+}
+
+.closeButton, .miniButton, .maxRestoreButton{
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.closeButton:hover{
+  color: red;
+  background: red;
+}
+.miniButton:hover{
+  color: #303030;
+  background: #303030;
+}
+.maxRestoreButton:hover{
+  color: #303030;
+  background: #303030;
 }
 
 .navBar {
@@ -30,30 +52,30 @@ body::-webkit-scrollbar {
   background-color: transparent;
 }
 
-body {
+/* body {
   scrollbar-width: thin;
   scrollbar-color: #74b1be #2f3241;
   padding-top: 64px;
-}
+} */
 
 /* Hide the default scrollbar */
-body::-webkit-scrollbar {
+/* body::-webkit-scrollbar {
   width: 14px;
   height: 14px;
   background-color: transparent;
-}
+} */
 
 /* Main scrollbar track */
-body::-webkit-scrollbar-track {
+/* body::-webkit-scrollbar-track {
   background-color: #2f3241;
-}
+} */
 
 /* Secondary scrollbar thumb */
-body::-webkit-scrollbar-thumb {
+/* body::-webkit-scrollbar-thumb {
   background-color: #74b1be;
-}
+} */
 
 /* When the scrollbar is hovered */
-body::-webkit-scrollbar-thumb:hover {
+/* body::-webkit-scrollbar-thumb:hover {
   background-color: #4ca5d1;
-}
+} */

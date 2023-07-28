@@ -1,14 +1,17 @@
-import React, { useState } from "react";
-import NavBar from "../components/NavBar";
+import React, { useState, useEffect } from "react";
 import FilePicker from "../components/FilePicker";
-import { Box, Button, Container, Typography } from "@mui/material";
+import { Box, Container } from "@mui/material";
 
 const SelectDataDictPage = (props) => {
-  const [forms, setForms] = useState(["Form 1", "Form 2"]);
+  const [forms, setForms] = useState([]);
+
+  useEffect(() => {
+    setForms(["Form 1", "Form 2"]);
+  }, []);
 
   return (
     <>
-      <NavBar />
+      {/* <NavBar /> */}
       <Container maxWidth="xl">
         <Box
           component="main"
