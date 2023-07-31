@@ -3,6 +3,8 @@ const path = require("path");
 const isDev = require("electron-is-dev");
 const csv = require("csv-parser");
 const fs = require("fs");
+const { testMySQLConnection, testPostgreSQLConnection } = require("../src/utils/dbTest");
+
 let win;
 
 function createWindow() {
@@ -40,8 +42,8 @@ app.on("activate", () => {
   }
 });
 
- // Handle window maximize event
- app.on("maximize", () => {
+// Handle window maximize event
+app.on("maximize", () => {
   win.webContents.send("window-maximized", true);
 });
 
@@ -93,5 +95,33 @@ ipcMain.handle("open-file-dialog", async (event) => {
         })
         .on("error", reject);
     });
+  }
+});
+
+// Listen for the "testDBConnection" event from the renderer process
+ipcMain.handle("testDBConnection", async (event, dataObj) => {
+  console.log("dataobj", dataObj);
+  // Perform your database connection test here
+  // Example: return a boolean value indicating if the connection was successful
+  if (dataObj.db === "MySQL") {
+    try {
+      // Your database connection code here
+      const isMySQLConnected = await testMySQLConnection(dataObj);
+      // Return a boolean value
+      return isMySQLConnected;
+    } catch (error) {
+      console.error("Error connecting to MySQL:", error);
+      return false;
+    }
+  } else if(dataObj.db === "PostgreSQL"){
+    try {
+      // Your database connection code here
+      const isPostgreSQLConnected = await testPostgreSQLConnection(dataObj);
+      // Return a boolean value
+      return isPostgreSQLConnected;
+    } catch (error) {
+      console.error("Error connecting to PostgreSQL:", error);
+      return false;
+    }
   }
 });

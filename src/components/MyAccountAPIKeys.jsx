@@ -13,6 +13,11 @@ import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
 import CancelIcon from "@mui/icons-material/Cancel";
 import InputAdornment from "@mui/material/InputAdornment";
+import DatabaseDropdown from "./dbForms/DatabaseDropdown";
+import MySQLForm from "./dbForms/MySQLForm";
+import PostgresForm from "./dbForms/PostgresForm";
+import { encryptData, decryptData } from "../utils/encryption";
+import CsvExportIcon from "../icons/csvExport.png";
 
 export default function MyAccountAPIKeys(props) {
   // console.log("adminsec", props);
@@ -27,9 +32,7 @@ export default function MyAccountAPIKeys(props) {
   const [editModeGPT3, setEditModeGPT3] = useState();
   // const [error, setError] = useState(false);
   const [redcapAPITest, setRedcapAPITest] = useState(false);
-  const [umlsAPITest, setUMLSAPITest] = useState(false);
-  const [gpt3APITest, setGPT3APITest] = useState(false);
-
+  const [selectedDatabase, setSelectedDatabase] = useState("");
   // let propsUserObj = JSON.parse(props.props.props.user);
   // let propsToken = props.props.props.token;
 
@@ -37,6 +40,14 @@ export default function MyAccountAPIKeys(props) {
   //   // checkExistingKeys();
   //   // eslint-disable-next-line react-hooks/exhaustive-deps
   // }, [propsToken]);
+
+  // Load the saved form data from localStorage on component mount
+  useEffect(() => {
+    // if (!formDataLoaded) {
+    const selectedDB = localStorage.getItem("selectedDB");
+    if (selectedDB) setSelectedDatabase(selectedDB);
+    // }
+  }, []);
 
   function checkExistingKeys() {
     //   //check for existing keys
@@ -138,7 +149,7 @@ export default function MyAccountAPIKeys(props) {
 
   const handleEdit = (event) => {
     if (event.target) event.preventDefault();
-    // console.log("handle key edit");
+    console.log("handle key edit", event);
     // console.log("event.!!", event.target.value);
 
     let _value;
@@ -222,6 +233,12 @@ export default function MyAccountAPIKeys(props) {
     checkExistingKeys();
   };
 
+  const handleDBChange = (event) => {
+    console.log("db change", event.target.value);
+    setSelectedDatabase(event.target.value);
+    localStorage.setItem("selectedDB", event.target.value);
+  };
+
   const testRedcapAPI = (event) => {
     //   // event.preventDefault();
     //   // console.log("test redcap api");
@@ -254,74 +271,30 @@ export default function MyAccountAPIKeys(props) {
     //     });
   };
 
-  const testDBConnection = (event) => {
-    //   // event.preventDefault();
-    //   // console.log("test umls api");
-    //   var myHeaders = new Headers();
-    //   myHeaders.append("Authorization", "Bearer " + propsToken);
-    //   var requestOptions = {
-    //     method: "GET",
-    //     headers: myHeaders,
-    //     redirect: "follow",
-    //     credentials: "include", // Include cookies with the request
-    //   };
-    //   fetch(
-    //     `${process.env.REACT_APP_BACKEND_API_URL}/api/keys/testDBConnection`,
-    //     requestOptions
-    //   )
-    //     .then((response) => {
-    //       // console.log("response stat", response.status);
-    //       if (response.status !== 200) {
-    //         throw new Error();
-    //       }
-    //       return response.text();
-    //     })
-    //     .then((result) => {
-    //       // console.log(result);
-    //       setUMLSAPITest("UMLS API Connected!");
-    //     })
-    //     .catch((error) => {
-    //       console.log("error", error);
-    //       setUMLSAPITest("Error");
-    //     });
-  };
+  // Function to render the appropriate database form based on selectedDatabase value
+  const renderDatabaseForm = () => {
+    switch (selectedDatabase) {
+      case "None - Export to CSV files":
+        return (
+          <Box sx={{margin: '30px'}}>
+            <img src={CsvExportIcon} width='100px' height='auto' alt="CSV Export Icon" />
+          </Box>
+        );
+      case "MySQL":
+        return <MySQLForm />;
+      case "PostgreSQL":
+        return <PostgresForm />;
 
-  const testGPT3API = (event) => {
-    //   // event.preventDefault();
-    //   // console.log("test gpt3 api");
-    //   var myHeaders = new Headers();
-    //   myHeaders.append("Authorization", "Bearer " + propsToken);
-    //   var requestOptions = {
-    //     method: "GET",
-    //     headers: myHeaders,
-    //     redirect: "follow",
-    //     credentials: "include", // Include cookies with the requestcredentials: "include", // Include cookies with the request
-    //   };
-    //   fetch(
-    //     `${process.env.REACT_APP_BACKEND_API_URL}/api/keys/testGPT3API`,
-    //     requestOptions
-    //   )
-    //     .then((response) => {
-    //       // console.log("response stat", response.status);
-    //       if (response.status !== 200) {
-    //         throw new Error();
-    //       }
-    //       return response.text();
-    //     })
-    //     .then((result) => {
-    //       // console.log(result);
-    //       setGPT3APITest("GPT3 API Connected!");
-    //     })
-    //     .catch((error) => {
-    //       console.log("error", error);
-    //       setGPT3APITest("Error");
-    //     });
+      // Add other cases for other database forms
+      default:
+        return null;
+    }
   };
 
   return (
     <>
       {/* <Grid> */}
-        {/* <h1
+      {/* <h1
           style={{
             paddingLeft: "20px",
             textAlign: "center",
@@ -474,7 +447,7 @@ export default function MyAccountAPIKeys(props) {
               <Button
                 onClick={(event) => testRedcapAPI(event)}
                 variant="outlined"
-                value="umlsAPIKey"
+                value="redcapAPIKey"
                 sx={{
                   ml: 4,
                   padding: "10px 30px 10px 30px",
@@ -498,7 +471,33 @@ export default function MyAccountAPIKeys(props) {
         <Grid
           item
           xs={12}
-          lg={6}
+          lg={4}
+          sx={{
+            // display: "flex",
+            // alignItems: "center",
+            justifyContent: "center",
+            flexWrap: "wrap",
+            // margin: "20px",
+            padding: "30px",
+            margin: "30px",
+          }}
+        >
+          <Paper elevation={3} sx={{ padding: "10px" }}>
+            {/* Determine which db form to use here with dropdown selected value */}
+            <Box sx={{ textAlign: "center" }}>
+              <h3>Database Credentials</h3>
+            </Box>
+            <DatabaseDropdown
+              handleDBChange={handleDBChange}
+              selectedDatabase={selectedDatabase}
+            />
+          </Paper>
+        </Grid>
+
+        <Grid
+          item
+          xs={12}
+          lg={3}
           sx={{
             justifyContent: "center",
             display: "flex",
@@ -507,87 +506,9 @@ export default function MyAccountAPIKeys(props) {
           }}
         >
           <Paper elevation={3}>
-            <Box sx={{ textAlign: "center" }}>
-              <h3>Database Credentials</h3>
-            </Box>
+            {/* Determine which db form to use here with dropdown selected value */}
 
-            <Box
-              component="form"
-              onSubmit={(event) => handleAPIKeySubmit(event, "umlsAPIKey")}
-              value="umlsAPIKey"
-              sx={{
-                justifyContent: "center",
-                display: "flex",
-                flexWrap: "wrap",
-                padding: "30px",
-              }}
-            >
-              <TextField
-                InputLabelProps={{ shrink: true }}
-                disabled={!editModeUMLS}
-                onChange={(event) => setUMLSKey(event.target.value)}
-                value={umlsKey}
-                margin="normal"
-                required
-                fullWidth
-                name="umlsAPIKey"
-                label="Database Hostname"
-                type="text"
-                id="umlsAPIKey"
-                InputProps={{
-                  endAdornment: (
-                    <>
-                      {!editModeUMLS ? (
-                        <InputAdornment position="end">
-                          <IconButton onClick={() => handleEdit("umlsAPIKey")}>
-                            <EditIcon />
-                          </IconButton>
-                        </InputAdornment>
-                      ) : (
-                        <>
-                          <InputAdornment position="end">
-                            <IconButton type="submit">
-                              <CheckIcon />
-                            </IconButton>
-                          </InputAdornment>
-                          <InputAdornment position="end">
-                            <IconButton
-                              disabled={!editModeUMLS}
-                              onClick={() => handleCancel("umlsAPIKey")}
-                            >
-                              <CancelIcon />
-                            </IconButton>
-                          </InputAdornment>
-                        </>
-                      )}
-                    </>
-                  ),
-                }}
-              />
-            </Box>
-
-            <Grid item xs={12}>
-              <Box sx={{ display: "block", textAlign: 'center', marginTop: "10px" }}>
-                <Button
-                  onClick={(event) => testDBConnection(event)}
-                  variant="outlined"
-                  value="umlsAPIKey"
-                  sx={{
-                    ml: 4,
-                    padding: "10px 30px 10px 30px",
-                    maxHeight: "60px",
-                    backgroundColor: "theme.primary.main",
-                  }}
-                >
-                  Test DB Connection
-                </Button>
-              </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <Box sx={{ display: "block", marginTop: "10px" }}>
-                <Typography>{umlsAPITest}</Typography>
-              </Box>
-            </Grid>
+            {renderDatabaseForm()}
           </Paper>
         </Grid>
       </Grid>
