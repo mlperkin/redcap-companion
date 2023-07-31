@@ -25,7 +25,7 @@ const DatabaseDropdown = ({selectedDatabase, handleDBChange}) => {
         justifyContent: "center",
         display: "flex",
         flexWrap: "wrap",
-        padding: "30px",
+        // padding: "30px",
       }}
     >
       <InputLabel id="database-label">Select Database</InputLabel>

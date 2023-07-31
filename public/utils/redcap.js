@@ -1,10 +1,11 @@
 const axios = require("axios");
-require("dotenv").config();
+// require("dotenv").config();
 
 async function testRedcapConnection(dataObj) {
-  if (process.env.NODE_ENV === "local") {
+  // if (process.env.NODE_ENV === "local") {
+    //need to remove this for prod
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; // Add this at the top of your file
-  }
+  // }
 
   try {
     const FormData = require("form-data");

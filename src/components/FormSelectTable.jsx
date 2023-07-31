@@ -17,7 +17,6 @@ export default function FormSelectTable({
   setSelectedRows,
   tableInstanceRef,
 }) {
-  // console.log('form seldata', data)
   return (
     <MaterialReactTable
       columns={columns}

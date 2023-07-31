@@ -22,9 +22,8 @@ import Skeleton from "@mui/material/Skeleton";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
 
 var XLSX = require("xlsx");
-export default function FormSelect({props}) {
-  console.log('props form select', props)
-  let token = 'token';
+export default function FormSelect({ props }) {
+  let token = "token";
   const [selectedForm, setSelectedForm] = useState("");
   const [data, setData] = useState();
   const [colDefs, setColDefs] = useState([]);
@@ -35,7 +34,6 @@ export default function FormSelect({props}) {
   const [csvFilename, setCSVFilename] = useState("");
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectRowsError, setSelectRowsError] = useState(false);
-  const [checkedItems, setCheckedItems] = useState([]);
 
   var tableInstanceRef = useRef(null);
   useEffect(() => {
@@ -47,7 +45,6 @@ export default function FormSelect({props}) {
   const handleRowSelection = (selected) => {
     const rowSelection = tableInstanceRef.current.getState().rowSelection;
     setSelectedRows(rowSelection);
-
   };
 
   const columns = useMemo(() => colDefs, [colDefs]);
@@ -77,7 +74,6 @@ export default function FormSelect({props}) {
     )
       .then((response) => response.text())
       .then((result) => {
-        console.log("result", result);
         importExcel(JSON.parse(result));
       })
       .catch((error) => console.log("error", error));
@@ -116,9 +112,8 @@ export default function FormSelect({props}) {
       var obj = convertedData[i];
 
       // Check if the field_type is 'dropdown'
-      if (obj.field_type === "dropdown" || obj.field_type === 'radio') {
+      if (obj.field_type === "dropdown" || obj.field_type === "radio") {
         var selectChoices = obj.select_choices_or_calculations;
-        console.log("Dropdown/radio value: " + selectChoices);
 
         var choices = selectChoices.split("|"); // Split the string into individual choices
 
@@ -163,7 +158,7 @@ export default function FormSelect({props}) {
         }
       }
     }
-    console.log('converted', convertedData)
+    console.log("converted", convertedData);
     setData(convertedData);
     setIsFormLoaded(true);
     setIsFormLoading(false);
@@ -192,7 +187,6 @@ export default function FormSelect({props}) {
 
   function submitToProcess(e) {
     // let selectedRows = tableInstanceRef.current?.getSelectedRowModel().rows;
-
     // // Reformat the array of objects
     // const reformattedArray = selectedRows.map((obj) => obj.original);
     // let dataToSendToQueue;
@@ -202,7 +196,6 @@ export default function FormSelect({props}) {
     //   dataToSendToQueue = reformattedArray;
     // }
     // setSelectRowsError(false);
-
     // var myHeaders = new Headers();
     // myHeaders.append("Authorization", "Bearer " + token);
     // // console.log("send data", data);
@@ -211,7 +204,6 @@ export default function FormSelect({props}) {
     // formdata.append("data", JSON.stringify(dataToSendToQueue));
     // formdata.append("selectedForm", selectedForm);
     // formdata.append("dataLength", dataToSendToQueue.length);
-
     // // Filter out properties with the value of false
     // const filteredCollections = Object.fromEntries(
     //   Object.entries(checkedItems).filter(([key, value]) => value !== false)
@@ -221,10 +213,8 @@ export default function FormSelect({props}) {
     // const checkIfAllFalse = (checkedItems) => {
     //   // Extract an array of values from the checkedItems object
     //   const values = Object.values(checkedItems);
-
     //   // Use the every() method to check if every value is false
     //   const allFalse = values.every((value) => value === false);
-
     //   // If the array is empty or all values are false, set selectRowsErrors to true
     //   if (values.length === 0 || allFalse) {
     //     setSelectRowsError(true);
@@ -234,11 +224,9 @@ export default function FormSelect({props}) {
     //     return true;
     //   }
     // };
-
     // // Call the checkIfAllFalse function and pass the checkedItems object
     // let checkedItem = checkIfAllFalse(checkedItems);
     // if (!checkedItem) return;
-
     // var requestOptions = {
     //   method: "POST",
     //   headers: myHeaders,
@@ -246,7 +234,6 @@ export default function FormSelect({props}) {
     //   redirect: "follow",
     //   credentials: "include", // Include cookies with the request
     // };
-
     // fetch(
     //   `${process.env.REACT_APP_BACKEND_API_URL}/api/queue/submit`,
     //   requestOptions
@@ -262,7 +249,6 @@ export default function FormSelect({props}) {
     //   })
     //   .catch((error) => console.log("error", error));
   }
-
 
   const handleExportData = () => {
     let _data = data;

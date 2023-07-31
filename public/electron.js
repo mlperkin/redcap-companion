@@ -1,13 +1,17 @@
+const { testMySQLConnection, testPostgreSQLConnection } = require('./utils/dbTest');
+const { testRedcapConnection } = require('./utils/redcap');
+
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
 const path = require("path");
 const isDev = require("electron-is-dev");
 const csv = require("csv-parser");
 const fs = require("fs");
-const {testRedcapConnection} = require("../src/utils/redcap")
-const {
-  testMySQLConnection,
-  testPostgreSQLConnection,
-} = require("../src/utils/dbTest");
+
+// const dbTestModulePath = path.join(app.getAppPath(), "/utils/dbTest.js");
+// const redcapModulePath = path.join(app.getAppPath(), "utils/redcap.js");
+
+
+
 
 
 let win;
@@ -105,7 +109,6 @@ ipcMain.handle("open-file-dialog", async (event) => {
 
 // Listen for the "testDBConnection" event from the renderer process
 ipcMain.handle("testDBConnection", async (event, dataObj) => {
-  console.log("dataobj", dataObj);
   // Perform your database connection test here
   // Example: return a boolean value indicating if the connection was successful
   if (dataObj.db === "MySQL") {
@@ -132,8 +135,6 @@ ipcMain.handle("testDBConnection", async (event, dataObj) => {
 });
 
 ipcMain.handle("testRedcapAPI", async (event, dataObj) => {
-  console.log("dataobj", dataObj);
-
   try {
     // Your database connection code here
     const isRedcapConnected = await testRedcapConnection(dataObj);

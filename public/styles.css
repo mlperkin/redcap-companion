@@ -1,14 +1,18 @@
 body {
-  -webkit-app-region: drag;
+  /* -webkit-app-region: drag; */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer and Edge */
+}
+
+.navBarBox{
+  -webkit-app-region: drag;
 }
 
 button,
 input,
 span,
-icon,
-.MuiContainer-root {
+icon 
+{
   -webkit-app-region: no-drag;
 }
 

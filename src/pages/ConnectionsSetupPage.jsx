@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Container } from "@mui/material";
-import MyAccountAPIKeys from "../components/MyAccountAPIKeys";
+import ConnectionsSetup from "../components/ConnectionsSetup";
 
 const ConnectionsSetupPage = () => {
   return (
@@ -17,7 +17,7 @@ const ConnectionsSetupPage = () => {
           }}
         >
           <h1>Connections Setup</h1>
-          <MyAccountAPIKeys />
+          <ConnectionsSetup />
         </Box>
       </Container>
     </>

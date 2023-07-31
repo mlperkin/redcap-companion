@@ -72,7 +72,6 @@ export default function NavBar(props) {
     // Fetch the initial window maximized state when the component mounts
     ipcRenderer.invoke("is-window-maximized").then((result) => {
       setIsMaximized(result);
-      console.log("result max", result);
     });
   };
 
@@ -105,7 +104,7 @@ export default function NavBar(props) {
   }
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box className="navBarBox" sx={{ flexGrow: 1 }}>
       <AppBar
         className="navBar"
         position="fixed"

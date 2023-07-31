@@ -16,10 +16,6 @@ function FilePicker(props) {
     const data = await ipcRenderer.invoke("open-file-dialog");
     if (data && data.length > 0) {
       setShowREDCapAPIInput(false);
-      console.log(
-        "cols",
-        Object.keys(data[0]).map((key) => ({ field: key, width: 150 }))
-      );
       setColumns(
         Object.keys(data[0]).map((key) => ({ field: key, width: 150 }))
       );

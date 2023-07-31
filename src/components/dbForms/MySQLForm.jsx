@@ -5,15 +5,21 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import { encryptData, decryptData } from "../../utils/encryption";
+import { Check, Clear } from "@mui/icons-material";
+import CircularProgress from "@mui/material/CircularProgress";
+import MysqlLogoIcon from "../../icons/mysql_logo.png"
+
 const { ipcRenderer } = window.require("electron");
 
-export default function MySQLForm({dataObj}) {
+export default function MySQLForm({ dataObj }) {
   const [mysqlHostName, setMysqlHostName] = useState("localhost");
   const [mysqlPort, setMysqlPort] = useState("3306");
   const [mysqlUsername, setMysqlUsername] = useState("");
   const [mysqlPassword, setMysqlPassword] = useState("");
-  const [mysqlDBTest, setMysqlDBTest] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
   const [formDataLoaded, setFormDataLoaded] = useState(false);
+  const [isMySQLConnected, setIsMySQLConnected] = useState(null); // Use null initially for an undetermined state
+ 
 
   function handleFormSubmit(event) {
     event.preventDefault();
@@ -25,7 +31,7 @@ export default function MySQLForm({dataObj}) {
       const savedFormData = localStorage.getItem("mysqlFormData");
       if (savedFormData) {
         const decryptedData = decryptData(savedFormData); // Decrypt the data
-        console.log('decrypted data', decryptedData)
+
         if (decryptedData) {
           setMysqlHostName(decryptedData.hostname);
           setMysqlPort(decryptedData.port);
@@ -33,7 +39,7 @@ export default function MySQLForm({dataObj}) {
           setMysqlPassword(decryptedData.password);
         }
         setFormDataLoaded(true);
-      }else{
+      } else {
         setFormDataLoaded(true);
       }
     }
@@ -42,7 +48,7 @@ export default function MySQLForm({dataObj}) {
   // Save the form data to localStorage whenever it changes
   useEffect(() => {
     const formData = {
-      db: 'MySQL',
+      db: "MySQL",
       hostname: mysqlHostName,
       port: mysqlPort,
       username: mysqlUsername,
@@ -56,7 +62,7 @@ export default function MySQLForm({dataObj}) {
 
   async function testDBConnection(event) {
     event.preventDefault();
-    // console.log("handle form submit");
+    setIsTesting(true);
     let dbObj = {
       db: "MySQL",
       hostname: mysqlHostName,
@@ -65,19 +71,42 @@ export default function MySQLForm({dataObj}) {
       password: mysqlPassword,
     };
 
-     // Call the main process function via ipcRenderer
-     const isMySQLConnected = await ipcRenderer.invoke("testDBConnection", dbObj);
-     if(!isMySQLConnected){
-      setMysqlDBTest('Failed')
-     }else{
-      setMysqlDBTest('Connected to MySQL DB!')
-     }
+    // Call the main process function via ipcRenderer
+    const isMySQLConnected = await ipcRenderer.invoke(
+      "testDBConnection",
+      dbObj
+    );
+    // Update the state with the connection status
+    setIsMySQLConnected(isMySQLConnected);
+    setIsTesting(false);
   }
 
   return (
     <Paper elevation={3}>
       <Box sx={{ textAlign: "center" }}>
         <h3>MySQL Database Credentials</h3>
+        <img width={'70px'} src={MysqlLogoIcon} alt='mysql logo'/>
+      </Box>
+      <Box sx={{ display: "block", marginTop: "10px", textAlign: "center" }}>
+        {isTesting ? (
+          // If testing is in progress, show the CircularProgress
+          <CircularProgress />
+        ) : isMySQLConnected === null ? (
+          // If connection status is null, show nothing (undetermined)
+          null
+        ) : isMySQLConnected ? (
+          // If connection is successful, show the green check icon to the left of the text
+          <Typography>
+            <Check style={{ color: "green", marginRight: "5px" }} />
+            Connected to MySQL DB!
+          </Typography>
+        ) : (
+          // If connection fails, show the red x icon to the left of the text
+          <Typography>
+            <Clear style={{ color: "red", marginRight: "5px" }} />
+            Failed to connect to MySQL DB!
+          </Typography>
+        )}
       </Box>
       <Box
         component="form"
@@ -100,7 +129,7 @@ export default function MySQLForm({dataObj}) {
 
         <TextField
           fullWidth
-          type='number'
+          type="number"
           label="MySQL Port"
           value={mysqlPort}
           onChange={(event) => setMysqlPort(event.target.value)}
@@ -141,12 +170,7 @@ export default function MySQLForm({dataObj}) {
             Test DB Connection
           </Button>
         </Box>
-        <Typography>{mysqlDBTest}</Typography>
       </Box>
-
-      {/* <Box sx={{ display: "block", marginTop: "10px", textAlign: "center" }}>
-        
-      </Box> */}
     </Paper>
   );
 }

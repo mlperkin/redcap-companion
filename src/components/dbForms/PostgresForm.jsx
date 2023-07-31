@@ -5,15 +5,20 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import { encryptData, decryptData } from "../../utils/encryption";
+import { Check, Clear } from "@mui/icons-material";
+import CircularProgress from "@mui/material/CircularProgress";
+import PostgresLogoIcon from "../../icons/postgres_logo.png"
+
 const { ipcRenderer } = window.require("electron");
 
-export default function PostgresForm({dataObj}) {
+export default function PostgresForm({ dataObj }) {
   const [postgresHostName, setPostgresHostName] = useState("localhost");
   const [postgresPort, setPostgresPort] = useState("5432");
   const [postgresUsername, setPostgresUsername] = useState("");
   const [postgresPassword, setPostgresPassword] = useState("");
-  const [postgresDBTest, setPostgresDBTest] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
   const [formDataLoaded, setFormDataLoaded] = useState(false);
+  const [isPostgresConnected, setIsPostgresConnected] = useState(null); // Use null initially for an undetermined state
 
   function handleFormSubmit(event) {
     event.preventDefault();
@@ -25,7 +30,7 @@ export default function PostgresForm({dataObj}) {
       const savedFormData = localStorage.getItem("postgresFormData");
       if (savedFormData) {
         const decryptedData = decryptData(savedFormData); // Decrypt the data
-        console.log('decrypted data', decryptedData)
+        console.log("decrypted data", decryptedData);
         if (decryptedData) {
           setPostgresHostName(decryptedData.hostname);
           setPostgresPort(decryptedData.port);
@@ -33,7 +38,7 @@ export default function PostgresForm({dataObj}) {
           setPostgresPassword(decryptedData.password);
         }
         setFormDataLoaded(true);
-      }else{
+      } else {
         setFormDataLoaded(true);
       }
     }
@@ -42,7 +47,7 @@ export default function PostgresForm({dataObj}) {
   // Save the form data to localStorage whenever it changes
   useEffect(() => {
     const formData = {
-      db: 'PostgreSQL',
+      db: "PostgreSQL",
       hostname: postgresHostName,
       port: postgresPort,
       username: postgresUsername,
@@ -52,10 +57,11 @@ export default function PostgresForm({dataObj}) {
       const encryptedData = encryptData(formData); // Encrypt the data
       localStorage.setItem("postgresFormData", encryptedData);
     }
-  }, [postgresHostName, postgresPort, postgresUsername, postgresPassword]);
+  }, [postgresHostName, postgresPort, postgresUsername, postgresPassword, formDataLoaded]);
 
   async function testDBConnection(event) {
     event.preventDefault();
+    setIsTesting(true);
     // console.log("handle form submit");
     let dbObj = {
       db: "PostgreSQL",
@@ -65,19 +71,41 @@ export default function PostgresForm({dataObj}) {
       password: postgresPassword,
     };
 
-     // Call the main process function via ipcRenderer
-     const isMySQLConnected = await ipcRenderer.invoke("testDBConnection", dbObj);
-     if(!isMySQLConnected){
-      setPostgresDBTest('Failed')
-     }else{
-      setPostgresDBTest('Connected to PostgreSQL DB!')
-     }
+    // Call the main process function via ipcRenderer
+    const isPostgresConnected = await ipcRenderer.invoke(
+      "testDBConnection",
+      dbObj
+    );
+    // Update the state with the connection status
+    setIsPostgresConnected(isPostgresConnected);
+    setIsTesting(false);
   }
 
   return (
     <Paper elevation={3}>
       <Box sx={{ textAlign: "center" }}>
         <h3>PostgreSQL Database Credentials</h3>
+        <img width={'70px'} src={PostgresLogoIcon} alt='postgresql logo'/>
+      </Box>
+      <Box sx={{ display: "block", marginTop: "10px", textAlign: "center" }}>
+        {isTesting ? (
+          // If testing is in progress, show the CircularProgress
+          <CircularProgress />
+        ) : isPostgresConnected ===
+          null ? // If connection status is null, show nothing (undetermined)
+        null : isPostgresConnected ? (
+          // If connection is successful, show the green check icon to the left of the text
+          <Typography>
+            <Check style={{ color: "green", marginRight: "5px" }} />
+            Connected to PostgreSQL DB!
+          </Typography>
+        ) : (
+          // If connection fails, show the red x icon to the left of the text
+          <Typography>
+            <Clear style={{ color: "red", marginRight: "5px" }} />
+            Failed to connect to PostgreSQL DB!
+          </Typography>
+        )}
       </Box>
       <Box
         component="form"
@@ -100,7 +128,7 @@ export default function PostgresForm({dataObj}) {
 
         <TextField
           fullWidth
-          type='number'
+          type="number"
           label="PostgreSQL Port"
           value={postgresPort}
           onChange={(event) => setPostgresPort(event.target.value)}
@@ -141,12 +169,7 @@ export default function PostgresForm({dataObj}) {
             Test DB Connection
           </Button>
         </Box>
-        <Typography>{postgresDBTest}</Typography>
       </Box>
-
-      {/* <Box sx={{ display: "block", marginTop: "10px", textAlign: "center" }}>
-        
-      </Box> */}
     </Paper>
   );
 }
