@@ -19,22 +19,29 @@ export default function RedcapForm() {
   const [isTesting, setIsTesting] = useState(false);
   const [isRedcapConnected, setIsRedcapConnected] = useState(null); // Use null initially for an undetermined state
 
-  // Load the saved form data from localStorage on component mount
+  // Function to load the data 
   useEffect(() => {
-    const savedFormData = localStorage.getItem("redcapFormData");
-    if (savedFormData) {
-      const decryptedData = decryptData(savedFormData); // Decrypt the data
+    // Request the store data from the main process when the component mounts
+    ipcRenderer.invoke("getStoreData").then((data) => {
+      const decryptedData = decryptData(data.redcapFormData); // Decrypt the data
       if (decryptedData) {
-        setFormData(decryptedData);
+        setFormData(decryptedData)
       }
-    }
+    });
   }, []);
 
-  // Save the form data to localStorage whenever it changes
+  // Function to update the store data
+  const updateStoreData = (newData) => {
+    console.log("update storedata", newData);
+    // Send a message to the main process to update the store data
+    ipcRenderer.send("setStoreData", newData);
+  };
+
+  // // Save the form data to localStorage whenever it changes
   useEffect(() => {
     if (formData.redcapAPIKey && formData.redcapAPIURL) {
       const encryptedData = encryptData(formData); // Encrypt the data
-      localStorage.setItem("redcapFormData", encryptedData);
+      updateStoreData({ redcapFormData: encryptedData }); // Update the Electron store with the encrypted data
     }
   }, [formData]);
 

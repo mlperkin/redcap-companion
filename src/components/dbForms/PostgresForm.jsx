@@ -57,7 +57,7 @@ export default function PostgresForm({ dataObj }) {
       const encryptedData = encryptData(formData); // Encrypt the data
       localStorage.setItem("postgresFormData", encryptedData);
     }
-  }, [postgresHostName, postgresPort, postgresUsername, postgresPassword, formDataLoaded]);
+  }, [postgresHostName, postgresPort, postgresUsername, postgresPassword]);
 
   async function testDBConnection(event) {
     event.preventDefault();

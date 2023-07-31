@@ -6,6 +6,8 @@ const path = require("path");
 const isDev = require("electron-is-dev");
 const csv = require("csv-parser");
 const fs = require("fs");
+const Store = require('electron-store');
+const store = new Store();
 
 // const dbTestModulePath = path.join(app.getAppPath(), "/utils/dbTest.js");
 // const redcapModulePath = path.join(app.getAppPath(), "utils/redcap.js");
@@ -144,4 +146,25 @@ ipcMain.handle("testRedcapAPI", async (event, dataObj) => {
     console.error("Error connecting to Redcap:", error);
     return false;
   }
+});
+
+// Listen for an IPC event from the renderer process to get the store data
+ipcMain.handle('getStoreData', (event) => {
+  return store.store;
+});
+
+
+// Listen for an IPC event from the renderer process to set the store data
+ipcMain.on('setStoreData', (event, newData) => {
+  // Get the current data from the store
+  const currentData = store.store || {};
+
+  // Merge the current data with the new data
+  const updatedData = { ...currentData, ...newData };
+
+  // Set the updated data in the store
+  store.store = updatedData;
+
+  // Optionally, you can send a response back to the renderer process if needed
+  event.sender.send('storeDataUpdated', updatedData);
 });

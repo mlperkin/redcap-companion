@@ -26,6 +26,7 @@
     "crypto-js": "^4.1.1",
     "csv-parser": "^3.0.0",
     "electron-is-dev": "^2.0.0",
+    "electron-store": "^8.1.0",
     "file-saver": "^2.0.5",
     "material-react-table": "^1.14.0",
     "mysql2": "^3.5.2",
