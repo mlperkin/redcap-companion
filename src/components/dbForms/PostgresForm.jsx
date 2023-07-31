@@ -1,42 +1,87 @@
-import React from "react";
-import Grid from "@mui/material/Grid";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
-// import CheckIcon from "@mui/icons-material/Check";
-// import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
-import CheckIcon from "@mui/icons-material/Check";
-import CancelIcon from "@mui/icons-material/Cancel";
-import InputAdornment from "@mui/material/InputAdornment";
+import { encryptData, decryptData } from "../../utils/encryption";
+const { ipcRenderer } = window.require("electron");
 
-export default function PostgresForm({ props }) {
-  const [pgHostName, setPGHostName] = useState("");
-  const [editModePGHostname, setEditModeMyPGHostname] = useState();
-  const [pgDBTest, setPGDBTest] = useState(false);
+export default function PostgresForm({dataObj}) {
+  const [postgresHostName, setPostgresHostName] = useState("localhost");
+  const [postgresPort, setPostgresPort] = useState("5432");
+  const [postgresUsername, setPostgresUsername] = useState("");
+  const [postgresPassword, setPostgresPassword] = useState("");
+  const [postgresDBTest, setPostgresDBTest] = useState(false);
+  const [formDataLoaded, setFormDataLoaded] = useState(false);
 
-  function handleFormSubmit() {}
+  function handleFormSubmit(event) {
+    event.preventDefault();
+  }
 
-  function handleCancel() {}
+  // Load the saved form data from localStorage on component mount
+  useEffect(() => {
+    if (!formDataLoaded) {
+      const savedFormData = localStorage.getItem("postgresFormData");
+      if (savedFormData) {
+        const decryptedData = decryptData(savedFormData); // Decrypt the data
+        console.log('decrypted data', decryptedData)
+        if (decryptedData) {
+          setPostgresHostName(decryptedData.hostname);
+          setPostgresPort(decryptedData.port);
+          setPostgresUsername(decryptedData.username);
+          setPostgresPassword(decryptedData.password);
+        }
+        setFormDataLoaded(true);
+      }else{
+        setFormDataLoaded(true);
+      }
+    }
+  }, [formDataLoaded]);
 
-  function handleEdit() {}
+  // Save the form data to localStorage whenever it changes
+  useEffect(() => {
+    const formData = {
+      db: 'PostgreSQL',
+      hostname: postgresHostName,
+      port: postgresPort,
+      username: postgresUsername,
+      password: postgresPassword,
+    };
+    if (formDataLoaded) {
+      const encryptedData = encryptData(formData); // Encrypt the data
+      localStorage.setItem("postgresFormData", encryptedData);
+    }
+  }, [postgresHostName, postgresPort, postgresUsername, postgresPassword]);
 
-  function testDBConnection() {}
+  async function testDBConnection(event) {
+    event.preventDefault();
+    // console.log("handle form submit");
+    let dbObj = {
+      db: "PostgreSQL",
+      hostname: postgresHostName,
+      port: postgresPort,
+      username: postgresUsername,
+      password: postgresPassword,
+    };
+
+     // Call the main process function via ipcRenderer
+     const isMySQLConnected = await ipcRenderer.invoke("testDBConnection", dbObj);
+     if(!isMySQLConnected){
+      setPostgresDBTest('Failed')
+     }else{
+      setPostgresDBTest('Connected to PostgreSQL DB!')
+     }
+  }
 
   return (
-    // <Paper elevation={3}>
-    <>
+    <Paper elevation={3}>
       <Box sx={{ textAlign: "center" }}>
-        <h3>Postgres Database Credentials</h3>
+        <h3>PostgreSQL Database Credentials</h3>
       </Box>
       <Box
         component="form"
-        onSubmit={(event) => handleFormSubmit(event, "postgres")}
-        value="postgres"
+        onSubmit={handleFormSubmit}
         sx={{
           justifyContent: "center",
           display: "flex",
@@ -45,55 +90,47 @@ export default function PostgresForm({ props }) {
         }}
       >
         <TextField
-          InputLabelProps={{ shrink: true }}
-          disabled={!editModePGHostname}
-          onChange={(event) => setPGHostName(event.target.value)}
-          value={pgHostName}
+          fullWidth
+          label="PostgreSQL Database Hostname"
+          value={postgresHostName}
+          onChange={(event) => setPostgresHostName(event.target.value)}
           margin="normal"
           required
-          fullWidth
-          name="hostname"
-          label="Postgres Database Hostname"
-          type="text"
-          id="hostname"
-          InputProps={{
-            endAdornment: (
-              <>
-                {!editModePGHostname ? (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => handleEdit("hostname")}>
-                      <EditIcon />
-                    </IconButton>
-                  </InputAdornment>
-                ) : (
-                  <>
-                    <InputAdornment position="end">
-                      <IconButton type="submit">
-                        <CheckIcon />
-                      </IconButton>
-                    </InputAdornment>
-                    <InputAdornment position="end">
-                      <IconButton
-                        disabled={!editModePGHostname}
-                        onClick={() => handleCancel("hostname")}
-                      >
-                        <CancelIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  </>
-                )}
-              </>
-            ),
-          }}
         />
-      </Box>
 
-      <Grid item xs={12}>
+        <TextField
+          fullWidth
+          type='number'
+          label="PostgreSQL Port"
+          value={postgresPort}
+          onChange={(event) => setPostgresPort(event.target.value)}
+          margin="normal"
+          required
+        />
+
+        <TextField
+          fullWidth
+          label="PostgreSQL Username"
+          value={postgresUsername}
+          onChange={(event) => setPostgresUsername(event.target.value)}
+          margin="normal"
+          required
+        />
+
+        <TextField
+          fullWidth
+          label="PostgreSQL Password"
+          type="password"
+          value={postgresPassword}
+          onChange={(event) => setPostgresPassword(event.target.value)}
+          margin="normal"
+          required
+        />
+
         <Box sx={{ display: "block", textAlign: "center", marginTop: "10px" }}>
           <Button
-            onClick={(event) => testDBConnection(event)}
+            onClick={testDBConnection}
             variant="outlined"
-            value="hostname"
             sx={{
               ml: 4,
               padding: "10px 30px 10px 30px",
@@ -104,13 +141,12 @@ export default function PostgresForm({ props }) {
             Test DB Connection
           </Button>
         </Box>
-      </Grid>
-      <Grid item xs={12}>
-        <Box sx={{ display: "block", marginTop: "10px" }}>
-          <Typography>{pgDBTest}</Typography>
-        </Box>
-      </Grid>
-    </>
-    // </Paper>
+        <Typography>{postgresDBTest}</Typography>
+      </Box>
+
+      {/* <Box sx={{ display: "block", marginTop: "10px", textAlign: "center" }}>
+        
+      </Box> */}
+    </Paper>
   );
 }

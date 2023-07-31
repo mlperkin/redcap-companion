@@ -45,7 +45,7 @@
     "react-eject": "react-scripts eject",
     "electron-build": "electron-builder",
     "build": "npm run react-build && npm run electron-build",
-    "start": "concurrently \"cross-env BROWSER=none npm run react-start\" \"wait-on http://127.0.0.1:3000 && electron .\" "
+    "start": "concurrently \"cross-env NODE_ENV=local BROWSER=none npm run react-start\" \"wait-on http://127.0.0.1:3000 && electron .\""
   },
   "eslintConfig": {
     "extends": [
@@ -67,6 +67,7 @@
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "concurrently": "^8.2.0",
+    "dotenv": "^16.3.1",
     "electron": "^25.3.1",
     "electron-builder": "^24.4.0",
     "wait-on": "^7.0.1"

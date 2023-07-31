@@ -6,6 +6,7 @@
 .pnp.js
 /dist
 /build
+.env
 
 # testing
 /coverage

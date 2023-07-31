@@ -3,7 +3,12 @@ const path = require("path");
 const isDev = require("electron-is-dev");
 const csv = require("csv-parser");
 const fs = require("fs");
-const { testMySQLConnection, testPostgreSQLConnection } = require("../src/utils/dbTest");
+const {testRedcapConnection} = require("../src/utils/redcap")
+const {
+  testMySQLConnection,
+  testPostgreSQLConnection,
+} = require("../src/utils/dbTest");
+
 
 let win;
 
@@ -113,7 +118,7 @@ ipcMain.handle("testDBConnection", async (event, dataObj) => {
       console.error("Error connecting to MySQL:", error);
       return false;
     }
-  } else if(dataObj.db === "PostgreSQL"){
+  } else if (dataObj.db === "PostgreSQL") {
     try {
       // Your database connection code here
       const isPostgreSQLConnected = await testPostgreSQLConnection(dataObj);
@@ -123,5 +128,19 @@ ipcMain.handle("testDBConnection", async (event, dataObj) => {
       console.error("Error connecting to PostgreSQL:", error);
       return false;
     }
+  }
+});
+
+ipcMain.handle("testRedcapAPI", async (event, dataObj) => {
+  console.log("dataobj", dataObj);
+
+  try {
+    // Your database connection code here
+    const isRedcapConnected = await testRedcapConnection(dataObj);
+    // Return a boolean value
+    return isRedcapConnected;
+  } catch (error) {
+    console.error("Error connecting to Redcap:", error);
+    return false;
   }
 });
