@@ -170,7 +170,7 @@ export default function PostgresForm({ dataObj }) {
               backgroundColor: "theme.primary.main",
             }}
           >
-            Test DB Connection
+            Test Connection
           </Button>
         </Box>
       </Box>

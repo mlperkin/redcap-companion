@@ -26,7 +26,7 @@ const DatabaseDropdown = ({ selectedDatabase, handleDBChange }) => {
     <Paper elevation={3} sx={{ padding: "10px" }}>
       {/* Determine which db form to use here with dropdown selected value */}
       <Box sx={{ textAlign: "center" }}>
-        <h3>Database Credentials</h3>
+        <h3>Output Source</h3>
       </Box>
       <BootstrapTooltip
         arrow

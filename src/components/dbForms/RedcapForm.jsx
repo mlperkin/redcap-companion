@@ -9,6 +9,8 @@ import { Check, Clear } from "@mui/icons-material";
 import CircularProgress from "@mui/material/CircularProgress";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import BootstrapTooltip from "../BootstrapTooltip";
+import { useDataContext } from "../context/DataContext";
+
 const { ipcRenderer } = window.require("electron");
 
 export default function RedcapForm() {
@@ -18,8 +20,13 @@ export default function RedcapForm() {
   });
   const [redcapAPITest, setRedcapAPITest] = useState("");
   const [isTesting, setIsTesting] = useState(false);
-  const [isRedcapConnected, setIsRedcapConnected] = useState(null); // Use null initially for an undetermined state
+  // const [isRedcapConnected, setIsRedcapConnected] = useState(null); // Use null initially for an undetermined state
   const [formDataLoaded, setFormDataLoaded] = useState(false);
+
+  const {
+    isRedcapConnected,
+    setIsRedcapConnected
+  } = useDataContext();
   // Function to load the data
   useEffect(() => {
     setFormDataLoaded(false);
@@ -74,6 +81,7 @@ export default function RedcapForm() {
       formData
     );
     setIsRedcapConnected(isRedcapConnected);
+    console.log('set redcap connected', isRedcapConnected)
     setIsTesting(false);
   }
 
@@ -154,7 +162,7 @@ export default function RedcapForm() {
               marginTop: "auto", // Add this line
             }}
           >
-            Test REDCap API
+            Test Connection
           </Button>
           <Grid item xs={12}>
             <Box sx={{ display: "block", marginTop: "10px" }}>

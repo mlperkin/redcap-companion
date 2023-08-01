@@ -43,11 +43,9 @@ function FilePicker(props) {
   };
 
   // Rest of your component code...
-
   return (
     <Container>
-      <Paper elevation={3}>
-        <Button variant="contained" onClick={handleREDCapAPIButtonClick}>
+      <Button variant="contained" onClick={handleREDCapAPIButtonClick}>
           REDCap API
         </Button>
         <Button
@@ -58,6 +56,8 @@ function FilePicker(props) {
         >
           Local Data Dictionary File
         </Button>
+      <Paper elevation={3}>
+        
         {initialLoad ? (
           <></>
         ) : showREDCapAPIInput ? (

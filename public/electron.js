@@ -20,7 +20,7 @@ let win;
 function createWindow() {
   win = new BrowserWindow({
     width: 1280,
-    height: 720,
+    height: 900,
     titleBarStyle: "hidden",
     minWidth: 650, // Set the minimum width here
     minHeight: 600, // Set the minimum height here

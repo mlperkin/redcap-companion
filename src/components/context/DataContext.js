@@ -11,6 +11,8 @@ export const DataProvider = ({ children }) => {
   const [initialLoad, setInitialLoad] = useState(true);
   const [showREDCapAPIInput, setShowREDCapAPIInput] = useState(false);
   const [selectedFilename, setSelectedFilename] = useState('');
+  const [selectedDatabase, setSelectedDatabase] = useState("");
+  const [isRedcapConnected, setIsRedcapConnected] = useState(null); // Use null initially for an undetermined state
 
   return (
     <DataContext.Provider
@@ -24,7 +26,11 @@ export const DataProvider = ({ children }) => {
         showREDCapAPIInput,
         setShowREDCapAPIInput,
         selectedFilename,
-        setSelectedFilename
+        setSelectedFilename,
+        selectedDatabase,
+        setSelectedDatabase,
+        isRedcapConnected,
+        setIsRedcapConnected
       }}
     >
       {children}

@@ -9,10 +9,14 @@ import MySQLForm from "./dbForms/MySQLForm";
 import RedcapForm from "./dbForms/RedcapForm";
 import PostgresForm from "./dbForms/PostgresForm";
 import CsvExportIcon from "../images/csvExport.png";
+import { useDataContext } from "./context/DataContext";
 
 export default function ConnectionsSetup(props) {
-  const [selectedDatabase, setSelectedDatabase] = useState("");
-
+  // const [selectedDatabase, setSelectedDatabase] = useState("");
+  const {
+    selectedDatabase,
+    setSelectedDatabase
+  } = useDataContext();
   // Load the saved form data from localStorage on component mount
   useEffect(() => {
     const selectedDB = localStorage.getItem("selectedDB");
@@ -53,7 +57,7 @@ export default function ConnectionsSetup(props) {
 
   return (
     <>
-      <Grid container spacing={1} sx={{ margin: "30px" }}>
+      <Grid container spacing={1} sx={{ margin: "0px" }}>
         {/* REDCAP Form */}
         <Grid
           item

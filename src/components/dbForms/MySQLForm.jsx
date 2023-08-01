@@ -169,7 +169,7 @@ export default function MySQLForm({ dataObj }) {
               backgroundColor: "theme.primary.main",
             }}
           >
-            Test DB Connection
+            Test Connection
           </Button>
         </Box>
       </Box>
