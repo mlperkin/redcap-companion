@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Grid, Typography } from "@mui/material";
+import { Grid, Tooltip, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
@@ -7,7 +7,8 @@ import Paper from "@mui/material/Paper";
 import { encryptData, decryptData } from "../../utils/encryption";
 import { Check, Clear } from "@mui/icons-material";
 import CircularProgress from "@mui/material/CircularProgress";
-
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import BootstrapTooltip from "../BootstrapTooltip";
 const { ipcRenderer } = window.require("electron");
 
 export default function RedcapForm() {
@@ -18,32 +19,33 @@ export default function RedcapForm() {
   const [redcapAPITest, setRedcapAPITest] = useState("");
   const [isTesting, setIsTesting] = useState(false);
   const [isRedcapConnected, setIsRedcapConnected] = useState(null); // Use null initially for an undetermined state
-
-  // Function to load the data 
+  const [formDataLoaded, setFormDataLoaded] = useState(false);
+  // Function to load the data
   useEffect(() => {
+    setFormDataLoaded(false);
     // Request the store data from the main process when the component mounts
     ipcRenderer.invoke("getStoreData").then((data) => {
       const decryptedData = decryptData(data.redcapFormData); // Decrypt the data
       if (decryptedData) {
-        setFormData(decryptedData)
+        setFormData(decryptedData);
       }
+      setFormDataLoaded(true);
     });
   }, []);
 
   // Function to update the store data
   const updateStoreData = (newData) => {
-    console.log("update storedata", newData);
     // Send a message to the main process to update the store data
     ipcRenderer.send("setStoreData", newData);
   };
 
   // // Save the form data to localStorage whenever it changes
   useEffect(() => {
-    if (formData.redcapAPIKey && formData.redcapAPIURL) {
+    if (formDataLoaded) {
       const encryptedData = encryptData(formData); // Encrypt the data
       updateStoreData({ redcapFormData: encryptedData }); // Update the Electron store with the encrypted data
     }
-  }, [formData]);
+  }, [formData, formDataLoaded]);
 
   function handleFormSubmit(event) {
     event.preventDefault();
@@ -79,22 +81,30 @@ export default function RedcapForm() {
     <Paper elevation={3}>
       <Box sx={{ textAlign: "center" }}>
         <h3>REDCap Credentials</h3>
+        <BootstrapTooltip
+          placement="top"
+          title="This needs to be entered in order to get the records from your REDCap instance."
+        >
+          <HelpOutlineIcon />
+        </BootstrapTooltip>
       </Box>
       <Box sx={{ display: "block", marginTop: "10px", textAlign: "center" }}>
         {isTesting ? (
           // If testing is in progress, show the CircularProgress
           <CircularProgress />
         ) : isRedcapConnected === null ? null : isRedcapConnected ? ( // If connection status is null, show nothing (undetermined)
-          // If connection is successful, show the green check icon to the left of the text
+          // If connection is successful, show the green check icon
           <Typography>
             <Check style={{ color: "green", marginRight: "5px" }} />
-            Connected to REDCap
+            <br />
+            Connected to REDCap!
           </Typography>
         ) : (
-          // If connection fails, show the red x icon to the left of the text
+          // If connection fails, show the red x icon
           <Typography>
             <Clear style={{ color: "red", marginRight: "5px" }} />
-            Failed to connect to REDCap
+            <br />
+            Failed to connect to REDCap!
           </Typography>
         )}
       </Box>

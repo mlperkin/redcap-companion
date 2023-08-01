@@ -1,13 +1,17 @@
 import React, { useState } from "react";
-import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import {
+  Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Tooltip,
+} from "@mui/material";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import BootstrapTooltip from "../BootstrapTooltip";
 
-const DatabaseDropdown = ({selectedDatabase, handleDBChange}) => {
-//   const [selectedDatabase, setSelectedDatabase] = useState("");
-
- 
-
-  const handleFormSubmit = (event) => {};
-
+const DatabaseDropdown = ({ selectedDatabase, handleDBChange }) => {
   const databaseOptions = [
     "None - Export to CSV files",
     "MySQL",
@@ -19,30 +23,43 @@ const DatabaseDropdown = ({selectedDatabase, handleDBChange}) => {
   ];
 
   return (
-    <FormControl
-      fullWidth
-      sx={{
-        justifyContent: "center",
-        display: "flex",
-        flexWrap: "wrap",
-        // padding: "30px",
-      }}
-    >
-      <InputLabel id="database-label">Select Database</InputLabel>
-
-      <Select
-        labelId="database-label"
-        value={selectedDatabase}
-        onChange={handleDBChange}
-        label="Select Database"
+    <Paper elevation={3} sx={{ padding: "10px" }}>
+      {/* Determine which db form to use here with dropdown selected value */}
+      <Box sx={{ textAlign: "center" }}>
+        <h3>Database Credentials</h3>
+      </Box>
+      <BootstrapTooltip
+        arrow
+        placement="top"
+        title="Select where you would like the OMOP table and records to be outputted to"
       >
-        {databaseOptions.map((option) => (
-          <MenuItem key={option} value={option}>
-            {option}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+        <HelpOutlineIcon />
+      </BootstrapTooltip>
+      <FormControl
+        fullWidth
+        sx={{
+          justifyContent: "center",
+          display: "flex",
+          flexWrap: "wrap",
+          // padding: "30px",
+        }}
+      >
+        <InputLabel id="database-label">Select Database</InputLabel>
+
+        <Select
+          labelId="database-label"
+          value={selectedDatabase}
+          onChange={handleDBChange}
+          label="Select Database"
+        >
+          {databaseOptions.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </Paper>
   );
 };
 

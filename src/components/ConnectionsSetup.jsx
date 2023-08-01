@@ -3,6 +3,7 @@ import Grid from "@mui/material/Grid";
 import { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
+import { Typography } from "@mui/material";
 import DatabaseDropdown from "./dbForms/DatabaseDropdown";
 import MySQLForm from "./dbForms/MySQLForm";
 import RedcapForm from "./dbForms/RedcapForm";
@@ -35,6 +36,9 @@ export default function ConnectionsSetup(props) {
               height="auto"
               alt="CSV Export Icon"
             />
+            <Typography>
+              This will output the OMOP data in CSV format in order to import into your own database and tables.
+            </Typography>
           </Box>
         );
       case "MySQL":
@@ -80,16 +84,12 @@ export default function ConnectionsSetup(props) {
             margin: "20px",
           }}
         >
-          <Paper elevation={3} sx={{ padding: "10px" }}>
-            {/* Determine which db form to use here with dropdown selected value */}
-            <Box sx={{ textAlign: "center" }}>
-              <h3>Database Credentials</h3>
-            </Box>
+         
             <DatabaseDropdown
               handleDBChange={handleDBChange}
               selectedDatabase={selectedDatabase}
             />
-          </Paper>
+         
         </Grid>
 
         {/* DB Creds */}

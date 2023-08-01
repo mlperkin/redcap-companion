@@ -30,7 +30,6 @@ export default function PostgresForm({ dataObj }) {
       const savedFormData = localStorage.getItem("postgresFormData");
       if (savedFormData) {
         const decryptedData = decryptData(savedFormData); // Decrypt the data
-        console.log("decrypted data", decryptedData);
         if (decryptedData) {
           setPostgresHostName(decryptedData.hostname);
           setPostgresPort(decryptedData.port);
@@ -57,12 +56,11 @@ export default function PostgresForm({ dataObj }) {
       const encryptedData = encryptData(formData); // Encrypt the data
       localStorage.setItem("postgresFormData", encryptedData);
     }
-  }, [postgresHostName, postgresPort, postgresUsername, postgresPassword]);
+  }, [postgresHostName, postgresPort, postgresUsername, postgresPassword, formDataLoaded]);
 
   async function testDBConnection(event) {
     event.preventDefault();
     setIsTesting(true);
-    // console.log("handle form submit");
     let dbObj = {
       db: "PostgreSQL",
       hostname: postgresHostName,
@@ -94,15 +92,17 @@ export default function PostgresForm({ dataObj }) {
         ) : isPostgresConnected ===
           null ? // If connection status is null, show nothing (undetermined)
         null : isPostgresConnected ? (
-          // If connection is successful, show the green check icon to the left of the text
+          // If connection is successful, show the green check icon
           <Typography>
             <Check style={{ color: "green", marginRight: "5px" }} />
+            <br/>
             Connected to PostgreSQL DB!
           </Typography>
         ) : (
-          // If connection fails, show the red x icon to the left of the text
+          // If connection fails, show the red x icon 
           <Typography>
             <Clear style={{ color: "red", marginRight: "5px" }} />
+            <br/>
             Failed to connect to PostgreSQL DB!
           </Typography>
         )}

@@ -168,3 +168,17 @@ ipcMain.on('setStoreData', (event, newData) => {
   // Optionally, you can send a response back to the renderer process if needed
   event.sender.send('storeDataUpdated', updatedData);
 });
+
+// // Listen for the before-quit event
+// app.on('before-quit', () => {
+//   // Clear the store data
+//   store.clear();
+// });
+
+// // Listen for the ready event (when Electron has finished initializing)
+// app.on('ready', () => {
+//   // Clear the store data on app startup
+//   store.clear();
+
+//   // Additional code to create windows, handle IPC events, etc.
+// });

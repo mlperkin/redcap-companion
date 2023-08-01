@@ -3,8 +3,8 @@ const axios = require("axios");
 
 async function testRedcapConnection(dataObj) {
   // if (process.env.NODE_ENV === "local") {
-    //need to remove this for prod
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; // Add this at the top of your file
+  //need to remove this for prod
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; // Add this at the top of your file
   // }
 
   try {
@@ -15,11 +15,17 @@ async function testRedcapConnection(dataObj) {
     data.append("content", "version");
     data.append("format", "json");
     data.append("returnFormat", "json");
-
+    
+    // Check if the last character of dataObj.redcapAPIURL is '/'
+    if (dataObj.redcapAPIURL.charAt(dataObj.redcapAPIURL.length - 1) !== "/") {
+      // If not, add the '/' to the end of the string
+      dataObj.redcapAPIURL += "/";
+    }
+    console.log('dataobj', dataObj)
     let config = {
       method: "post",
       maxBodyLength: Infinity,
-      url: dataObj.redcapAPIURL + 'redcap/api/',
+      url: dataObj.redcapAPIURL,
       headers: {
         ...data.getHeaders(),
       },

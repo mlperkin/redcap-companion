@@ -35,20 +35,17 @@ export default function MySQLForm({ dataObj }) {
         setMysqlUsername(decryptedData.username);
         setMysqlPassword(decryptedData.password);
         setFormDataLoaded(true);
-      }else{
+      } else {
         setFormDataLoaded(true);
       }
-     
     });
   }, [formDataLoaded]);
 
   // Function to update the store data
   const updateStoreData = (newData) => {
-    console.log("update storedata", newData);
     // Send a message to the main process to update the store data
     ipcRenderer.send("setStoreData", newData);
   };
-
 
   // Save the form data to localStorage whenever it changes
   useEffect(() => {
@@ -59,13 +56,11 @@ export default function MySQLForm({ dataObj }) {
       username: mysqlUsername,
       password: mysqlPassword,
     };
-    setFormDataLoaded(formData);
     if (formDataLoaded) {
       const encryptedData = encryptData(formData); // Encrypt the data
       updateStoreData({ MySQLForm: encryptedData }); // Update the Electron store with the encrypted data
-      // localStorage.setItem("mysqlFormData", encryptedData);
     }
-  }, [mysqlHostName, mysqlPort, mysqlUsername, mysqlPassword]);
+  }, [mysqlHostName, mysqlPort, mysqlUsername, mysqlPassword, formDataLoaded]);
 
   async function testDBConnection(event) {
     event.preventDefault();
@@ -78,7 +73,6 @@ export default function MySQLForm({ dataObj }) {
     };
     setIsTesting(true);
     let dbObj = formData;
-    console.log('dbobj', dbObj)
     // Call the main process function via ipcRenderer
     const isMySQLConnected = await ipcRenderer.invoke(
       "testDBConnection",
@@ -99,18 +93,18 @@ export default function MySQLForm({ dataObj }) {
         {isTesting ? (
           // If testing is in progress, show the CircularProgress
           <CircularProgress />
-        ) : isMySQLConnected ===
-          null ? // If connection status is null, show nothing (undetermined)
-        null : isMySQLConnected ? (
-          // If connection is successful, show the green check icon to the left of the text
+        ) : isMySQLConnected === null ? null : isMySQLConnected ? ( // If connection status is null, show nothing (undetermined)
+          // If connection is successful, show the green check icon
           <Typography>
             <Check style={{ color: "green", marginRight: "5px" }} />
+            <br />
             Connected to MySQL DB!
           </Typography>
         ) : (
-          // If connection fails, show the red x icon to the left of the text
+          // If connection fails, show the red x icon
           <Typography>
             <Clear style={{ color: "red", marginRight: "5px" }} />
+            <br />
             Failed to connect to MySQL DB!
           </Typography>
         )}
