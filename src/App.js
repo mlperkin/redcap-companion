@@ -12,6 +12,7 @@ import ExecutePage from "./pages/ExecutePage";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import NavBar from "./components/NavBar";
+import { DataProvider } from "./components/context/DataContext";
 
 const ColorModeContext = createContext({ toggleColorMode: () => {} });
 
@@ -19,16 +20,22 @@ function App({ mode }) {
   const colorMode = useContext(ColorModeContext);
 
   return (
-    <>
-      <NavBar toggleColorMode={colorMode.toggleColorMode}/>
+    <DataProvider>
+      <NavBar toggleColorMode={colorMode.toggleColorMode} />
       <Routes>
         {/* set init page */}
         <Route path="/" element={<ConnectionsSetupPage mode={mode} />} />
-        <Route path="/selectDataDict" element={<SelectDataDict mode={mode} />} />
-        <Route path="/setupConnections" element={<ConnectionsSetupPage mode={mode} />} />
+        <Route
+          path="/selectDataDict"
+          element={<SelectDataDict mode={mode} />}
+        />
+        <Route
+          path="/setupConnections"
+          element={<ConnectionsSetupPage mode={mode} />}
+        />
         <Route path="/execute" element={<ExecutePage mode={mode} />} />
       </Routes>
-    </>
+    </DataProvider>
   );
 }
 

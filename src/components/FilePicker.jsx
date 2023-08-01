@@ -1,25 +1,37 @@
-import React, { useState } from "react";
-import { Button, Container, Typography } from "@mui/material";
+// FilePicker.js
+import React from "react";
+import { Box, Button, Container, Divider, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import CheckIcon from "@mui/icons-material/Check";
 import FormSelect from "./FormSelect";
 import Paper from "@mui/material/Paper";
+import { useDataContext } from "./context/DataContext";
 const { ipcRenderer } = window.require("electron");
 
 function FilePicker(props) {
-  const [rows, setRows] = useState([]);
-  const [columns, setColumns] = useState([]);
-  const [initialLoad, setInitialLoad] = useState(true);
-  const [showREDCapAPIInput, setShowREDCapAPIInput] = useState(false);
+  const {
+    rows,
+    setRows,
+    columns,
+    setColumns,
+    initialLoad,
+    setInitialLoad,
+    showREDCapAPIInput,
+    setShowREDCapAPIInput,
+    selectedFilename, 
+    setSelectedFilename
+  } = useDataContext();
 
   const handleButtonClick = async () => {
     const data = await ipcRenderer.invoke("open-file-dialog");
-    if (data && data.length > 0) {
+    console.log("data", data);
+    if (data && data.contents.length > 0) {
       setShowREDCapAPIInput(false);
+      setSelectedFilename(data.title)
       setColumns(
-        Object.keys(data[0]).map((key) => ({ field: key, width: 150 }))
+        Object.keys(data.contents[0]).map((key) => ({ field: key, width: 150 }))
       );
-      setRows(data.map((item, index) => ({ id: index, ...item })));
+      setRows(data.contents.map((item, index) => ({ id: index, ...item })));
       setInitialLoad(false);
     }
   };
@@ -27,7 +39,10 @@ function FilePicker(props) {
   const handleREDCapAPIButtonClick = () => {
     setShowREDCapAPIInput(true);
     setInitialLoad(false);
+    setSelectedFilename('')
   };
+
+  // Rest of your component code...
 
   return (
     <Container>
@@ -47,19 +62,22 @@ function FilePicker(props) {
           <></>
         ) : showREDCapAPIInput ? (
           <>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <Typography variant="h6" sx={{ mr: 1 }}>
-                REDCap Credentials Check
-              </Typography>
-
+            <Divider sx={{}} />
+            <Box sx={{ textAlign: "center", marginTop: 1, marginBottom: 1 }}>
               <CheckIcon sx={{ color: "green" }} />
-            </div>
-            <div>
+              <br />
+              <Typography variant="h6" sx={{ mr: 1 }}>
+                REDCap Connectivity
+              </Typography>
+            </Box>
+            <Divider sx={{}} />
+            <Box sx={{ marginTop: 1, marginBottom: 1 }}>
               <FormSelect props={props} />
-            </div>
+            </Box>
           </>
         ) : (
           <>
+          <h3>{selectedFilename}</h3>
             <DataGrid
               rows={rows}
               columns={columns}

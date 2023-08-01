@@ -7,7 +7,7 @@ import Paper from "@mui/material/Paper";
 import { encryptData, decryptData } from "../../utils/encryption";
 import { Check, Clear } from "@mui/icons-material";
 import CircularProgress from "@mui/material/CircularProgress";
-import PostgresLogoIcon from "../../icons/postgres_logo.png"
+import PostgresLogoIcon from "../../images/postgres_logo.png";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -56,7 +56,13 @@ export default function PostgresForm({ dataObj }) {
       const encryptedData = encryptData(formData); // Encrypt the data
       localStorage.setItem("postgresFormData", encryptedData);
     }
-  }, [postgresHostName, postgresPort, postgresUsername, postgresPassword, formDataLoaded]);
+  }, [
+    postgresHostName,
+    postgresPort,
+    postgresUsername,
+    postgresPassword,
+    formDataLoaded,
+  ]);
 
   async function testDBConnection(event) {
     event.preventDefault();
@@ -81,29 +87,27 @@ export default function PostgresForm({ dataObj }) {
 
   return (
     <Paper elevation={3}>
-      <Box sx={{ textAlign: "center" }}>
-        <h3>PostgreSQL Database Credentials</h3>
-        <img width={'70px'} src={PostgresLogoIcon} alt='postgresql logo'/>
+      <Box sx={{ textAlign: "center", paddingTop: '30px' }}>
+        <img width={"70px"} src={PostgresLogoIcon} alt="postgresql logo" />
+        {/* <h3>PostgreSQL Database Credentials</h3> */}
       </Box>
       <Box sx={{ display: "block", marginTop: "10px", textAlign: "center" }}>
         {isTesting ? (
           // If testing is in progress, show the CircularProgress
           <CircularProgress />
-        ) : isPostgresConnected ===
-          null ? // If connection status is null, show nothing (undetermined)
-        null : isPostgresConnected ? (
+        ) : isPostgresConnected === null ? null : isPostgresConnected ? ( // If connection status is null, show nothing (undetermined)
           // If connection is successful, show the green check icon
           <Typography>
             <Check style={{ color: "green", marginRight: "5px" }} />
-            <br/>
-            Connected to PostgreSQL DB!
+            <br />
+            Connected to PostgreSQL!
           </Typography>
         ) : (
-          // If connection fails, show the red x icon 
+          // If connection fails, show the red x icon
           <Typography>
             <Clear style={{ color: "red", marginRight: "5px" }} />
-            <br/>
-            Failed to connect to PostgreSQL DB!
+            <br />
+            Failed to connect to PostgreSQL!
           </Typography>
         )}
       </Box>

@@ -8,7 +8,7 @@ import DatabaseDropdown from "./dbForms/DatabaseDropdown";
 import MySQLForm from "./dbForms/MySQLForm";
 import RedcapForm from "./dbForms/RedcapForm";
 import PostgresForm from "./dbForms/PostgresForm";
-import CsvExportIcon from "../icons/csvExport.png";
+import CsvExportIcon from "../images/csvExport.png";
 
 export default function ConnectionsSetup(props) {
   const [selectedDatabase, setSelectedDatabase] = useState("");
@@ -32,12 +32,12 @@ export default function ConnectionsSetup(props) {
           <Box sx={{ margin: "30px" }}>
             <img
               src={CsvExportIcon}
-              width="100px"
+              width="60px"
               height="auto"
               alt="CSV Export Icon"
             />
             <Typography>
-              This will output the OMOP data in CSV format in order to import into your own database and tables.
+              Output OMOP data in CSV format to import into your own database and tables.
             </Typography>
           </Box>
         );

@@ -2,17 +2,13 @@ import React from "react";
 import Box from "@mui/material/Box";
 import MaterialReactTable from "material-react-table";
 import { darken, Button } from "@mui/material";
-// import CloseIcon from "@mui/icons-material/Close";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 
 export default function FormSelectTable({
   columns,
   data,
   setSorting,
-  value,
   handleExportData,
-  resetScreen,
-  handleRowSelection,
   selectedRows,
   setSelectedRows,
   tableInstanceRef,
@@ -26,33 +22,16 @@ export default function FormSelectTable({
       enableBottomToolbar={true}
       enableGlobalFilterModes={true}
       enablePagination={true}
-      muiTablePaginationProps={
-        {
-          // rowsPerPageOptions: [
-          //   { label: '50', value: 50 },
-          //   { label: '100', value: 100 },
-          //   { label: '150', value: 150 },
-          //   { label: '200', value: 200 },
-          //   { label: '500', value: 500 },
-          //   { label: '1000', value: 1000 }
-          // ],
-        }
-      }
-      // positionPagination='top'
-      // enableRowNumbers
       options={{
         selection: true,
       }}
       enableRowSelection
       tableInstanceRef={tableInstanceRef}
-      // selectAllMode="all"
-      // onRowSelectionChange={handleRowSelection} //connect internal row selection state to your own
+
       state={{ selectedRows }} //pass our managed row selection state to the table to use
       getRowId={(row) => row.field_name} //give each row a more useful id
       muiTableBodyRowProps={({ row }) => ({
-        //add onClick to row to select upon clicking anywhere in the row
-        // onClick: row.getToggleSelectedHandler(),
-        // sx: { cursor: "pointer" },
+
         onClick: () =>
           setSelectedRows((prev) => ({
             ...prev,
@@ -63,9 +42,8 @@ export default function FormSelectTable({
           cursor: "pointer",
         },
       })}
-      // selectedRows={selectedRows}
       muiTableContainerProps={{
-        sx: { maxHeight: "30vh" },
+        sx: { maxHeight: "50vh" },
       }}
       onSortingChange={setSorting}
       initialState={{
@@ -119,19 +97,6 @@ export default function FormSelectTable({
             flexWrap: "wrap",
           }}
         >
-          {/* <Button
-            onClick={() => {
-              let selectedRows =
-                tableInstanceRef.current?.getSelectedRowModel().rows;
-              console.log("selected rows", selectedRows);
-
-              // Reformat the array of objects
-              const reformattedArray = selectedRows.map((obj) => obj.original);
-              console.log('reformat', reformattedArray)
-            }}
-          >
-            Log Selected Rows
-          </Button> */}
           <Button
             color="success"
             onClick={handleExportData}
@@ -140,18 +105,6 @@ export default function FormSelectTable({
           >
             Export
           </Button>
-
-          <Box style={{ marginLeft: "auto" }}>
-            {/* <Button
-              variant="outlined"
-              color="error"
-              startIcon={<CloseIcon />}
-              component="label"
-              onClick={(event) => resetScreen(event, value)}
-            >
-              Close
-            </Button> */}
-          </Box>
         </Box>
       )}
     />

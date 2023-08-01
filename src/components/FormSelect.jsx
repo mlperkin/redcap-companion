@@ -11,11 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import Button from "@mui/material/Button";
-import AddTaskIcon from "@mui/icons-material/AddTask";
 import FormSelectTable from "./FormSelectTable";
-import Alert from "@mui/material/Alert";
-import TransferList from "./TransferList";
-// import CollectionList from "./CollectionList";
 import Papa from "papaparse";
 import { saveAs } from "file-saver";
 import Skeleton from "@mui/material/Skeleton";
@@ -23,17 +19,13 @@ import ImportExportIcon from "@mui/icons-material/ImportExport";
 
 var XLSX = require("xlsx");
 export default function FormSelect({ props }) {
-  let token = "token";
   const [selectedForm, setSelectedForm] = useState("");
   const [data, setData] = useState();
   const [colDefs, setColDefs] = useState([]);
   const [isFormLoaded, setIsFormLoaded] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
-  const [showSubmittedNotifcation, setShowSubmittedNotifcation] =
-    useState(false);
   const [csvFilename, setCSVFilename] = useState("");
   const [selectedRows, setSelectedRows] = useState([]);
-  const [selectRowsError, setSelectRowsError] = useState(false);
 
   var tableInstanceRef = useRef(null);
   useEffect(() => {
@@ -53,23 +45,20 @@ export default function FormSelect({ props }) {
     setIsFormLoaded(false);
     setIsFormLoading(true);
     if (!selectedForm) setSelectedForm(props.forms[0]);
-    var myHeaders = new Headers();
-    myHeaders.append("Authorization", "Bearer " + token);
-
-    var FormData = require("form-data");
     var formdata = new FormData();
-    formdata.append("form", selectedForm);
+    formdata.append("token", "BD042CC2A422D27D1D0C65D9D692C329");
+    formdata.append("content", "metadata");
+    formdata.append("format", "json");
+    formdata.append("forms[0]", "bioinformatics_core_activity_survey");
 
     var requestOptions = {
       method: "POST",
-      headers: myHeaders,
       body: formdata,
       redirect: "follow",
-      credentials: "include", // Include cookies with the request
     };
 
     fetch(
-      `${process.env.REACT_APP_BACKEND_API_URL}/api/redcap/exportMetadata`,
+      "http://crudev.wakehealth.edu/redcapwiz_devccc/redcap/api/",
       requestOptions
     )
       .then((response) => response.text())
@@ -185,76 +174,8 @@ export default function FormSelect({ props }) {
     return rows;
   };
 
-  function submitToProcess(e) {
-    // let selectedRows = tableInstanceRef.current?.getSelectedRowModel().rows;
-    // // Reformat the array of objects
-    // const reformattedArray = selectedRows.map((obj) => obj.original);
-    // let dataToSendToQueue;
-    // if (!reformattedArray || reformattedArray.length <= 0) {
-    //   dataToSendToQueue = data;
-    // } else {
-    //   dataToSendToQueue = reformattedArray;
-    // }
-    // setSelectRowsError(false);
-    // var myHeaders = new Headers();
-    // myHeaders.append("Authorization", "Bearer " + token);
-    // // console.log("send data", data);
-    // var formdata = new FormData();
-    // // console.log('object length', dataToSendToQueue.length)
-    // formdata.append("data", JSON.stringify(dataToSendToQueue));
-    // formdata.append("selectedForm", selectedForm);
-    // formdata.append("dataLength", dataToSendToQueue.length);
-    // // Filter out properties with the value of false
-    // const filteredCollections = Object.fromEntries(
-    //   Object.entries(checkedItems).filter(([key, value]) => value !== false)
-    // );
-    // // console.log("collections to use", JSON.stringify(filteredCollections));
-    // formdata.append("collections", JSON.stringify(filteredCollections));
-    // const checkIfAllFalse = (checkedItems) => {
-    //   // Extract an array of values from the checkedItems object
-    //   const values = Object.values(checkedItems);
-    //   // Use the every() method to check if every value is false
-    //   const allFalse = values.every((value) => value === false);
-    //   // If the array is empty or all values are false, set selectRowsErrors to true
-    //   if (values.length === 0 || allFalse) {
-    //     setSelectRowsError(true);
-    //     return false;
-    //   } else {
-    //     setSelectRowsError(false);
-    //     return true;
-    //   }
-    // };
-    // // Call the checkIfAllFalse function and pass the checkedItems object
-    // let checkedItem = checkIfAllFalse(checkedItems);
-    // if (!checkedItem) return;
-    // var requestOptions = {
-    //   method: "POST",
-    //   headers: myHeaders,
-    //   body: formdata,
-    //   redirect: "follow",
-    //   credentials: "include", // Include cookies with the request
-    // };
-    // fetch(
-    //   `${process.env.REACT_APP_BACKEND_API_URL}/api/queue/submit`,
-    //   requestOptions
-    // )
-    //   .then((response) => response.text())
-    //   .then((result) => {
-    //     // console.log(result);
-    //     window.scrollTo(0, 0); //scroll to top of page
-    //     setShowSubmittedNotifcation(true);
-    //     setTimeout(() => {
-    //       setShowSubmittedNotifcation(false);
-    //     }, 5000);
-    //   })
-    //   .catch((error) => console.log("error", error));
-  }
-
   const handleExportData = () => {
     let _data = data;
-    // if (selectedTabIdx) {
-    //   _data = approvedData; //change export data if on approved tab
-    // }
     let keys = _data.reduce(function (acc, obj) {
       Object.keys(obj).forEach(function (key) {
         if (!acc.includes(key)) acc.push(key);
@@ -279,11 +200,8 @@ export default function FormSelect({ props }) {
 
   function resetScreen() {
     setData("");
-    // setApprovedData("");
-    // setIsLoading(false);
     setCSVFilename("");
     setIsFormLoaded(false);
-    // setSelectedFile("");
   }
 
   if (props.forms.length > 0) {
@@ -317,57 +235,13 @@ export default function FormSelect({ props }) {
                 </Button>
               </Grid>
             </FormControl>
-            {isFormLoading && (
-              <Skeleton
-                variant="rounded"
-                sx={{ margin: "auto" }}
-                width={"80%"}
-                height={"30vh"}
-              />
-            )}
-            <Grid sx={{ margin: 1 }}>
-              {isFormLoaded && (
-                <>
-                  {/* <CollectionList
-                    token={token}
-                    setCheckedItems={setCheckedItems}
-                    checkedItems={checkedItems}
-                  /> */}
 
-                  <TransferList
-                    props={props}
-                    setData={setData}
-                    data={data}
-                    setColDefs={setColDefs}
-                    colDefs={colDefs}
-                  />
-                </>
-              )}
-            </Grid>
-            <Grid sx={{ margin: "auto", mt: 2 }}>
-              {selectRowsError && (
-                <Alert
-                  severity="error"
-                  sx={{
-                    fontSize: "1.2rem",
-                    maxWidth: "400px",
-                  }}
-                >
-                  <Typography variant="h6" gutterBottom>
-                    Error
-                  </Typography>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Please select as least one collection to use.
-                  </Typography>
-                </Alert>
-              )}
-            </Grid>
           </Grid>
 
           <Grid
             item
             xs={12}
-            lg={8}
+            lg={12}
             sx={{ maxWidth: "100%", overflowX: "auto" }}
           >
             {isFormLoading && (
@@ -386,51 +260,6 @@ export default function FormSelect({ props }) {
                   setSelectedRows={setSelectedRows}
                   tableInstanceRef={tableInstanceRef}
                 />
-
-                <Grid item xs={12} sx={{ mt: 2 }}>
-                  <Tooltip
-                    title={
-                      "This will submit your selected rows (all if none selected) to a process that will return the most similar SNOMED ids and texts based on the field_label"
-                    }
-                  >
-                    <Button
-                      // sx={{ float: "right" }}
-                      variant="contained"
-                      color="primary"
-                      component="label"
-                      startIcon={<AddTaskIcon />}
-                      onClick={(e) => submitToProcess(e)}
-                    >
-                      Submit Job To Queue
-                    </Button>
-                  </Tooltip>
-                </Grid>
-                {showSubmittedNotifcation && (
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    minHeight="100vh"
-                  >
-                    <Alert
-                      severity="success"
-                      sx={{
-                        fontSize: "1.2rem",
-                        position: "absolute",
-                        top: "0px",
-                        right: "250px",
-                        zIndex: 10000,
-                      }}
-                    >
-                      <Typography variant="h6" gutterBottom>
-                        Submitted to Queue
-                      </Typography>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        Your job has been successfully submitted to the queue.
-                      </Typography>
-                    </Alert>
-                  </Box>
-                )}
               </>
             )}
           </Grid>

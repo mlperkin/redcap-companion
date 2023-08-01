@@ -1,8 +1,16 @@
 import React from "react";
 import { Box, Container } from "@mui/material";
 import ConnectionsSetup from "../components/ConnectionsSetup";
+import ArrowCircleRightIcon from "@mui/icons-material/ArrowCircleRight";
+import BootstrapTooltip from "../components/BootstrapTooltip";
+import { useNavigate } from "react-router-dom";
 
 const ConnectionsSetupPage = () => {
+  const navigate = useNavigate();
+
+  function handleClick(){
+    navigate("/selectDataDict");
+  }
   return (
     <>
       <Container maxWidth="xl">
@@ -16,7 +24,17 @@ const ConnectionsSetupPage = () => {
             textAlign: "center",
           }}
         >
-          <h1>Connections Setup</h1>
+          <Box>
+            <h1>Connections Setup</h1>
+            <BootstrapTooltip title="Go Next">
+              <ArrowCircleRightIcon
+              onClick={handleClick}
+                sx={{ cursor: "pointer" }}
+                color="primary"
+                fontSize="large"
+              />
+            </BootstrapTooltip>
+          </Box>
           <ConnectionsSetup />
         </Box>
       </Container>

@@ -7,7 +7,7 @@ import Paper from "@mui/material/Paper";
 import { encryptData, decryptData } from "../../utils/encryption";
 import { Check, Clear } from "@mui/icons-material";
 import CircularProgress from "@mui/material/CircularProgress";
-import MysqlLogoIcon from "../../icons/mysql_logo.png";
+import MysqlLogoIcon from "../../images/mysql_logo.png";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -85,9 +85,10 @@ export default function MySQLForm({ dataObj }) {
 
   return (
     <Paper elevation={3}>
-      <Box sx={{ textAlign: "center" }}>
-        <h3>MySQL Database Credentials</h3>
-        <img width={"70px"} src={MysqlLogoIcon} alt="mysql logo" />
+      <Box sx={{ textAlign: "center", paddingTop: '30px' }}>
+      <img width={"70px"} src={MysqlLogoIcon} alt="mysql logo" />
+        {/* <h3>MySQL Database Credentials</h3> */}
+        
       </Box>
       <Box sx={{ display: "block", marginTop: "10px", textAlign: "center" }}>
         {isTesting ? (
@@ -98,14 +99,14 @@ export default function MySQLForm({ dataObj }) {
           <Typography>
             <Check style={{ color: "green", marginRight: "5px" }} />
             <br />
-            Connected to MySQL DB!
+            Connected to MySQL!
           </Typography>
         ) : (
           // If connection fails, show the red x icon
           <Typography>
             <Clear style={{ color: "red", marginRight: "5px" }} />
             <br />
-            Failed to connect to MySQL DB!
+            Failed to connect to MySQL!
           </Typography>
         )}
       </Box>

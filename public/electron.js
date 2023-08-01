@@ -1,20 +1,19 @@
-const { testMySQLConnection, testPostgreSQLConnection } = require('./utils/dbTest');
-const { testRedcapConnection } = require('./utils/redcap');
+const {
+  testMySQLConnection,
+  testPostgreSQLConnection,
+} = require("./utils/dbTest");
+const { testRedcapConnection } = require("./utils/redcap");
 
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
 const path = require("path");
 const isDev = require("electron-is-dev");
 const csv = require("csv-parser");
 const fs = require("fs");
-const Store = require('electron-store');
+const Store = require("electron-store");
 const store = new Store();
 
 // const dbTestModulePath = path.join(app.getAppPath(), "/utils/dbTest.js");
 // const redcapModulePath = path.join(app.getAppPath(), "utils/redcap.js");
-
-
-
-
 
 let win;
 
@@ -88,7 +87,6 @@ ipcMain.handle("window-close", () => {
   win.close();
 });
 
-// Here is the new ipcMain event for opening file dialog and reading file
 ipcMain.handle("open-file-dialog", async (event) => {
   const result = await dialog.showOpenDialog(win, {
     properties: ["openFile"],
@@ -98,11 +96,14 @@ ipcMain.handle("open-file-dialog", async (event) => {
   if (!result.canceled) {
     return new Promise((resolve, reject) => {
       const results = [];
-      fs.createReadStream(result.filePaths[0])
+      const filePath = result.filePaths[0]; // Get the selected file path.
+      const fileName = path.basename(filePath); // Extract the file name from the path.
+
+      fs.createReadStream(filePath)
         .pipe(csv())
         .on("data", (data) => results.push(data))
         .on("end", () => {
-          resolve(results);
+          resolve({ title: fileName, contents: results }); // Return an object containing the title and contents.
         })
         .on("error", reject);
     });
@@ -149,13 +150,12 @@ ipcMain.handle("testRedcapAPI", async (event, dataObj) => {
 });
 
 // Listen for an IPC event from the renderer process to get the store data
-ipcMain.handle('getStoreData', (event) => {
+ipcMain.handle("getStoreData", (event) => {
   return store.store;
 });
 
-
 // Listen for an IPC event from the renderer process to set the store data
-ipcMain.on('setStoreData', (event, newData) => {
+ipcMain.on("setStoreData", (event, newData) => {
   // Get the current data from the store
   const currentData = store.store || {};
 
@@ -166,7 +166,7 @@ ipcMain.on('setStoreData', (event, newData) => {
   store.store = updatedData;
 
   // Optionally, you can send a response back to the renderer process if needed
-  event.sender.send('storeDataUpdated', updatedData);
+  event.sender.send("storeDataUpdated", updatedData);
 });
 
 // // Listen for the before-quit event
