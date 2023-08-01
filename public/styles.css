@@ -41,10 +41,10 @@ icon
   /* overflow-y: hidden; */
   display: block;
   position: fixed;
-  height: 56px;
+  /* height: 56px; */
   /* Compensate for body 1px border */
   /* width: calc(100% - 2px);  */
-  background: #254053;
+  /* background: #254053; */
 }
 
 

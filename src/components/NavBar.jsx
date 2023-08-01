@@ -12,13 +12,17 @@ import { useTheme } from "@mui/material/styles";
 import IconButton from "@mui/material/IconButton";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
-
+import { useDataContext } from "./context/DataContext";
 const { ipcRenderer } = window.require("electron");
 
 export default function NavBar(props) {
   const [isMaximized, setIsMaximized] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const {
+    isExecuting
+  } = useDataContext();
 
   const { toggleColorMode } = props;
   const theme = useTheme();
@@ -113,9 +117,8 @@ export default function NavBar(props) {
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <IconButton
             className={"my-sixth-step"}
-            sx={{ ml: 1 }}
+            sx={{ ml: 1, fontSize: "14px" }} // Adjust the font size as needed
             onClick={toggleColorMode}
-            color="inherit"
           >
             {theme.palette.mode === "dark" ? (
               <LightModeIcon />
@@ -127,38 +130,13 @@ export default function NavBar(props) {
           <Tabs
             value={navIdx}
             onChange={handleChange}
+            textColor="inherit"
             indicatorColor="secondary"
             aria-label="simple tabs example"
           >
-            <Tab
-              label="Connections Setup"
-              sx={{
-                color: "#ffffff", // Default color for inactive tabs
-                "&.Mui-selected": {
-                  color: "#74b1be", // Color for selected tab
-                },
-              }}
-            />
-
-            <Tab
-              label="Select Data Dictionary"
-              sx={{
-                color: "#ffffff", // Default color for inactive tabs
-                "&.Mui-selected": {
-                  color: "#74b1be", // Color for selected tab
-                },
-              }}
-            />
-
-            <Tab
-              label="Execute"
-              sx={{
-                color: "#ffffff", // Default color for inactive tabs
-                "&.Mui-selected": {
-                  color: "#74b1be", // Color for selected tab
-                },
-              }}
-            />
+            <Tab label="Connections Setup" disabled={isExecuting} />
+            <Tab label="Select Data Dictionary" disabled={isExecuting} />
+            <Tab label="Execute" />
           </Tabs>
 
           {/* Window controls */}

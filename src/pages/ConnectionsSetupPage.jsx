@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 const ConnectionsSetupPage = () => {
   const navigate = useNavigate();
 
-  function handleClick(){
+  function handleClick() {
     navigate("/selectDataDict");
   }
   return (
@@ -24,16 +24,21 @@ const ConnectionsSetupPage = () => {
             textAlign: "center",
           }}
         >
-          <Box>
-            <h1>Connections Setup</h1>
+          <Box sx={{ marginTop: "20px" }}>
+            <ArrowCircleRightIcon
+              sx={{ opacity: 0 }}
+              color="primary"
+              fontSize="large"
+            />
             <BootstrapTooltip title="Go Next">
               <ArrowCircleRightIcon
-              onClick={handleClick}
+                onClick={handleClick}
                 sx={{ cursor: "pointer" }}
                 color="primary"
                 fontSize="large"
               />
             </BootstrapTooltip>
+            <h1>Connections Setup</h1>
           </Box>
           <ConnectionsSetup />
         </Box>

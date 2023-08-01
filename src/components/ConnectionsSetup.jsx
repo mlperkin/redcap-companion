@@ -1,6 +1,6 @@
 import React from "react";
 import Grid from "@mui/material/Grid";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import { Typography } from "@mui/material";
@@ -21,7 +21,7 @@ export default function ConnectionsSetup(props) {
   useEffect(() => {
     const selectedDB = localStorage.getItem("selectedDB");
     if (selectedDB) setSelectedDatabase(selectedDB);
-  }, []);
+  }, [setSelectedDatabase]);
 
   const handleDBChange = (event) => {
     setSelectedDatabase(event.target.value);

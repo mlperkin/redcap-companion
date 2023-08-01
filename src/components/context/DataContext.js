@@ -13,6 +13,8 @@ export const DataProvider = ({ children }) => {
   const [selectedFilename, setSelectedFilename] = useState('');
   const [selectedDatabase, setSelectedDatabase] = useState("");
   const [isRedcapConnected, setIsRedcapConnected] = useState(null); // Use null initially for an undetermined state
+  const [isExecuting, setIsExecuting] = useState(null); // Use null initially for an undetermined state
+  const [execStatus, setExecStatus] = useState(null); //null initially for undetermined state
 
   return (
     <DataContext.Provider
@@ -30,7 +32,9 @@ export const DataProvider = ({ children }) => {
         selectedDatabase,
         setSelectedDatabase,
         isRedcapConnected,
-        setIsRedcapConnected
+        setIsRedcapConnected,
+        isExecuting,
+        setIsExecuting
       }}
     >
       {children}
