@@ -21,7 +21,7 @@ async function testRedcapConnection(dataObj) {
       // If not, add the '/' to the end of the string
       dataObj.redcapAPIURL += "/";
     }
-    console.log('dataobj', dataObj)
+  
     let config = {
       method: "post",
       maxBodyLength: Infinity,
