@@ -45,7 +45,6 @@ const ExecutePage = () => {
   });
   const [formDataLoaded, setFormDataLoaded] = useState(false);
 
-
   const navigate = useNavigate();
 
   let totalChecks = 3; //how many total checks here
@@ -178,12 +177,12 @@ const ExecutePage = () => {
   };
 
   const showExecResults = () => {
-    if(execStatus === true){
-      return(<Typography>Success!</Typography>)
-    }else if(execStatus === false){
-      return(<Typography>Failed!</Typography>)
+    if (execStatus === true) {
+      return <Typography>Success!</Typography>;
+    } else if (execStatus === false) {
+      return <Typography>Failed!</Typography>;
     }
-  }
+  };
 
   function execute() {
     setIsExecuting(true);
@@ -208,19 +207,12 @@ const ExecutePage = () => {
         >
           <Box sx={{ marginTop: "20px" }}>
             <BootstrapTooltip title="Go Prev">
-              <IconButton
-                className={"my-sixth-step"}
-                sx={{
-                  ml: 1,
-                  fontSize: "14px", // Adjust the font size as needed
-                  cursor: isExecuting ? "not-allowed" : "pointer", // Change cursor based on isExecuting
-                  opacity: isExecuting ? 0.5 : 1, // Reduce opacity when isExecuting is true
-                }}
+            <ArrowCircleLeftIcon
                 onClick={handleClickPrev}
+                sx={{ cursor: "pointer" }}
                 color="primary"
-              >
-                <ArrowCircleLeftIcon fontSize="large" />
-              </IconButton>
+                fontSize="large"
+              />
             </BootstrapTooltip>
             <ArrowCircleLeftIcon
               sx={{ opacity: 0 }}

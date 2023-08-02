@@ -15,14 +15,10 @@
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "@mui/icons-material": "^5.14.1",
-    "@mui/material": "^5.14.1",
-    "@mui/x-data-grid": "^6.10.1",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
+    "@mui/icons-material": "^5.14.3",
+    "@mui/material": "^5.14.3",
+    "@mui/x-data-grid": "^6.10.2",
     "axios": "^1.4.0",
-    "cross-env": "^7.0.3",
     "crypto-js": "^4.1.1",
     "csv-parser": "^3.0.0",
     "electron-is-dev": "^2.0.0",
@@ -31,13 +27,11 @@
     "material-react-table": "^1.14.0",
     "mysql2": "^3.5.2",
     "papaparse": "^5.4.1",
-    "pg": "^8.11.1",
+    "pg": "^8.11.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.14.2",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz"
   },
   "scripts": {
     "react-start": "react-scripts start",
@@ -65,12 +59,20 @@
       "last 1 safari version"
     ]
   },
+  "overrides": {
+    "react-scripts":{
+      "@svgr/webpack": "^8.0.1"
+    }
+  },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@svgr/webpack": "^8.0.1",
     "concurrently": "^8.2.0",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.3.1",
-    "electron": "^25.3.1",
-    "electron-builder": "^24.4.0",
+    "electron": "^25.3.2",
+    "electron-builder": "^24.6.3",
+    "react-scripts": "5.0.1",
     "wait-on": "^7.0.1"
   }
 }
