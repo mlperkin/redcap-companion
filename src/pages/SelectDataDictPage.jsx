@@ -25,7 +25,6 @@ const SelectDataDictPage = (props) => {
 
   return (
     <>
-      {/* <NavBar /> */}
       <Container maxWidth="xl">
         <Box
           component="main"
