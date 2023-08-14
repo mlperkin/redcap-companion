@@ -19,6 +19,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { decryptData } from "../utils/encryption";
+import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -47,6 +48,7 @@ const ExecutePage = () => {
 
   const navigate = useNavigate();
 
+
   let totalChecks = 3; //how many total checks here
 
   // Function to load the data
@@ -54,9 +56,18 @@ const ExecutePage = () => {
     setFormDataLoaded(false);
     // Request the store data from the main process when the component mounts
     ipcRenderer.invoke("getStoreData").then((data) => {
-      const decryptedData = decryptData(data.redcapFormData); // Decrypt the data
-      if (decryptedData) {
-        setFormData(decryptedData);
+      const redcapDecryptedData = decryptData(data.redcapFormData); // Decrypt the data
+      const mysqlDecryptedData = decryptData(data.MySQLForm); // Decrypt the data
+      const savedPGFormData = localStorage.getItem("postgresFormData");
+      let postgresDecryptedData
+      if (savedPGFormData) {
+        postgresDecryptedData = decryptData(savedPGFormData); // Decrypt the data
+      }
+      console.log('pg decrypt', postgresDecryptedData)
+      console.log('mysql decrypted', mysqlDecryptedData)
+      if (redcapDecryptedData) {
+        setFormData(redcapDecryptedData);
+        console.log('redcap decrypted data', redcapDecryptedData)
       }
       setFormDataLoaded(true);
     });
@@ -192,7 +203,10 @@ const ExecutePage = () => {
 
   function execute() {
     setIsExecuting(true);
-
+    console.log('use this data', ddData)
+    console.log('output to this', selectedDatabase)
+    console.log('with these creds', )
+    console.log('get records for this redcap instance', formData )
     //for development
     setTimeout(() => {
       setIsExecuting(false);
