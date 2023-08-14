@@ -32,6 +32,7 @@ const ExecutePage = () => {
     setIsExecuting,
     execStatus,
     setExecStatus,
+    ddData
   } = useDataContext();
 
   const [checksPassed, setChecksPassed] = useState(0);
@@ -77,12 +78,18 @@ const ExecutePage = () => {
       passedChecks++;
     }
 
-    if (selectedFilename) passedChecks++;
+    // let dd_data = localStorage.getItem('dd_data')
+    // if(dd_data){
+    //   console.log('dd_data stuff', JSON.parse(dd_data))
+    // }
+    
+
+    if (ddData) passedChecks++;
 
     setIsValid(passedChecks === totalChecks); // Set to true if all checks pass
     // Set the number of checks that passed to display the fraction (e.g., "1/2")
     setChecksPassed(passedChecks);
-  }, [isRedcapConnected, selectedFilename, selectedDatabase, totalChecks]);
+  }, [isRedcapConnected, ddData, selectedDatabase, totalChecks]);
 
   function executionText() {
     if (selectedDatabase === "None - Export to CSV files") {
@@ -239,9 +246,9 @@ const ExecutePage = () => {
                       <strong>Data Dictionary:</strong>
                     </TableCell>
                     <TableCell>
-                      {selectedFilename ? (
+                      {ddData ? (
                         <>
-                          {selectedFilename}
+                          {selectedFilename? selectedFilename: 'REDCap API Used'}
                           <CheckCircleOutlineIcon
                             style={{ color: "green", marginLeft: "5px" }}
                           />

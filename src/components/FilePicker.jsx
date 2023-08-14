@@ -19,12 +19,16 @@ function FilePicker(props) {
     showREDCapAPIInput,
     setShowREDCapAPIInput,
     selectedFilename, 
-    setSelectedFilename
+    setSelectedFilename,
+    setDDData
   } = useDataContext();
 
   const handleButtonClick = async () => {
     const data = await ipcRenderer.invoke("open-file-dialog");
     console.log("data", data);
+    // localStorage.setItem('dd_data', JSON.stringify(data.contents))
+    setDDData(data.contents)
+    localStorage.setItem('redcapAPIDD', false)
     if (data && data.contents.length > 0) {
       setShowREDCapAPIInput(false);
       setSelectedFilename(data.title)
@@ -37,9 +41,11 @@ function FilePicker(props) {
   };
 
   const handleREDCapAPIButtonClick = () => {
+    localStorage.setItem('dd_data', "")
     setShowREDCapAPIInput(true);
     setInitialLoad(false);
     setSelectedFilename('')
+    setDDData()
   };
 
   // Rest of your component code...

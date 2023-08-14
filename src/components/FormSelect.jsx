@@ -1,24 +1,24 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useMemo, useRef } from "react";
-import {
-  Box,
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
-  Select,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { FormControl, Grid, InputLabel, MenuItem, Select } from "@mui/material";
 import Button from "@mui/material/Button";
 import FormSelectTable from "./FormSelectTable";
 import Papa from "papaparse";
 import { saveAs } from "file-saver";
 import Skeleton from "@mui/material/Skeleton";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
+import { encryptData, decryptData } from "../utils/encryption";
+import { useDataContext } from "./context/DataContext";
+
+const { ipcRenderer } = window.require("electron");
 
 var XLSX = require("xlsx");
 export default function FormSelect({ props }) {
+  const {
+    ddData,
+    setDDData
+  } = useDataContext();
+
   const [selectedForm, setSelectedForm] = useState("");
   const [data, setData] = useState();
   const [colDefs, setColDefs] = useState([]);
@@ -26,8 +26,47 @@ export default function FormSelect({ props }) {
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [csvFilename, setCSVFilename] = useState("");
   const [selectedRows, setSelectedRows] = useState([]);
+  const [formData, setFormData] = useState();
+  const [formDataLoaded, setFormDataLoaded] = useState();
 
   var tableInstanceRef = useRef(null);
+
+  useEffect(() => {
+    //check if api was already selected
+    if(localStorage.getItem('redcapAPIDD')){
+      // console.log('just set it', ddData)
+      if(ddData && ddData.length > 0){
+        const workSheet = XLSX.utils.json_to_sheet(ddData);
+        //convert to array
+        const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+        const headers = fileData[0];
+    
+        const heads = headers.map((head) => ({
+          accessorKey: head.replaceAll(".", ""),
+          header: head.replaceAll(".", ""),
+        }));
+        setColDefs(heads);
+        setData(ddData);
+        setIsFormLoaded(true);
+        setIsFormLoading(false);
+      }else{
+        setIsFormLoaded(false)
+      }
+     
+    }
+
+    setFormDataLoaded(false);
+    
+    // Request the store data from the main process when the component mounts
+    ipcRenderer.invoke("getStoreData").then((data) => {
+      const decryptedData = decryptData(data.redcapFormData); // Decrypt the data
+      if (decryptedData) {
+        setFormData(decryptedData);
+      }
+      setFormDataLoaded(true);
+    });
+  }, [ddData]);
+
   useEffect(() => {
     if (tableInstanceRef.current) {
       setSelectedRows(tableInstanceRef.current.getState().rowSelection);
@@ -45,11 +84,13 @@ export default function FormSelect({ props }) {
     setIsFormLoaded(false);
     setIsFormLoading(true);
     if (!selectedForm) setSelectedForm(props.forms[0]);
+    // console.log("selected form", selectedForm);
     var formdata = new FormData();
-    formdata.append("token", "BD042CC2A422D27D1D0C65D9D692C329");
+    // console.log("formdata", formData);
+    formdata.append("token", formData.redcapAPIKey);
     formdata.append("content", "metadata");
     formdata.append("format", "json");
-    formdata.append("forms[0]", "bioinformatics_core_activity_survey");
+    formdata.append("forms[0]", selectedForm);
 
     var requestOptions = {
       method: "POST",
@@ -63,7 +104,9 @@ export default function FormSelect({ props }) {
     )
       .then((response) => response.text())
       .then((result) => {
-        importExcel(JSON.parse(result));
+        parseResult(JSON.parse(result));
+        localStorage.setItem('redcapAPIDD', true)
+
       })
       .catch((error) => console.log("error", error));
   }
@@ -77,7 +120,7 @@ export default function FormSelect({ props }) {
     resetScreen();
   };
 
-  function importExcel(e) {
+  function parseResult(e) {
     const file = e;
     // setCSVFilename(file.name);
 
@@ -149,6 +192,8 @@ export default function FormSelect({ props }) {
     }
     console.log("converted", convertedData);
     setData(convertedData);
+    // localStorage.setItem('dd_data', JSON.stringify(convertedData))
+    setDDData(convertedData)
     setIsFormLoaded(true);
     setIsFormLoading(false);
   }
@@ -235,7 +280,6 @@ export default function FormSelect({ props }) {
                 </Button>
               </Grid>
             </FormControl>
-
           </Grid>
 
           <Grid

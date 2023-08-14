@@ -15,6 +15,7 @@ export const DataProvider = ({ children }) => {
   const [isRedcapConnected, setIsRedcapConnected] = useState(null); // Use null initially for an undetermined state
   const [isExecuting, setIsExecuting] = useState(null); // Use null initially for an undetermined state
   const [execStatus, setExecStatus] = useState(null); //null initially for undetermined state
+  const [ddData, setDDData] = useState([]);
 
   return (
     <DataContext.Provider
@@ -34,7 +35,9 @@ export const DataProvider = ({ children }) => {
         isRedcapConnected,
         setIsRedcapConnected,
         isExecuting,
-        setIsExecuting
+        setIsExecuting,
+        ddData,
+        setDDData
       }}
     >
       {children}
