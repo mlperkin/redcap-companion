@@ -25,6 +25,10 @@ const ConnectionsSetupPage = () => {
           }}
         >
           <Box sx={{ marginTop: "20px" }}>
+            <h1>Connections Setup</h1>
+          </Box>
+          <ConnectionsSetup />
+          <Box>
             <ArrowCircleRightIcon
               sx={{ opacity: 0 }}
               color="primary"
@@ -38,9 +42,7 @@ const ConnectionsSetupPage = () => {
                 fontSize="large"
               />
             </BootstrapTooltip>
-            <h1>Connections Setup</h1>
           </Box>
-          <ConnectionsSetup />
         </Box>
       </Container>
     </>

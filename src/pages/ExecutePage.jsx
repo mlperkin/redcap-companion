@@ -3,8 +3,7 @@ import {
   Box,
   Button,
   Container,
-  Divider,
-  IconButton,
+  Divider,   
   Table,
   TableBody,
   TableCell,
@@ -19,7 +18,7 @@ import ArrowCircleLeftIcon from "@mui/icons-material/ArrowCircleLeft";
 import CircularProgress from "@mui/material/CircularProgress";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { encryptData, decryptData } from "../utils/encryption";
+import { decryptData } from "../utils/encryption";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -206,19 +205,6 @@ const ExecutePage = () => {
           }}
         >
           <Box sx={{ marginTop: "20px" }}>
-            <BootstrapTooltip title="Go Prev">
-            <ArrowCircleLeftIcon
-                onClick={handleClickPrev}
-                sx={{ cursor: "pointer" }}
-                color="primary"
-                fontSize="large"
-              />
-            </BootstrapTooltip>
-            <ArrowCircleLeftIcon
-              sx={{ opacity: 0 }}
-              color="primary"
-              fontSize="large"
-            />
             <h1 sx={{ textAlign: "center" }}>Execute</h1>
           </Box>
 
@@ -300,7 +286,23 @@ const ExecutePage = () => {
               </Box>
             </Paper>
           </Container>
+          <Box>
+          <BootstrapTooltip title="Go Prev">
+            <ArrowCircleLeftIcon
+              onClick={handleClickPrev}
+              sx={{ cursor: "pointer" }}
+              color="primary"
+              fontSize="large"
+            />
+          </BootstrapTooltip>
+          <ArrowCircleLeftIcon
+            sx={{ opacity: 0 }}
+            color="primary"
+            fontSize="large"
+          />
         </Box>
+        </Box>
+       
       </Container>
     </>
   );

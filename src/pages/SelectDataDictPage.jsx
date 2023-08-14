@@ -36,7 +36,11 @@ const SelectDataDictPage = (props) => {
             textAlign: "center",
           }}
         >
-          <Box sx={{marginTop:'20px'}}>
+          <Box sx={{ marginTop: "20px" }}>
+            <h1>Select Data Dictionary</h1>
+          </Box>
+          <FilePicker props={props} forms={forms} />
+          <Box>
             <BootstrapTooltip title="Go Prev">
               <ArrowCircleLeftIcon
                 onClick={handleClickPrev}
@@ -53,9 +57,7 @@ const SelectDataDictPage = (props) => {
                 fontSize="large"
               />
             </BootstrapTooltip>
-            <h1>Select Data Dictionary</h1>
           </Box>
-          <FilePicker props={props} forms={forms} />
         </Box>
       </Container>
     </>
