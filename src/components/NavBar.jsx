@@ -134,8 +134,8 @@ export default function NavBar(props) {
             indicatorColor="secondary"
             aria-label="simple tabs example"
           >
-            <Tab label="Connections Setup" disabled={isExecuting} />
-            <Tab label="Select Data Dictionary" disabled={isExecuting} />
+            <Tab label="Connections/Output Setup" disabled={isExecuting} />
+            <Tab label="Input Data Dictionary" disabled={isExecuting} />
             <Tab label="Execute" />
           </Tabs>
 

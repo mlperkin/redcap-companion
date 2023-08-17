@@ -2,7 +2,7 @@ const {
   testMySQLConnection,
   testPostgreSQLConnection,
 } = require("./utils/dbTest");
-const { testRedcapConnection } = require("./utils/redcap");
+const { testRedcapConnection, getRedcapRecords } = require("./utils/redcap");
 
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
 const path = require("path");
@@ -143,6 +143,18 @@ ipcMain.handle("testRedcapAPI", async (event, dataObj) => {
     const isRedcapConnected = await testRedcapConnection(dataObj);
     // Return a boolean value
     return isRedcapConnected;
+  } catch (error) {
+    console.error("Error connecting to Redcap:", error);
+    return false;
+  }
+});
+
+ipcMain.handle("getRedcapRecords", async (event, dataObj) => {
+  try {
+    // Your database connection code here
+    const redcapRecords = await getRedcapRecords(dataObj);
+    // Return a boolean value
+    return redcapRecords;
   } catch (error) {
     console.error("Error connecting to Redcap:", error);
     return false;

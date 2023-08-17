@@ -27,11 +27,9 @@ export default function FormSelectTable({
       }}
       enableRowSelection
       tableInstanceRef={tableInstanceRef}
-
       state={{ selectedRows }} //pass our managed row selection state to the table to use
       getRowId={(row) => row.field_name} //give each row a more useful id
       muiTableBodyRowProps={({ row }) => ({
-
         onClick: () =>
           setSelectedRows((prev) => ({
             ...prev,
@@ -105,6 +103,15 @@ export default function FormSelectTable({
           >
             Export
           </Button>
+          {/* <Button
+            variant="outlined"
+            component="label"
+            color="error"
+            // startIcon={<ImportExportIcon />}
+            // onClick={(e) => getDataDictionary(e)}
+          >
+            Show All
+          </Button> */}
         </Box>
       )}
     />

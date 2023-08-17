@@ -1,6 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useMemo, useRef } from "react";
-import { FormControl, Grid, InputLabel, MenuItem, Select } from "@mui/material";
+import {
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Select,
+  Typography,
+} from "@mui/material";
 import Button from "@mui/material/Button";
 import FormSelectTable from "./FormSelectTable";
 import Papa from "papaparse";
@@ -14,10 +21,8 @@ const { ipcRenderer } = window.require("electron");
 
 var XLSX = require("xlsx");
 export default function FormSelect({ props }) {
-  const {
-    ddData,
-    setDDData
-  } = useDataContext();
+  const { ddData, setDDData, redcapFormName, setRedcapFormName } =
+    useDataContext();
 
   const [selectedForm, setSelectedForm] = useState("");
   const [data, setData] = useState();
@@ -28,19 +33,20 @@ export default function FormSelect({ props }) {
   const [selectedRows, setSelectedRows] = useState([]);
   const [formData, setFormData] = useState();
   const [formDataLoaded, setFormDataLoaded] = useState();
+  const [noMappedResults, setNoMappedResults] = useState();
 
   var tableInstanceRef = useRef(null);
 
   useEffect(() => {
     //check if api was already selected
-    if(localStorage.getItem('redcapAPIDD')){
+    if (localStorage.getItem("redcapAPIDD")) {
       // console.log('just set it', ddData)
-      if(ddData && ddData.length > 0){
+      if (ddData && ddData.length > 0) {
         const workSheet = XLSX.utils.json_to_sheet(ddData);
         //convert to array
         const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
         const headers = fileData[0];
-    
+
         const heads = headers.map((head) => ({
           accessorKey: head.replaceAll(".", ""),
           header: head.replaceAll(".", ""),
@@ -49,14 +55,14 @@ export default function FormSelect({ props }) {
         setData(ddData);
         setIsFormLoaded(true);
         setIsFormLoading(false);
-      }else{
-        setIsFormLoaded(false)
+        setSelectedForm(redcapFormName)
+      } else {
+        setIsFormLoaded(false);
       }
-     
     }
 
     setFormDataLoaded(false);
-    
+
     // Request the store data from the main process when the component mounts
     ipcRenderer.invoke("getStoreData").then((data) => {
       const decryptedData = decryptData(data.redcapFormData); // Decrypt the data
@@ -105,17 +111,22 @@ export default function FormSelect({ props }) {
       .then((response) => response.text())
       .then((result) => {
         parseResult(JSON.parse(result));
-        localStorage.setItem('redcapAPIDD', true)
-
+        localStorage.setItem("redcapAPIDD", true);
       })
       .catch((error) => console.log("error", error));
   }
 
   useEffect(() => {
-    setSelectedForm(props.forms[0]);
+    
+    if(!selectedForm) {
+      console.log('set selected form')
+      if(redcapFormName) setSelectedForm(redcapFormName)
+      else setSelectedForm(props.forms[0]);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.forms]);
   const handleChange = (event) => {
+    console.log('handle change')
     setSelectedForm(event.target.value);
     resetScreen();
   };
@@ -138,7 +149,6 @@ export default function FormSelect({ props }) {
     fileData.splice(0, 1);
     setSelectedRows(convertToJson(headers, fileData));
 
-    // setData(convertToJson(headers, fileData));
     let convertedData = convertToJson(headers, fileData);
     for (var i = 0; i < convertedData.length; i++) {
       var obj = convertedData[i];
@@ -191,9 +201,29 @@ export default function FormSelect({ props }) {
       }
     }
     console.log("converted", convertedData);
-    setData(convertedData);
+
+    let _formName;
+    let onlyMappedData = convertedData.filter((item) => {
+      try {
+        // Attempt to parse the field_annotation as JSON
+        const parsedValue = JSON.parse(item.field_annotation);
+        if (item.form_name) _formName = item.form_name;
+        return typeof parsedValue === "object" && parsedValue !== null; // Check if the parsed value is an object
+      } catch (e) {
+        return false; // If parsing failed, exclude this item from the filtered result
+      }
+    });
+
+    setData(onlyMappedData);
     // localStorage.setItem('dd_data', JSON.stringify(convertedData))
-    setDDData(convertedData)
+    setDDData(onlyMappedData);
+    if (onlyMappedData && onlyMappedData.length <= 0) {
+      setNoMappedResults(true);
+    } else {
+      setNoMappedResults(false);
+    }
+    // if(!_formName) throw new Error('No form name detected')
+    setRedcapFormName(_formName);
     setIsFormLoaded(true);
     setIsFormLoading(false);
   }
@@ -276,7 +306,7 @@ export default function FormSelect({ props }) {
                   startIcon={<ImportExportIcon />}
                   onClick={(e) => getDataDictionary(e)}
                 >
-                  Import Data Dictionary
+                  Get Data Dictionary
                 </Button>
               </Grid>
             </FormControl>
@@ -290,6 +320,9 @@ export default function FormSelect({ props }) {
           >
             {isFormLoading && (
               <Skeleton variant="rounded" width={"100%"} height={"40vh"} />
+            )}
+            {!isFormLoading && noMappedResults && (
+              <Typography>No mapped results detected</Typography>
             )}
             {isFormLoaded && (
               <>

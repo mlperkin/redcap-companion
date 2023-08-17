@@ -3,7 +3,7 @@ import {
   Box,
   Button,
   Container,
-  Divider,   
+  Divider,
   Table,
   TableBody,
   TableCell,
@@ -19,7 +19,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { decryptData } from "../utils/encryption";
-import { ConnectingAirportsOutlined } from "@mui/icons-material";
+// import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -33,23 +33,24 @@ const ExecutePage = () => {
     setIsExecuting,
     execStatus,
     setExecStatus,
-    ddData
+    ddData,
+    redcapFormName,
   } = useDataContext();
 
   const [checksPassed, setChecksPassed] = useState(0);
   const [isValid, setIsValid] = useState(true); //set true, if any checks fail then set to false
-  const [redcapAPITest, setRedcapAPITest] = useState("");
+  // const [redcapAPITest, setRedcapAPITest] = useState("");
   const [isTesting, setIsTesting] = useState(false);
   const [formData, setFormData] = useState({
     redcapAPIKey: "",
     redcapAPIURL: "",
   });
   const [formDataLoaded, setFormDataLoaded] = useState(false);
+  const [dbCreds, setDBCreds] = useState();
 
   const navigate = useNavigate();
 
-
-  let totalChecks = 3; //how many total checks here
+  let totalChecks = 4; //how many total checks here
 
   // Function to load the data
   useEffect(() => {
@@ -59,15 +60,21 @@ const ExecutePage = () => {
       const redcapDecryptedData = decryptData(data.redcapFormData); // Decrypt the data
       const mysqlDecryptedData = decryptData(data.MySQLForm); // Decrypt the data
       const savedPGFormData = localStorage.getItem("postgresFormData");
-      let postgresDecryptedData
+      let postgresDecryptedData;
       if (savedPGFormData) {
         postgresDecryptedData = decryptData(savedPGFormData); // Decrypt the data
       }
-      console.log('pg decrypt', postgresDecryptedData)
-      console.log('mysql decrypted', mysqlDecryptedData)
+      if (selectedDatabase === "MySQL") {
+        // console.log("mysql selected");
+        setDBCreds(mysqlDecryptedData);
+      } else if (selectedDatabase === "PostgreSQL") {
+        setDBCreds(postgresDecryptedData);
+      }
+      // console.log("pg decrypt", postgresDecryptedData);
+      // console.log("mysql decrypted", mysqlDecryptedData);
       if (redcapDecryptedData) {
         setFormData(redcapDecryptedData);
-        console.log('redcap decrypted data', redcapDecryptedData)
+        // console.log("redcap decrypted data", redcapDecryptedData);
       }
       setFormDataLoaded(true);
     });
@@ -89,18 +96,21 @@ const ExecutePage = () => {
       passedChecks++;
     }
 
-    // let dd_data = localStorage.getItem('dd_data')
-    // if(dd_data){
-    //   console.log('dd_data stuff', JSON.parse(dd_data))
-    // }
-    
+    if (ddData && ddData.length) passedChecks++;
+    console.info("redcapformname", redcapFormName);
 
-    if (ddData) passedChecks++;
+    if (redcapFormName) passedChecks++;
 
     setIsValid(passedChecks === totalChecks); // Set to true if all checks pass
     // Set the number of checks that passed to display the fraction (e.g., "1/2")
     setChecksPassed(passedChecks);
-  }, [isRedcapConnected, ddData, selectedDatabase, totalChecks]);
+  }, [
+    isRedcapConnected,
+    ddData,
+    selectedDatabase,
+    redcapFormName,
+    totalChecks,
+  ]);
 
   function executionText() {
     if (selectedDatabase === "None - Export to CSV files") {
@@ -117,7 +127,7 @@ const ExecutePage = () => {
     setIsTesting(true);
     const { redcapAPIKey, redcapAPIURL } = formData;
     if (!redcapAPIKey || !redcapAPIURL) {
-      setRedcapAPITest("Please provide both API key and URL.");
+      // setRedcapAPITest("Please provide both API key and URL.");
       return;
     }
 
@@ -201,17 +211,97 @@ const ExecutePage = () => {
     }
   };
 
-  function execute() {
+  async function execute() {
     setIsExecuting(true);
-    console.log('use this data', ddData)
-    console.log('output to this', selectedDatabase)
-    console.log('with these creds', )
-    console.log('get records for this redcap instance', formData )
+    setExecStatus(false);
+
+    //the steps involved here
+    // 1. get all redcap records for selected form
+    let redCapRecords = await getRedcapRecords();
+    // 2. match redcap records field_names with field_names from data dictionary and merge these two together
+    let mergedRedcapRecords = await matchAndMergeRedcapRecords(redCapRecords);
+    // 3. iterate through this merged list to create SQL CSV files (for upsert on mysql and postgresql)
+    await generateOutput(mergedRedcapRecords);
+
     //for development
     setTimeout(() => {
       setIsExecuting(false);
     }, 5000);
   }
+
+  //the steps involved here
+  // 1. get all redcap records for selected form
+  async function getRedcapRecords() {
+    // console.log("get redcap records for this form", selectedFilename);
+    // console.log("get records for this redcap instance", formData);
+    // Call the main process function via ipcRenderer
+    let modFormData = { ...formData, formName: redcapFormName };
+    const redcapRecords = await ipcRenderer.invoke(
+      "getRedcapRecords",
+      modFormData
+    );
+
+    console.log("redcap records", redcapRecords);
+    return redcapRecords;
+  }
+  // 2. match redcap records field_names with field_names from data dictionary
+  async function matchAndMergeRedcapRecords(redCapRecords) {
+    // console.log("match these redcap records", redCapRecords);
+    // console.log("with this data", ddData);
+
+    redCapRecords.forEach((obj1) => {
+      ddData.forEach((obj2) => {
+        for (const key in obj1) {
+          if (key === obj2.field_name) {
+            obj1[key] = {
+              redcap_value: obj1[key],
+              mapping_metadata: JSON.parse(obj2.field_annotation),
+            };
+            break; // No need to continue checking other keys for this pair of objects
+          }
+        }
+      });
+    });
+    // console.log("obj1", redCapRecords);
+
+    return redCapRecords;
+  }
+  // 4. iterate through this merged list to create SQL CSV files (for upsert on mysql and postgresql)
+  async function generateOutput(matchedAndMergedRedcapRecords) {
+    console.log("generate output", selectedDatabase);
+    console.log("output to this", selectedDatabase);
+    console.log("with these creds", dbCreds);
+    if (!matchedAndMergedRedcapRecords.length) return;
+
+    //we now need to iterate through this merged data and generate SQL
+    console.log("gen output with this data", matchedAndMergedRedcapRecords);
+
+    generateCSV(matchedAndMergedRedcapRecords);
+
+    setExecStatus(true);
+    setIsExecuting(false);
+  }
+
+  function generateCSV(data) {
+    //csv output
+    // Generate CSV
+    const header = Object.keys(data[0]).join(",");
+    const rows = data.map((row) => Object.values(row).join(",")).join("\n");
+    const csvContent = header + "\n" + rows;
+
+    // Create a Blob with the CSV content
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
+    // Create a link and click it to trigger the download
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "outputData.csv"); // You can name the file whatever you want
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   return (
     <>
       <Container maxWidth="xl">
@@ -235,7 +325,53 @@ const ExecutePage = () => {
                 <TableBody>
                   <TableRow>
                     <TableCell>
-                      <strong>Output:</strong>
+                      <strong>Input Data Dictionary:</strong>
+                    </TableCell>
+                    <TableCell>
+                      {ddData && ddData.length ? (
+                        <>
+                          {selectedFilename
+                            ? selectedFilename
+                            : "REDCap API Used"}
+                          <CheckCircleOutlineIcon
+                            style={{ color: "green", marginLeft: "5px" }}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          Select a REDCap data dictionary with mapped results
+                          <CancelIcon
+                            style={{ color: "red", marginLeft: "5px" }}
+                          />
+                        </>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <strong>REDCap Form Name:</strong>
+                    </TableCell>
+                    <TableCell>
+                      {redcapFormName ? (
+                        <>
+                          {redcapFormName}
+                          <CheckCircleOutlineIcon
+                            style={{ color: "green", marginLeft: "5px" }}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          Form name not detected
+                          <CancelIcon
+                            style={{ color: "red", marginLeft: "5px" }}
+                          />
+                        </>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <strong>Output Source:</strong>
                     </TableCell>
                     <TableCell>
                       {selectedDatabase ? (
@@ -255,38 +391,17 @@ const ExecutePage = () => {
                       )}
                     </TableCell>
                   </TableRow>
+
                   <TableRow>
                     <TableCell>
-                      <strong>Data Dictionary:</strong>
-                    </TableCell>
-                    <TableCell>
-                      {ddData ? (
-                        <>
-                          {selectedFilename? selectedFilename: 'REDCap API Used'}
-                          <CheckCircleOutlineIcon
-                            style={{ color: "green", marginLeft: "5px" }}
-                          />
-                        </>
-                      ) : (
-                        <>
-                          Please select a REDCap data dictionary
-                          <CancelIcon
-                            style={{ color: "red", marginLeft: "5px" }}
-                          />
-                        </>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>
-                      <strong>REDCap Connectivity Test:</strong>
+                      <strong>REDCap Connectivity:</strong>
                     </TableCell>
                     <TableCell>{redcapConnected()}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
               <Divider />
-              {checksPassed}/{totalChecks} checks passed
+              {checksPassed}/{totalChecks} passed
               <br />
               <Button
                 disabled={!isValid || isExecuting}
@@ -304,26 +419,27 @@ const ExecutePage = () => {
                     {executionText()}{" "}
                   </>
                 ) : null}
+
+                {showExecResults()}
               </Box>
             </Paper>
           </Container>
           <Box>
-          <BootstrapTooltip title="Go Prev">
+            <BootstrapTooltip title="Go Prev">
+              <ArrowCircleLeftIcon
+                onClick={handleClickPrev}
+                sx={{ cursor: "pointer" }}
+                color="primary"
+                fontSize="large"
+              />
+            </BootstrapTooltip>
             <ArrowCircleLeftIcon
-              onClick={handleClickPrev}
-              sx={{ cursor: "pointer" }}
+              sx={{ opacity: 0 }}
               color="primary"
               fontSize="large"
             />
-          </BootstrapTooltip>
-          <ArrowCircleLeftIcon
-            sx={{ opacity: 0 }}
-            color="primary"
-            fontSize="large"
-          />
+          </Box>
         </Box>
-        </Box>
-       
       </Container>
     </>
   );
