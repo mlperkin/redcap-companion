@@ -1,25 +1,40 @@
+
 import CryptoJS from 'crypto-js';
+const { ipcRenderer } = window.require("electron");
+let secretKey = null;
 
-// const secretKey = generateEncryptionKey(); // Random is more secure but lose data between app restarts
-const secretKey = 'your-super-secret-key'; //Good for developing
-
-// Function to generate a strong encryption key
-export function generateEncryptionKey() {
-  return CryptoJS.lib.WordArray.random(32).toString(); // 32 bytes for AES-256 encryption
+// Function to initialize the secret key
+export async function initializeEncryptionKey() {
+  secretKey = await ipcRenderer.invoke('generate-unique-id');
+  if (!secretKey) {
+    console.error('Failed to generate a unique machine ID');
+  }
 }
 
 export function encryptData(data) {
+  if (!secretKey) {
+    // console.error('Secret key not initialized');
+    return null;
+  }
+
   const encryptedData = CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
   return encryptedData;
 }
 
 export function decryptData(encryptedData) {
+  if (!secretKey) {
+    // console.error('Secret key not initialized');
+    return null;
+  }
+
   try {
     const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
     const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
     return decryptedData;
   } catch (error) {
-    // console.error('Error decrypting data:', error);
     return null;
   }
 }
+
+// Ensure to call initializeEncryptionKey() when the application starts
+initializeEncryptionKey();

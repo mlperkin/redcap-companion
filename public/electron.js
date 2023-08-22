@@ -1,7 +1,9 @@
+const { machineId } = require("node-machine-id");
 const {
   testMySQLConnection,
   testPostgreSQLConnection,
 } = require("./utils/dbTest");
+
 const { testRedcapConnection, getRedcapRecords } = require("./utils/redcap");
 
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
@@ -10,6 +12,7 @@ const isDev = require("electron-is-dev");
 const csv = require("csv-parser");
 const fs = require("fs");
 const Store = require("electron-store");
+
 const store = new Store();
 
 // const dbTestModulePath = path.join(app.getAppPath(), "/utils/dbTest.js");
@@ -107,6 +110,16 @@ ipcMain.handle("open-file-dialog", async (event) => {
         })
         .on("error", reject);
     });
+  }
+});
+
+ipcMain.handle("generate-unique-id", async () => {
+  try {
+    const uniqueMachineId = await machineId();
+    return uniqueMachineId;
+  } catch (error) {
+    console.error("Error generating unique machine ID:", error);
+    return null;
   }
 });
 

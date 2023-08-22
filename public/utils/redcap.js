@@ -3,10 +3,10 @@ const axios = require("axios");
 
 async function testRedcapConnection(dataObj) {
   // if (process.env.NODE_ENV === "local") {
-  //need to remove this for prod
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; // Add this at the top of your file
+  // //need to remove this for prod
+  // // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; // Add this at the top of your file
   // }
-  console.log('dataobj', dataObj)
+  // console.log('dataobj', dataObj)
   try {
     const FormData = require("form-data");
     let data = new FormData();
@@ -50,14 +50,13 @@ async function testRedcapConnection(dataObj) {
 
 async function getRedcapRecords(dataObj) {
   // if (process.env.NODE_ENV === "local") {
-  //need to remove this for prod
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; // Add this at the top of your file
+  // //need to remove this for prod
+  // // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; // Add this at the top of your file
   // }
 
   try {
     const FormData = require("form-data");
     let data = new FormData();
-      console.log('dataobj', dataObj)
     data.append("token", dataObj.redcapAPIKey);
     data.append("content", "record");
     data.append("format", "json");
