@@ -222,7 +222,7 @@ const ExecutePage = () => {
     // 2. match redcap records field_names with field_names from data dictionary and merge these two together
     let mergedRedcapRecords = await matchAndMergeRedcapRecords(redCapRecords);
     // 3. iterate through this merged list to create SQL CSV files (for upsert on mysql and postgresql)
-    setMergedData(mergedRedcapRecords);
+    // setMergedData(mergedRedcapRecords);
     await generateOutput(mergedRedcapRecords);
 
     //for development
@@ -280,8 +280,29 @@ const ExecutePage = () => {
     //we now need to iterate through this merged data and generate SQL
     console.log("gen output with this data", matchedAndMergedRedcapRecords);
 
+    const filteredData = matchedAndMergedRedcapRecords.map(item => {
+      let newObj = {};
+    
+      // Keep the 'demguid' key-value pair
+      if (item.demguid) {
+        newObj.demguid = item.demguid;
+      }
+    
+      // Check each key in the object to see if it has an object with 'redcap_value' as a key
+      for (let key in item) {
+        if (item[key] && typeof item[key] === 'object' && item[key].hasOwnProperty('redcap_value')) {
+          newObj[key] = item[key];
+        }
+      }
+    
+      return newObj;
+    });
+    
+    console.log('filteredData', filteredData);
+
     // generateCSV(matchedAndMergedRedcapRecords);
-    generateJSON(matchedAndMergedRedcapRecords);
+    // generateJSON(filteredData);
+    generateSQL(filteredData)
     
     setExecStatus(true);
     setIsExecuting(false);
@@ -325,6 +346,46 @@ const ExecutePage = () => {
     link.click();
     document.body.removeChild(link);
   }
+
+  function generateSQL(data) {
+    let sqlContent = "";
+
+    data.forEach(item => {
+        const demguid = item.demguid;
+        const birthDateValue = item.impd_brthdtc.redcap_value;
+        
+        // Insert into person table
+        sqlContent += `-- Inserting data for demguid = ${demguid} into person table\n`;
+        sqlContent += `INSERT INTO person (person_id, birth_date) VALUES \n`;
+        sqlContent += `('${demguid}', '${birthDateValue}');\n\n`;
+
+        const birthDateConceptId = item.impd_brthdtc.mapping_metadata.impd_brthdtc.extraData.concept_id;
+        const ageValue = item.imp_age.redcap_value;
+        const ageConceptId = item.imp_age.mapping_metadata.imp_age.extraData.concept_id;
+
+        // Insert into observations table
+        sqlContent += `-- Inserting observations for demguid = ${demguid}\n`;
+        sqlContent += `INSERT INTO observations (demguid, concept_id, value_as_string, date_recorded) VALUES \n`;
+        sqlContent += `('${demguid}', ${birthDateConceptId}, '${birthDateValue}', CURRENT_DATE),\n`;
+        sqlContent += `('${demguid}', ${ageConceptId}, '${ageValue}', CURRENT_DATE);\n\n`;
+    });
+
+    // Create a Blob with the SQL content
+    const blob = new Blob([sqlContent], {
+        type: "text/plain;charset=utf-8;",
+    });
+
+    // Create a link and click it to trigger the download
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "outputData.sql");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+
 
   return (
     <>
@@ -464,7 +525,7 @@ const ExecutePage = () => {
             />
           </Box>
         </Box>
-        {JSON.stringify(mergedData)}
+        {/* {JSON.stringify(mergedData)} */}
       </Container>
     </>
   );

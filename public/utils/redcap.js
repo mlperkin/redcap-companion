@@ -57,6 +57,7 @@ async function getRedcapRecords(dataObj) {
   try {
     const FormData = require("form-data");
     let data = new FormData();
+    console.log('dataobj', dataObj)
     data.append("token", dataObj.redcapAPIKey);
     data.append("content", "record");
     data.append("format", "json");
@@ -65,7 +66,7 @@ async function getRedcapRecords(dataObj) {
     data.append("type", "flat");
     data.append("rawOrLabel", "raw");
     data.append("rawOrLabelHeaders", "raw");
-    data.append("forms[0]", dataObj.formName);
+    // data.append("forms[0]", dataObj.formName);
 
     // Check if the last character of dataObj.redcapAPIURL is '/'
     if (dataObj.redcapAPIURL.charAt(dataObj.redcapAPIURL.length - 1) !== "/") {
@@ -94,7 +95,7 @@ async function getRedcapRecords(dataObj) {
       return false;
     }
   } catch (error) {
-    console.error("Error connecting to REDCap API:", error.message);
+    console.error("Error connecting to REDCap API to get records:", error.message);
     return false;
   }
 }
