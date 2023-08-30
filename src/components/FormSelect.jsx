@@ -55,7 +55,7 @@ export default function FormSelect({ props }) {
         setData(ddData);
         setIsFormLoaded(true);
         setIsFormLoading(false);
-        setSelectedForm(redcapFormName)
+        setSelectedForm(redcapFormName);
       } else {
         setIsFormLoaded(false);
       }
@@ -104,10 +104,7 @@ export default function FormSelect({ props }) {
       redirect: "follow",
     };
 
-    fetch(
-      "http://crudev.wakehealth.edu/redcapwiz_devccc/redcap/api/",
-      requestOptions
-    )
+    fetch(formData.redcapAPIURL, requestOptions)
       .then((response) => response.text())
       .then((result) => {
         parseResult(JSON.parse(result));
@@ -117,16 +114,15 @@ export default function FormSelect({ props }) {
   }
 
   useEffect(() => {
-    
-    if(!selectedForm) {
-      console.log('set selected form')
-      if(redcapFormName) setSelectedForm(redcapFormName)
+    if (!selectedForm) {
+      console.log("set selected form");
+      if (redcapFormName) setSelectedForm(redcapFormName);
       else setSelectedForm(props.forms[0]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.forms]);
   const handleChange = (event) => {
-    console.log('handle change')
+    console.log("handle change");
     setSelectedForm(event.target.value);
     resetScreen();
   };

@@ -47,6 +47,7 @@ const ExecutePage = () => {
   });
   const [formDataLoaded, setFormDataLoaded] = useState(false);
   const [dbCreds, setDBCreds] = useState();
+  const [mergedData, setMergedData] = useState([]);
 
   const navigate = useNavigate();
 
@@ -221,6 +222,7 @@ const ExecutePage = () => {
     // 2. match redcap records field_names with field_names from data dictionary and merge these two together
     let mergedRedcapRecords = await matchAndMergeRedcapRecords(redCapRecords);
     // 3. iterate through this merged list to create SQL CSV files (for upsert on mysql and postgresql)
+    setMergedData(mergedRedcapRecords);
     await generateOutput(mergedRedcapRecords);
 
     //for development
@@ -249,6 +251,8 @@ const ExecutePage = () => {
     // console.log("match these redcap records", redCapRecords);
     // console.log("with this data", ddData);
 
+    if(!redCapRecords) return;
+
     redCapRecords.forEach((obj1) => {
       ddData.forEach((obj2) => {
         for (const key in obj1) {
@@ -276,8 +280,9 @@ const ExecutePage = () => {
     //we now need to iterate through this merged data and generate SQL
     console.log("gen output with this data", matchedAndMergedRedcapRecords);
 
-    generateCSV(matchedAndMergedRedcapRecords);
-
+    // generateCSV(matchedAndMergedRedcapRecords);
+    generateJSON(matchedAndMergedRedcapRecords);
+    
     setExecStatus(true);
     setIsExecuting(false);
   }
@@ -297,6 +302,25 @@ const ExecutePage = () => {
     const link = document.createElement("a");
     link.href = url;
     link.setAttribute("download", "outputData.csv"); // You can name the file whatever you want
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function generateJSON(data) {
+    // Convert data to JSON format with indentation
+    const jsonContent = JSON.stringify(data, null, 4); // 4 spaces of indentation
+
+    // Create a Blob with the JSON content
+    const blob = new Blob([jsonContent], {
+      type: "application/json;charset=utf-8;",
+    });
+
+    // Create a link and click it to trigger the download
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "outputData.json"); // Naming the file as .json
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -440,6 +464,7 @@ const ExecutePage = () => {
             />
           </Box>
         </Box>
+        {JSON.stringify(mergedData)}
       </Container>
     </>
   );

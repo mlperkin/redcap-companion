@@ -7,6 +7,9 @@ import ArrowCircleLeftIcon from "@mui/icons-material/ArrowCircleLeft";
 import ArrowCircleRightIcon from "@mui/icons-material/ArrowCircleRight";
 import { encryptData, decryptData } from "../utils/encryption";
 import { useDataContext } from "../components/context/DataContext";
+import QuoteApp from "./vlist";
+import Todo from "./Todo";
+import Kanban from "./Kanban";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -14,14 +17,12 @@ const SelectDataDictPage = (props) => {
   const [forms, setForms] = useState([]);
   const [formData, setFormData] = useState();
   const [formDataLoaded, setFormDataLoaded] = useState();
-  const {
-    ddData,
-  } = useDataContext();
+  const { ddData } = useDataContext();
   const navigate = useNavigate();
 
   useEffect(() => {
-    let redcapAPI = localStorage.getItem('redcapAPIDD')
-    if(redcapAPI){
+    let redcapAPI = localStorage.getItem("redcapAPIDD");
+    if (redcapAPI) {
       // console.log('the dd', ddData)
     }
     setFormDataLoaded(false);
@@ -39,7 +40,7 @@ const SelectDataDictPage = (props) => {
   useEffect(() => {
     if (formDataLoaded) {
       // Call your function or add code here that should run after formData is updated
-      getForms()
+      getForms();
     }
   }, [formDataLoaded]); // Run whenever formDataLoaded changes
 
@@ -69,10 +70,7 @@ const SelectDataDictPage = (props) => {
       redirect: "follow",
     };
 
-    fetch(
-      "http://crudev.wakehealth.edu/redcapwiz_devccc/redcap/api/",
-      requestOptions
-    )
+    fetch(formData.redcapAPIURL, requestOptions)
       .then((response) => response.text())
       .then((result) => {
         // console.log("result", JSON.parse(result));
@@ -121,6 +119,9 @@ const SelectDataDictPage = (props) => {
               />
             </BootstrapTooltip>
           </Box>
+          {/* <QuoteApp/> */}
+          {/* <Kanban/> */}
+          {/* <Todo/> */}
         </Box>
       </Container>
     </>
