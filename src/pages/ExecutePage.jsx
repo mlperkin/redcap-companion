@@ -214,7 +214,7 @@ const ExecutePage = () => {
 
   async function execute() {
     setIsExecuting(true);
-    setExecStatus(false);
+    setExecStatus(null);
 
     //the steps involved here
     // 1. get all redcap records for selected form
@@ -226,9 +226,9 @@ const ExecutePage = () => {
     await generateOutput(mergedRedcapRecords);
 
     //for development
-    setTimeout(() => {
-      setIsExecuting(false);
-    }, 5000);
+    // setTimeout(() => {
+    //   setIsExecuting(false);
+    // }, 5000);
   }
 
   //the steps involved here
@@ -251,7 +251,7 @@ const ExecutePage = () => {
     // console.log("match these redcap records", redCapRecords);
     // console.log("with this data", ddData);
 
-    if(!redCapRecords) return;
+    if (!redCapRecords) return;
 
     redCapRecords.forEach((obj1) => {
       ddData.forEach((obj2) => {
@@ -280,30 +280,34 @@ const ExecutePage = () => {
     //we now need to iterate through this merged data and generate SQL
     console.log("gen output with this data", matchedAndMergedRedcapRecords);
 
-    const filteredData = matchedAndMergedRedcapRecords.map(item => {
+    const filteredData = matchedAndMergedRedcapRecords.map((item) => {
       let newObj = {};
-    
+
       // Keep the 'demguid' key-value pair
       if (item.demguid) {
         newObj.demguid = item.demguid;
       }
-    
+
       // Check each key in the object to see if it has an object with 'redcap_value' as a key
       for (let key in item) {
-        if (item[key] && typeof item[key] === 'object' && item[key].hasOwnProperty('redcap_value')) {
+        if (
+          item[key] &&
+          typeof item[key] === "object" &&
+          item[key].hasOwnProperty("redcap_value")
+        ) {
           newObj[key] = item[key];
         }
       }
-    
+
       return newObj;
     });
-    
-    console.log('filteredData', filteredData);
+
+    console.log("filteredData", filteredData);
 
     // generateCSV(matchedAndMergedRedcapRecords);
     // generateJSON(filteredData);
-    generateSQL(filteredData)
-    
+    generateSQL(filteredData);
+
     setExecStatus(true);
     setIsExecuting(false);
   }
@@ -350,29 +354,59 @@ const ExecutePage = () => {
   function generateSQL(data) {
     let sqlContent = "";
 
-    data.forEach(item => {
-        const demguid = item.demguid;
-        const birthDateValue = item.impd_brthdtc.redcap_value;
-        
-        // Insert into person table
-        sqlContent += `-- Inserting data for demguid = ${demguid} into person table\n`;
-        sqlContent += `INSERT INTO person (person_id, birth_date) VALUES \n`;
-        sqlContent += `('${demguid}', '${birthDateValue}');\n\n`;
+    sqlContent += "DO $$ \nDECLARE \n";
+    sqlContent +=
+      "    observation_type_concept_id_val BIGINT := 123456; -- placeholder, replace with correct value\n";
+    sqlContent += "BEGIN\n\n";
 
-        const birthDateConceptId = item.impd_brthdtc.mapping_metadata.impd_brthdtc.extraData.concept_id;
-        const ageValue = item.imp_age.redcap_value;
-        const ageConceptId = item.imp_age.mapping_metadata.imp_age.extraData.concept_id;
+    data.forEach((item) => {
+      const demguid = item.demguid;
+      const birthDateValue = item.impd_brthdtc.redcap_value;
+      let birthYear, birthMonth, birthDay
+      const [year, month, day] = birthDateValue.split("-");
+      let dateObj = new Date(year, month - 1, day);
+      birthYear = dateObj.getFullYear();
+      birthMonth = dateObj.getMonth() + 1;
+      birthDay = dateObj.getDate();
+      // console.log('bdate', birthDateValue)
+      if(!birthYear) birthYear = '1000'
+      // console.log('b', birthMonth + '/' + birthDay)
+      // Placeholder values for race and ethnicity
+      const raceConceptIdPlaceholder = 999999; // adjust this if you have a specific value
+      const ethnicityConceptIdPlaceholder = 888888; // adjust this if you have a specific value
 
-        // Insert into observations table
-        sqlContent += `-- Inserting observations for demguid = ${demguid}\n`;
-        sqlContent += `INSERT INTO observations (demguid, concept_id, value_as_string, date_recorded) VALUES \n`;
-        sqlContent += `('${demguid}', ${birthDateConceptId}, '${birthDateValue}', CURRENT_DATE),\n`;
-        sqlContent += `('${demguid}', ${ageConceptId}, '${ageValue}', CURRENT_DATE);\n\n`;
+      // Insert into person table
+      sqlContent += `-- Inserting data for demguid = ${demguid} into person table\n`;
+      if (birthYear) {
+        sqlContent += `INSERT INTO person (person_id, birth_datetime,  gender_concept_id, year_of_birth, month_of_birth, day_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
+        sqlContent += `('${demguid}', '${birthDateValue}', 12345, ${birthYear}, ${birthMonth}, ${birthDay}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
+      } else {
+        sqlContent += `INSERT INTO person (person_id, birth_datetime, gender_concept_id, year_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
+        sqlContent += `('${demguid}', '${birthDateValue}', 12345, ${birthYear}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
+      }
+
+      const birthDateConceptId =
+        item.impd_brthdtc.mapping_metadata.impd_brthdtc.extraData.concept_id;
+      const ageValue = item.imp_age.redcap_value;
+      const ageConceptId =
+        item.imp_age.mapping_metadata.imp_age.extraData.concept_id;
+
+      // Insert birthDate into observations table
+      sqlContent += `-- Inserting birthDate observation for demguid = ${demguid}\n`;
+      sqlContent += `INSERT INTO observation (observation_id, person_id, observation_concept_id, value_as_string, observation_date, observation_type_concept_id) \n`;
+      sqlContent += `VALUES ((SELECT COALESCE(MAX(observation_id), 0) + 1 FROM observation), '${demguid}', ${birthDateConceptId}, '${birthDateValue}', CURRENT_DATE, observation_type_concept_id_val);\n\n`;
+
+      // Insert age into observations table
+      sqlContent += `-- Inserting age observation for demguid = ${demguid}\n`;
+      sqlContent += `INSERT INTO observation (observation_id, person_id, observation_concept_id, value_as_string, observation_date, observation_type_concept_id) \n`;
+      sqlContent += `VALUES ((SELECT COALESCE(MAX(observation_id), 0) + 2 FROM observation), '${demguid}', ${ageConceptId}, '${ageValue}', CURRENT_DATE, observation_type_concept_id_val);\n\n`;
     });
+
+    sqlContent += "END $$;";
 
     // Create a Blob with the SQL content
     const blob = new Blob([sqlContent], {
-        type: "text/plain;charset=utf-8;",
+      type: "text/plain;charset=utf-8;",
     });
 
     // Create a link and click it to trigger the download
@@ -383,9 +417,7 @@ const ExecutePage = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-}
-
-
+  }
 
   return (
     <>
