@@ -57,7 +57,7 @@ async function getRedcapRecords(dataObj) {
   try {
     const FormData = require("form-data");
     let data = new FormData();
-    console.log('dataobj', dataObj)
+    // console.log('dataobj', dataObj)
     data.append("token", dataObj.redcapAPIKey);
     data.append("content", "record");
     data.append("format", "json");

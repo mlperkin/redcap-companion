@@ -45,9 +45,9 @@ const ExecutePage = () => {
     redcapAPIKey: "",
     redcapAPIURL: "",
   });
-  const [formDataLoaded, setFormDataLoaded] = useState(false);
+  // const [formDataLoaded, setFormDataLoaded] = useState(false);
   const [dbCreds, setDBCreds] = useState();
-  const [mergedData, setMergedData] = useState([]);
+  // const [mergedData, setMergedData] = useState([]);
 
   const navigate = useNavigate();
 
@@ -55,7 +55,7 @@ const ExecutePage = () => {
 
   // Function to load the data
   useEffect(() => {
-    setFormDataLoaded(false);
+    // setFormDataLoaded(false);
     // Request the store data from the main process when the component mounts
     ipcRenderer.invoke("getStoreData").then((data) => {
       const redcapDecryptedData = decryptData(data.redcapFormData); // Decrypt the data
@@ -77,9 +77,9 @@ const ExecutePage = () => {
         setFormData(redcapDecryptedData);
         // console.log("redcap decrypted data", redcapDecryptedData);
       }
-      setFormDataLoaded(true);
+      // setFormDataLoaded(true);
     });
-  }, []);
+  }, [selectedDatabase]);
 
   function handleClickPrev() {
     if (isExecuting) return;
@@ -312,48 +312,48 @@ const ExecutePage = () => {
     setIsExecuting(false);
   }
 
-  function generateCSV(data) {
-    //csv output
-    // Generate CSV
-    const header = Object.keys(data[0]).join(",");
-    const rows = data.map((row) => Object.values(row).join(",")).join("\n");
-    const csvContent = header + "\n" + rows;
+  // function generateCSV(data) {
+  //   //csv output
+  //   // Generate CSV
+  //   const header = Object.keys(data[0]).join(",");
+  //   const rows = data.map((row) => Object.values(row).join(",")).join("\n");
+  //   const csvContent = header + "\n" + rows;
 
-    // Create a Blob with the CSV content
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  //   // Create a Blob with the CSV content
+  //   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
 
-    // Create a link and click it to trigger the download
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "outputData.csv"); // You can name the file whatever you want
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  //   // Create a link and click it to trigger the download
+  //   const url = URL.createObjectURL(blob);
+  //   const link = document.createElement("a");
+  //   link.href = url;
+  //   link.setAttribute("download", "outputData.csv"); // You can name the file whatever you want
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // }
 
-  function generateJSON(data) {
-    // Convert data to JSON format with indentation
-    const jsonContent = JSON.stringify(data, null, 4); // 4 spaces of indentation
+  // function generateJSON(data) {
+  //   // Convert data to JSON format with indentation
+  //   const jsonContent = JSON.stringify(data, null, 4); // 4 spaces of indentation
 
-    // Create a Blob with the JSON content
-    const blob = new Blob([jsonContent], {
-      type: "application/json;charset=utf-8;",
-    });
+  //   // Create a Blob with the JSON content
+  //   const blob = new Blob([jsonContent], {
+  //     type: "application/json;charset=utf-8;",
+  //   });
 
-    // Create a link and click it to trigger the download
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "outputData.json"); // Naming the file as .json
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  //   // Create a link and click it to trigger the download
+  //   const url = URL.createObjectURL(blob);
+  //   const link = document.createElement("a");
+  //   link.href = url;
+  //   link.setAttribute("download", "outputData.json"); // Naming the file as .json
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // }
 
   function generateSQL(data) {
     let sqlContent = "";
-
+    let excludedData = [];
     sqlContent += "DO $$ \nDECLARE \n";
     sqlContent +=
       "    observation_type_concept_id_val BIGINT := 123456; -- placeholder, replace with correct value\n";
@@ -362,27 +362,44 @@ const ExecutePage = () => {
     data.forEach((item) => {
       const demguid = item.demguid;
       const birthDateValue = item.impd_brthdtc.redcap_value;
-      let birthYear, birthMonth, birthDay
+      let birthYear, birthMonth, birthDay;
       const [year, month, day] = birthDateValue.split("-");
       let dateObj = new Date(year, month - 1, day);
       birthYear = dateObj.getFullYear();
       birthMonth = dateObj.getMonth() + 1;
       birthDay = dateObj.getDate();
-      // console.log('bdate', birthDateValue)
-      if(!birthYear) birthYear = '1000'
-      // console.log('b', birthMonth + '/' + birthDay)
-      // Placeholder values for race and ethnicity
-      const raceConceptIdPlaceholder = 999999; // adjust this if you have a specific value
-      const ethnicityConceptIdPlaceholder = 888888; // adjust this if you have a specific value
 
+      //define min criteria needed for person to exist in tables
+      if (!birthYear || !birthDateValue) {
+        //this data gets outputted to excludedData.csv file
+        excludedData.push(item);
+        return;
+      }
+
+      // Define possible races and their corresponding values
+      const raceValues = [
+        { race: "WHITE", value: 8527 },
+        { race: "BLACK", value: 8516 },
+        { race: "ASIAN", value: 8515 },
+      ];
+
+      // Choose a random race from the array
+      const randomRaceIndex = Math.floor(Math.random() * raceValues.length);
+      const selectedRace = raceValues[randomRaceIndex];
+
+      // Use the selected race's value or default to 0 if not found
+      const raceConceptIdPlaceholder = selectedRace ? selectedRace.value : 0;
+      //Placerholder data
+      const ethnicityConceptIdPlaceholder = 38003564; // adjust this if you have a specific value
+      const genderConceptId = "8507";
       // Insert into person table
       sqlContent += `-- Inserting data for demguid = ${demguid} into person table\n`;
       if (birthYear) {
         sqlContent += `INSERT INTO person (person_id, birth_datetime,  gender_concept_id, year_of_birth, month_of_birth, day_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
-        sqlContent += `('${demguid}', '${birthDateValue}', 12345, ${birthYear}, ${birthMonth}, ${birthDay}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
+        sqlContent += `('${demguid}', '${birthDateValue}', ${genderConceptId}, ${birthYear}, ${birthMonth}, ${birthDay}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
       } else {
         sqlContent += `INSERT INTO person (person_id, birth_datetime, gender_concept_id, year_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
-        sqlContent += `('${demguid}', '${birthDateValue}', 12345, ${birthYear}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
+        sqlContent += `('${demguid}', '${birthDateValue}', ${genderConceptId}, ${birthYear}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
       }
 
       const birthDateConceptId =
@@ -417,8 +434,26 @@ const ExecutePage = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    downloadExcludedData(excludedData);
   }
 
+  function downloadExcludedData(data) {
+    let _dataString = JSON.stringify(data, null, 2);
+    // Create a Blob with the SQL content
+    const blob = new Blob([_dataString], {
+      type: "text/plain;charset=utf-8;",
+    });
+
+    // Create a link and click it to trigger the download
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "excludedData.json");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
   return (
     <>
       <Container maxWidth="xl">
