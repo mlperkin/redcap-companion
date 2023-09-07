@@ -35,3 +35,35 @@ This will create a `build` and `dist` directory. The .exe will be located in the
 ![Output Files](./src/images/docs/desktop-comp-output-files.png)
 
 
+## Updating Atlas Data
+
+Execute Achilles in R Studio. Change the connectionDetails to work for your instance.
+
+    connectionDetails <- createConnectionDetails(
+        dbms = "postgresql", 
+        server = "localhost/postgres", 
+        user = "postgres", 
+        password = "yourpassword"
+    ) 
+		 
+
+Execute this line for Achilles 1.7.2, fixes conflict with r studio version due to server/hostname issue
+
+    options(connectionObserver = NULL)
+
+Finally execute Achilles. Again, any options below to better suit your instance.
+
+    Achilles::achilles(
+        cdmVersion = "5.4", 
+        connectionDetails = connectionDetails,
+        cdmDatabaseSchema = "cdm_synthea10",
+        resultsDatabaseSchema = "results",
+        smallCellCount = 0,
+        createTable = TRUE,
+    )
+
+Next, clear any related rows in the `web_api` schema in the `achilles_cache` table that you are testing for.
+
+Visit the Atlas Data Sources page and refresh and test again.
+
+

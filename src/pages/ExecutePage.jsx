@@ -425,14 +425,16 @@ const ExecutePage = () => {
       //Placerholder data
       const ethnicityConceptIdPlaceholder = 38003564; // adjust this if you have a specific value
       const genderConceptId = "8507";
-      // Insert into person table
-      personSQLContent += `-- Inserting data for demguid = ${demguid} into person table\n`;
-      if (birthYear) {
-        personSQLContent += `INSERT INTO person (person_id, birth_datetime,  gender_concept_id, year_of_birth, month_of_birth, day_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
-        personSQLContent += `('${demguid}', '${birthDateValue}', ${genderConceptId}, ${birthYear}, ${birthMonth}, ${birthDay}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
-      } else {
-        personSQLContent += `INSERT INTO person (person_id, birth_datetime, gender_concept_id, year_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
-        personSQLContent += `('${demguid}', '${birthDateValue}', ${genderConceptId}, ${birthYear}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
+      if (birthYear && birthDateValue) {
+        // Insert into person table
+        personSQLContent += `-- Inserting data for demguid = ${demguid} into person table\n`;
+        if (birthYear) {
+          personSQLContent += `INSERT INTO person (person_id, birth_datetime,  gender_concept_id, year_of_birth, month_of_birth, day_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
+          personSQLContent += `('${demguid}', '${birthDateValue}', ${genderConceptId}, ${birthYear}, ${birthMonth}, ${birthDay}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
+        } else {
+          personSQLContent += `INSERT INTO person (person_id, birth_datetime, gender_concept_id, year_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
+          personSQLContent += `('${demguid}', '${birthDateValue}', ${genderConceptId}, ${birthYear}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
+        }
       }
 
       const birthDateConceptId =
@@ -455,7 +457,11 @@ const ExecutePage = () => {
       if (!observationPeriods[demguid]) {
         observationPeriods[demguid] = {
           start: new Date(item.imp_enroll_date),
-          stop: new Date(item.imp_followup_date?item.imp_followup_date:item.imp_enroll_date),
+          stop: new Date(
+            item.imp_followup_date
+              ? item.imp_followup_date
+              : item.imp_enroll_date
+          ),
         };
       } else {
         // Update start if the current item's start is earlier
@@ -487,6 +493,7 @@ const ExecutePage = () => {
         observationPeriods[demguid].stop
       )}', 44814724);\n\n`;
     }
+    observationPeriodSQLContent += "END $$;";
 
     console.log("selectedOMOPTables", selectedOMOPTables);
     if (selectedOMOPTables.includes("person"))
@@ -495,8 +502,7 @@ const ExecutePage = () => {
       downloadSQL(observationPeriodSQLContent, "observation_period.sql");
     if (selectedOMOPTables.includes("observation"))
       downloadSQL(observationSQLContent, "observation.sql");
-
-    downloadExcludedData(excludedData);
+    if (excludedData && excludedData.length) downloadExcludedData(excludedData);
   }
 
   function downloadSQL(sqlContent, fileName) {
