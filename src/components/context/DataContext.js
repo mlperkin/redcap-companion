@@ -17,6 +17,7 @@ export const DataProvider = ({ children }) => {
   const [execStatus, setExecStatus] = useState(null); //null initially for undetermined state
   const [ddData, setDDData] = useState([]);
   const [redcapFormName, setRedcapFormName] = useState();
+  const [selectedOMOPTables, setSelectedOMOPTables] = useState([]);
 
   return (
     <DataContext.Provider
@@ -42,7 +43,9 @@ export const DataProvider = ({ children }) => {
         ddData,
         setDDData,
         redcapFormName,
-        setRedcapFormName
+        setRedcapFormName,
+        selectedOMOPTables,
+        setSelectedOMOPTables
       }}
     >
       {children}

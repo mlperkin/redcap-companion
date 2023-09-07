@@ -19,6 +19,8 @@ import CircularProgress from "@mui/material/CircularProgress";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { decryptData } from "../utils/encryption";
+import OMOPCheckboxes from "../components/OMOPCheckboxes";
+
 // import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
 const { ipcRenderer } = window.require("electron");
@@ -35,6 +37,7 @@ const ExecutePage = () => {
     setExecStatus,
     ddData,
     redcapFormName,
+    selectedOMOPTables,
   } = useDataContext();
 
   const [checksPassed, setChecksPassed] = useState(0);
@@ -56,10 +59,12 @@ const ExecutePage = () => {
   // Function to load the data
   useEffect(() => {
     // setFormDataLoaded(false);
+    console.log("get store data");
     // Request the store data from the main process when the component mounts
     ipcRenderer.invoke("getStoreData").then((data) => {
       const redcapDecryptedData = decryptData(data.redcapFormData); // Decrypt the data
       const mysqlDecryptedData = decryptData(data.MySQLForm); // Decrypt the data
+      console.log("redcap", redcapDecryptedData);
       const savedPGFormData = localStorage.getItem("postgresFormData");
       let postgresDecryptedData;
       if (savedPGFormData) {
@@ -124,14 +129,18 @@ const ExecutePage = () => {
   }
 
   async function testRedcapAPI(event) {
+    console.log("test redcap api!");
+    console.log("form", formData);
     event.preventDefault();
     setIsTesting(true);
     const { redcapAPIKey, redcapAPIURL } = formData;
     if (!redcapAPIKey || !redcapAPIURL) {
+      console.log("returning missing api key or url");
+      setIsRedcapConnected(false);
+      setIsTesting(false);
       // setRedcapAPITest("Please provide both API key and URL.");
       return;
     }
-
     // Call the main process function via ipcRenderer
     const isRedcapConnected = await ipcRenderer.invoke(
       "testRedcapAPI",
@@ -288,6 +297,18 @@ const ExecutePage = () => {
         newObj.demguid = item.demguid;
       }
 
+      // Keep the 'enroll date' key-value pair
+      if (item.imp_enroll_date) {
+        newObj.imp_enroll_date = item.imp_enroll_date;
+      }
+
+      // Keep the 'follw up date' key-value pair
+      if (item.imp_followup_date) {
+        newObj.imp_followup_date = item.imp_followup_date;
+      }
+
+      console.log("item", item["redcap_repeat_instrument"]);
+
       // Check each key in the object to see if it has an object with 'redcap_value' as a key
       for (let key in item) {
         if (
@@ -306,7 +327,7 @@ const ExecutePage = () => {
 
     // generateCSV(matchedAndMergedRedcapRecords);
     // generateJSON(filteredData);
-    generateSQL(filteredData);
+    generateSQLFiles(filteredData);
 
     setExecStatus(true);
     setIsExecuting(false);
@@ -351,14 +372,23 @@ const ExecutePage = () => {
   //   document.body.removeChild(link);
   // }
 
-  function generateSQL(data) {
-    let sqlContent = "";
-    let excludedData = [];
-    sqlContent += "DO $$ \nDECLARE \n";
-    sqlContent +=
-      "    observation_type_concept_id_val BIGINT := 123456; -- placeholder, replace with correct value\n";
-    sqlContent += "BEGIN\n\n";
+  function generateSQLFiles(data) {
+    //A good rule of thumb is to always create the PERSON table first The VISIT_OCCURRENCE table must be created before the standardized clinical data tables as they all refer to the VISIT_OCCURRENCE_ID
 
+    let personSQLContent = "";
+    let observationSQLContent = "";
+    let observationPeriodSQLContent = "";
+    let excludedData = [];
+
+    personSQLContent += "DO $$ \nDECLARE \n";
+    observationPeriodSQLContent += "DO $$ \nDECLARE \n";
+    observationSQLContent += "DO $$ \nDECLARE \n";
+    observationSQLContent +=
+      "    observation_type_concept_id_val BIGINT := 123456; -- placeholder, replace with correct value\n";
+
+    personSQLContent += "BEGIN\n\n";
+    observationSQLContent += "BEGIN\n\n";
+    observationPeriodSQLContent += "BEGIN\n\n";
     data.forEach((item) => {
       const demguid = item.demguid;
       const birthDateValue = item.impd_brthdtc.redcap_value;
@@ -372,6 +402,7 @@ const ExecutePage = () => {
       //define min criteria needed for person to exist in tables
       if (!birthYear || !birthDateValue) {
         //this data gets outputted to excludedData.csv file
+        console.log("dropping", item);
         excludedData.push(item);
         return;
       }
@@ -393,13 +424,13 @@ const ExecutePage = () => {
       const ethnicityConceptIdPlaceholder = 38003564; // adjust this if you have a specific value
       const genderConceptId = "8507";
       // Insert into person table
-      sqlContent += `-- Inserting data for demguid = ${demguid} into person table\n`;
+      personSQLContent += `-- Inserting data for demguid = ${demguid} into person table\n`;
       if (birthYear) {
-        sqlContent += `INSERT INTO person (person_id, birth_datetime,  gender_concept_id, year_of_birth, month_of_birth, day_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
-        sqlContent += `('${demguid}', '${birthDateValue}', ${genderConceptId}, ${birthYear}, ${birthMonth}, ${birthDay}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
+        personSQLContent += `INSERT INTO person (person_id, birth_datetime,  gender_concept_id, year_of_birth, month_of_birth, day_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
+        personSQLContent += `('${demguid}', '${birthDateValue}', ${genderConceptId}, ${birthYear}, ${birthMonth}, ${birthDay}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
       } else {
-        sqlContent += `INSERT INTO person (person_id, birth_datetime, gender_concept_id, year_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
-        sqlContent += `('${demguid}', '${birthDateValue}', ${genderConceptId}, ${birthYear}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
+        personSQLContent += `INSERT INTO person (person_id, birth_datetime, gender_concept_id, year_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
+        personSQLContent += `('${demguid}', '${birthDateValue}', ${genderConceptId}, ${birthYear}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
       }
 
       const birthDateConceptId =
@@ -408,19 +439,37 @@ const ExecutePage = () => {
       const ageConceptId =
         item.imp_age.mapping_metadata.imp_age.extraData.concept_id;
 
-      // Insert birthDate into observations table
-      sqlContent += `-- Inserting birthDate observation for demguid = ${demguid}\n`;
-      sqlContent += `INSERT INTO observation (observation_id, person_id, observation_concept_id, value_as_string, observation_date, observation_type_concept_id) \n`;
-      sqlContent += `VALUES ((SELECT COALESCE(MAX(observation_id), 0) + 1 FROM observation), '${demguid}', ${birthDateConceptId}, '${birthDateValue}', CURRENT_DATE, observation_type_concept_id_val);\n\n`;
+      // Insert into observation table
+      observationSQLContent += `-- Inserting birthDate observation for demguid = ${demguid}\n`;
+      observationSQLContent += `INSERT INTO observation (observation_id, person_id, observation_concept_id, value_as_string, observation_date, observation_type_concept_id) \n`;
+      observationSQLContent += `VALUES ((SELECT COALESCE(MAX(observation_id), 0) + 1 FROM observation), '${demguid}', ${birthDateConceptId}, '${birthDateValue}', CURRENT_DATE, observation_type_concept_id_val);\n\n`;
 
-      // Insert age into observations table
-      sqlContent += `-- Inserting age observation for demguid = ${demguid}\n`;
-      sqlContent += `INSERT INTO observation (observation_id, person_id, observation_concept_id, value_as_string, observation_date, observation_type_concept_id) \n`;
-      sqlContent += `VALUES ((SELECT COALESCE(MAX(observation_id), 0) + 2 FROM observation), '${demguid}', ${ageConceptId}, '${ageValue}', CURRENT_DATE, observation_type_concept_id_val);\n\n`;
-    });
+      // Insert into observation table
+      observationSQLContent += `-- Inserting age observation for demguid = ${demguid}\n`;
+      observationSQLContent += `INSERT INTO observation (observation_id, person_id, observation_concept_id, value_as_string, observation_date, observation_type_concept_id) \n`;
+      observationSQLContent += `VALUES ((SELECT COALESCE(MAX(observation_id), 0) + 2 FROM observation), '${demguid}', ${ageConceptId}, '${ageValue}', CURRENT_DATE, observation_type_concept_id_val);\n\n`;
 
-    sqlContent += "END $$;";
 
+      // Insert into observation_period table
+      observationPeriodSQLContent += `-- Inserting observation period for demguid = ${demguid}\n`;
+      observationPeriodSQLContent += `INSERT INTO observation_period (observation_period_id, person_id, observation_period_start_date, observation_period_end_date, period_type_concept_id) \n`;
+      observationPeriodSQLContent += `VALUES ((SELECT COALESCE(MAX(observation_period_id), 0) + 1 FROM observation_period), '${demguid}', '${birthDateValue}', '${birthDateValue}', 44814724);\n\n`;
+    }); //end data loop
+
+    personSQLContent += "END $$;";
+    observationSQLContent += "END $$;";
+    console.log("selectedOMOPTables", selectedOMOPTables);
+    if (selectedOMOPTables.includes("person"))
+      downloadSQL(personSQLContent, "person.sql");
+    if (selectedOMOPTables.includes("observation_period"))
+      downloadSQL(observationPeriodSQLContent, "observation_period.sql");
+    if (selectedOMOPTables.includes("observation"))
+      downloadSQL(observationSQLContent, "observation.sql");
+
+    downloadExcludedData(excludedData);
+  }
+
+  function downloadSQL(sqlContent, fileName) {
     // Create a Blob with the SQL content
     const blob = new Blob([sqlContent], {
       type: "text/plain;charset=utf-8;",
@@ -430,12 +479,10 @@ const ExecutePage = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "outputData.sql");
+    link.setAttribute("download", fileName);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    downloadExcludedData(excludedData);
   }
 
   function downloadExcludedData(data) {
@@ -555,6 +602,8 @@ const ExecutePage = () => {
               <Divider />
               {checksPassed}/{totalChecks} passed
               <br />
+              <h3>Output OMOP Tables</h3>
+              <OMOPCheckboxes />
               <Button
                 disabled={!isValid || isExecuting}
                 onClick={execute}
