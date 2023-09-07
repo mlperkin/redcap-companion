@@ -379,6 +379,8 @@ const ExecutePage = () => {
     let observationSQLContent = "";
     let observationPeriodSQLContent = "";
     let excludedData = [];
+    // Step 1: Process data to derive earliest start and latest stop for each demguid
+    const observationPeriods = {};
 
     personSQLContent += "DO $$ \nDECLARE \n";
     observationPeriodSQLContent += "DO $$ \nDECLARE \n";
@@ -402,9 +404,9 @@ const ExecutePage = () => {
       //define min criteria needed for person to exist in tables
       if (!birthYear || !birthDateValue) {
         //this data gets outputted to excludedData.csv file
-        console.log("dropping", item);
-        excludedData.push(item);
-        return;
+        // console.log("dropping", item);
+        // excludedData.push(item);
+        // return;
       }
 
       // Define possible races and their corresponding values
@@ -449,15 +451,43 @@ const ExecutePage = () => {
       observationSQLContent += `INSERT INTO observation (observation_id, person_id, observation_concept_id, value_as_string, observation_date, observation_type_concept_id) \n`;
       observationSQLContent += `VALUES ((SELECT COALESCE(MAX(observation_id), 0) + 2 FROM observation), '${demguid}', ${ageConceptId}, '${ageValue}', CURRENT_DATE, observation_type_concept_id_val);\n\n`;
 
+      // initialize if not yet done
+      if (!observationPeriods[demguid]) {
+        observationPeriods[demguid] = {
+          start: new Date(item.imp_enroll_date),
+          stop: new Date(item.imp_followup_date?item.imp_followup_date:item.imp_enroll_date),
+        };
+      } else {
+        // Update start if the current item's start is earlier
+        if (
+          new Date(item.imp_enroll_date) < observationPeriods[demguid].start
+        ) {
+          observationPeriods[demguid].start = new Date(item.imp_enroll_date);
+        }
 
-      // Insert into observation_period table
-      observationPeriodSQLContent += `-- Inserting observation period for demguid = ${demguid}\n`;
-      observationPeriodSQLContent += `INSERT INTO observation_period (observation_period_id, person_id, observation_period_start_date, observation_period_end_date, period_type_concept_id) \n`;
-      observationPeriodSQLContent += `VALUES ((SELECT COALESCE(MAX(observation_period_id), 0) + 1 FROM observation_period), '${demguid}', '${birthDateValue}', '${birthDateValue}', 44814724);\n\n`;
+        // Update stop if the current item's stop is later
+        if (
+          new Date(item.imp_followup_date) > observationPeriods[demguid].stop
+        ) {
+          observationPeriods[demguid].stop = new Date(item.imp_followup_date);
+        }
+      }
     }); //end data loop
 
     personSQLContent += "END $$;";
     observationSQLContent += "END $$;";
+
+    // Step 2: Create SQL statements for the observation_period table using the derived data
+    for (let demguid in observationPeriods) {
+      observationPeriodSQLContent += `-- Inserting observation period for demguid = ${demguid}\n`;
+      observationPeriodSQLContent += `INSERT INTO observation_period (observation_period_id, person_id, observation_period_start_date, observation_period_end_date, period_type_concept_id) \n`;
+      observationPeriodSQLContent += `VALUES ((SELECT COALESCE(MAX(observation_period_id), 0) + 1 FROM observation_period), '${demguid}', '${formatDateToSQL(
+        observationPeriods[demguid].start
+      )}', '${formatDateToSQL(
+        observationPeriods[demguid].stop
+      )}', 44814724);\n\n`;
+    }
+
     console.log("selectedOMOPTables", selectedOMOPTables);
     if (selectedOMOPTables.includes("person"))
       downloadSQL(personSQLContent, "person.sql");
@@ -483,6 +513,14 @@ const ExecutePage = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  // Additional utility function to convert a Date object to YYYY-MM-DD string
+  function formatDateToSQL(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
   function downloadExcludedData(data) {
