@@ -1,6 +1,6 @@
 // FilePicker.js
 import React, { useState } from "react";
-import { Box, Button, Container, Divider, Typography } from "@mui/material";
+import { Box, Button, Container, Divider, Typography, Tooltip } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import CheckIcon from "@mui/icons-material/Check";
 import FormSelect from "./FormSelect";
@@ -22,7 +22,7 @@ function FilePicker(props) {
     setSelectedFilename,
     ddData,
     setDDData,
-    setRedcapFormName
+    setRedcapFormName,
   } = useDataContext();
 
   const [ddParseErr, setDDParseErr] = useState(false);
@@ -37,33 +37,65 @@ function FilePicker(props) {
     try {
       if (data && data.contents.length > 0) {
         setDDData([]);
-        setDDParseErr(false)
+        setDDParseErr(false);
         setSelectedFilename();
-        let _formName
+        let _formName;
         let onlyMappedData = data.contents.filter((item) => {
           try {
             // Attempt to parse the field_annotation as JSON
             const parsedValue = JSON.parse(item.field_annotation);
-            if(item.form_name)_formName = item.form_name
+            if (item.form_name) _formName = item.form_name;
             return typeof parsedValue === "object" && parsedValue !== null; // Check if the parsed value is an object
           } catch (e) {
             return false; // If parsing failed, exclude this item from the filtered result
           }
         });
-        console.log('form name', _formName)
+        console.log("form name", _formName);
         console.log("onlyMappedData", onlyMappedData);
         // if(!_formName) throw new Error('No form name detected')
-        setRedcapFormName(_formName)
+        setRedcapFormName(_formName);
         setDDData(onlyMappedData);
+        console.log("mappeddata", onlyMappedData);
         setShowREDCapAPIInput(false);
-        setColumns(
-          Object.keys(onlyMappedData[0]).map((key) => ({
-            field: key,
+
+        // setColumns(
+        //   Object.keys(onlyMappedData[0]).map((key) => ({
+        //     field: key,
+        //     width: 150,
+        //   }))
+        // );
+        // setRows(onlyMappedData.map((item, index) => ({ id: index, ...item })));
+
+        // setSelectedFilename(data.title);
+
+        const truncateString = (str, num) => {
+          if (str.length <= num) return str;
+          return str.slice(0, num) + '...';
+        }
+        setColumns([
+          {
+            field: 'field_name',
+            headerName: 'Field Name',
             width: 150,
-          }))
-        );
+          },
+          {
+            field: 'field_annotation',
+            headerName: 'Field Annotation',
+            width: 350,
+            renderCell: (params) => (
+              <Tooltip title={params.value}>
+                <span>
+                  {truncateString(params.value, 50)} 
+                </span>
+              </Tooltip>
+            ),
+          },
+        ]);
+   
+        
+        
+        
         setRows(onlyMappedData.map((item, index) => ({ id: index, ...item })));
-        setSelectedFilename(data.title);
 
         setInitialLoad(false);
       }
@@ -74,7 +106,7 @@ function FilePicker(props) {
       console.log("clear cols and rwos");
       setColumns([]);
       setRows([]);
-      setDDParseErr(true)
+      setDDParseErr(true);
     }
   };
 
@@ -98,7 +130,7 @@ function FilePicker(props) {
         variant="contained"
         onClick={handleButtonClick}
       >
-        Local Data Dictionary File
+        Local Mapping File
       </Button>
       <Paper elevation={3}>
         {initialLoad ? (
@@ -120,28 +152,25 @@ function FilePicker(props) {
           </>
         ) : (
           <>
-            {ddData &&
-              (
-                <>
-                  <h3>{selectedFilename}</h3>
-                  <Typography>Mapped Data Found</Typography>
-                  <DataGrid
-                    rows={rows}
-                    columns={columns}
-                    autoHeight
-                    autoWidth
-                    initialState={{
-                      pagination: { paginationModel: { pageSize: 5 } }, // Set pageSize to 5
-                    }}
-                    pageSizeOptions={[5, 10, 25]} // Customize pagination options
-                  />
-                </>
-              )}
+            {ddData && (
+              <>
+                <h3>{selectedFilename}</h3>
+                <Typography>Mapped Data Found</Typography>
+                <DataGrid
+                  rows={rows}
+                  columns={columns}
+                  autoHeight
+                  autoWidth
+                  initialState={{
+                    pagination: { paginationModel: { pageSize: 5 } }, // Set pageSize to 5
+                  }}
+                  pageSizeOptions={[5, 10, 25]} // Customize pagination options
+                />
+              </>
+            )}
           </>
         )}
-        {ddParseErr && (
-          <Typography>Error parsing data dictionary</Typography>
-        )}
+        {ddParseErr && <Typography>Error parsing data dictionary</Typography>}
       </Paper>
     </Container>
   );

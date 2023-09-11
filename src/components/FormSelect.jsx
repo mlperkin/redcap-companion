@@ -302,7 +302,7 @@ export default function FormSelect({ props }) {
                   startIcon={<ImportExportIcon />}
                   onClick={(e) => getDataDictionary(e)}
                 >
-                  Get Data Dictionary
+                  Get Data
                 </Button>
               </Grid>
             </FormControl>

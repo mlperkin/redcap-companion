@@ -6,9 +6,9 @@ import React, {
   createContext,
 } from "react";
 import { Routes, Route } from "react-router-dom";
-import SelectDataDict from "./pages/SelectDataDictPage";
+import MappingDataPage from "./pages/MappingDataPage";
 import ConnectionsSetupPage from "./pages/ConnectionsSetupPage";
-import ExecutePage from "./pages/ExecutePage";
+import OutputPage from "./pages/OutputPage";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import NavBar from "./components/NavBar";
@@ -26,14 +26,14 @@ function App({ mode }) {
         {/* set init page */}
         <Route path="/" element={<ConnectionsSetupPage mode={mode} />} />
         <Route
-          path="/selectDataDict"
-          element={<SelectDataDict mode={mode} />}
+          path="/mappingData"
+          element={<MappingDataPage mode={mode} />}
         />
         <Route
           path="/setupConnections"
           element={<ConnectionsSetupPage mode={mode} />}
         />
-        <Route path="/execute" element={<ExecutePage mode={mode} />} />
+        <Route path="/output" element={<OutputPage mode={mode} />} />
       </Routes>
     </DataProvider>
   );

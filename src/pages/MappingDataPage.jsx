@@ -5,19 +5,19 @@ import { useNavigate } from "react-router-dom";
 import BootstrapTooltip from "../components/BootstrapTooltip";
 import ArrowCircleLeftIcon from "@mui/icons-material/ArrowCircleLeft";
 import ArrowCircleRightIcon from "@mui/icons-material/ArrowCircleRight";
-import { encryptData, decryptData } from "../utils/encryption";
-import { useDataContext } from "../components/context/DataContext";
-import QuoteApp from "./vlist";
-import Todo from "./Todo";
-import Kanban from "./Kanban";
+import { decryptData } from "../utils/encryption";
+// import { useDataContext } from "../components/context/DataContext";
+// import QuoteApp from "./vlist";
+// import Todo from "./Todo";
+// import Kanban from "./Kanban";
 
 const { ipcRenderer } = window.require("electron");
 
-const SelectDataDictPage = (props) => {
+const MappingDataPage = (props) => {
   const [forms, setForms] = useState([]);
   const [formData, setFormData] = useState();
   const [formDataLoaded, setFormDataLoaded] = useState();
-  const { ddData } = useDataContext();
+  // const { ddData } = useDataContext();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,10 +42,11 @@ const SelectDataDictPage = (props) => {
       // Call your function or add code here that should run after formData is updated
       getForms();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formDataLoaded]); // Run whenever formDataLoaded changes
 
   function handleClick() {
-    navigate("/execute");
+    navigate("/output");
   }
 
   function handleClickPrev() {
@@ -98,7 +99,7 @@ const SelectDataDictPage = (props) => {
           }}
         >
           <Box sx={{ marginTop: "20px" }}>
-            <h1>Select Data Dictionary</h1>
+            <h1>Mapping Data</h1>
           </Box>
           <FilePicker props={props} forms={forms} />
           <Box>
@@ -128,4 +129,4 @@ const SelectDataDictPage = (props) => {
   );
 };
 
-export default SelectDataDictPage;
+export default MappingDataPage;

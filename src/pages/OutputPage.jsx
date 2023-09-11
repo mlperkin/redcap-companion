@@ -8,6 +8,7 @@ import {
   TableBody,
   TableCell,
   TableRow,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
@@ -20,12 +21,12 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { decryptData } from "../utils/encryption";
 import OMOPCheckboxes from "../components/OMOPCheckboxes";
-
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 // import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
 const { ipcRenderer } = window.require("electron");
 
-const ExecutePage = () => {
+const OutputPage = () => {
   const {
     selectedFilename,
     selectedDatabase,
@@ -88,7 +89,7 @@ const ExecutePage = () => {
 
   function handleClickPrev() {
     if (isExecuting) return;
-    navigate("/selectDataDict");
+    navigate("/mappingData");
   }
 
   useEffect(() => {
@@ -221,7 +222,7 @@ const ExecutePage = () => {
     }
   };
 
-  async function execute() {
+  async function output() {
     setIsExecuting(true);
     setExecStatus(null);
 
@@ -424,7 +425,7 @@ const ExecutePage = () => {
       const raceConceptIdPlaceholder = selectedRace ? selectedRace.value : 0;
       //Placerholder data
       const ethnicityConceptIdPlaceholder = 38003564; // adjust this if you have a specific value
-      const genderConceptId = "8507";
+      const genderConceptId = "8507"; //need to get this from the data
       if (birthYear && birthDateValue) {
         // Insert into person table
         personSQLContent += `-- Inserting data for demguid = ${demguid} into person table\n`;
@@ -559,7 +560,7 @@ const ExecutePage = () => {
           }}
         >
           <Box sx={{ marginTop: "20px" }}>
-            <h1 sx={{ textAlign: "center" }}>Execute</h1>
+            <h1 sx={{ textAlign: "center" }}>Output to OMOP</h1>
           </Box>
 
           <Container>
@@ -568,7 +569,7 @@ const ExecutePage = () => {
                 <TableBody>
                   <TableRow>
                     <TableCell>
-                      <strong>Input Data Dictionary:</strong>
+                      <strong>Mapping Data:</strong>
                     </TableCell>
                     <TableCell>
                       {ddData && ddData.length ? (
@@ -644,29 +645,46 @@ const ExecutePage = () => {
                 </TableBody>
               </Table>
               <Divider />
-              {checksPassed}/{totalChecks} passed
-              <br />
-              <h3>Output OMOP Tables</h3>
-              <OMOPCheckboxes />
-              <Button
-                disabled={!isValid || isExecuting}
-                onClick={execute}
-                variant="contained"
-                sx={{ marginTop: "10px" }}
-              >
-                Execute
-              </Button>
-              <br />
-              <Box sx={{ margin: "20px" }}>
-                {isExecuting ? (
-                  <>
-                    <CircularProgress />
-                    {executionText()}{" "}
-                  </>
-                ) : null}
+            </Paper>
+            <Divider />
+            <Paper>
+              <Table>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>
+                      <br />
+                    
+                      <h3>Output OMOP Tables   <Tooltip
+                        title="Select OMOP Tables you want to generate output for
+                        "
+                      >
+                        <HelpOutlineIcon />
+                      </Tooltip></h3>
+                      <OMOPCheckboxes />
+                      <Button
+                        disabled={!isValid || isExecuting}
+                        onClick={output}
+                        variant="contained"
+                        sx={{ marginTop: "10px" }}
+                      >
+                        Output to OMOP
+                      </Button>
+                      <br />
+                      <Box sx={{ margin: "20px" }}>
+                        {isExecuting ? (
+                          <>
+                            <CircularProgress />
+                            {executionText()}{" "}
+                          </>
+                        ) : null}
 
-                {showExecResults()}
-              </Box>
+                        {/* {showExecResults()} */}
+                      </Box>
+                    </TableCell>
+                    <TableCell> </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </Paper>
           </Container>
           <Box>
@@ -691,4 +709,4 @@ const ExecutePage = () => {
   );
 };
 
-export default ExecutePage;
+export default OutputPage;

@@ -45,9 +45,9 @@ export default function NavBar(props) {
     switch (path) {
       case "/setupConnections":
         return 0;
-      case "/selectDataDict":
+      case "/mappingData":
         return 1;
-      case "/execute":
+      case "/output":
         return 2;
       default:
         return 0;
@@ -62,10 +62,10 @@ export default function NavBar(props) {
         navigate("/setupConnections");
         break;
       case 1:
-        navigate("/selectDataDict");
+        navigate("/mappingData");
         break;
       case 2:
-        navigate("/execute");
+        navigate("/output");
         break;
       default:
         break;
@@ -134,9 +134,9 @@ export default function NavBar(props) {
             indicatorColor="secondary"
             aria-label="simple tabs example"
           >
-            <Tab label="Connections/Output Setup" disabled={isExecuting} />
-            <Tab label="Input Data Dictionary" disabled={isExecuting} />
-            <Tab label="Execute" />
+            <Tab label="Connections Setup" disabled={isExecuting} />
+            <Tab label="Mapping Data" disabled={isExecuting} />
+            <Tab label="Output to OMOP" />
           </Tabs>
 
           {/* Window controls */}

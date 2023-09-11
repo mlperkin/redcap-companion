@@ -9,7 +9,7 @@ const ConnectionsSetupPage = () => {
   const navigate = useNavigate();
 
   function handleClick() {
-    navigate("/selectDataDict");
+    navigate("/mappingData");
   }
   return (
     <>
