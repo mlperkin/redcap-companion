@@ -89,7 +89,7 @@ const OutputPage = () => {
 
   function handleClickPrev() {
     if (isExecuting) return;
-    navigate("/mappingData");
+    navigate("/mappedData");
   }
 
   useEffect(() => {
@@ -569,7 +569,7 @@ const OutputPage = () => {
                 <TableBody>
                   <TableRow>
                     <TableCell>
-                      <strong>Mapping Data:</strong>
+                      <strong>Mapped Data:</strong>
                     </TableCell>
                     <TableCell>
                       {ddData && ddData.length ? (

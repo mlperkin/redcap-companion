@@ -130,7 +130,7 @@ function FilePicker(props) {
         variant="contained"
         onClick={handleButtonClick}
       >
-        Local Mapping File
+        Local Mapped File
       </Button>
       <Paper elevation={3}>
         {initialLoad ? (

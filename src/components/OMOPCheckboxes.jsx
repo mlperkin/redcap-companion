@@ -1,5 +1,16 @@
 import React from "react";
-import { Checkbox, FormControlLabel, Tooltip, Chip } from "@mui/material";
+import {
+  Checkbox,
+  FormControlLabel,
+  Tooltip,
+  Chip,
+  Select,
+  MenuItem,
+  TextField,
+  InputLabel,
+  FormControl,
+  Grid
+} from "@mui/material";
 import { useDataContext } from "./context/DataContext";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
@@ -34,6 +45,32 @@ const OMOPCheckboxes = () => {
       color: "info",
     },
     // Add other tables and chip details as needed
+  };
+
+  const CustomizedFieldsForTable = {
+    person: (
+      <div>
+        <FormControl fullWidth margin="normal">
+          <InputLabel id="demo-simple-select-label">Select Option</InputLabel>
+          <Select
+            labelId="demo-simple-select-label"
+            id="demo-simple-select"
+            defaultValue="option1"
+          >
+            <MenuItem value="option1">Option 1</MenuItem>
+            <MenuItem value="option2">Option 2</MenuItem>
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth margin="normal">
+          <TextField
+            label="Enter Details"
+            placeholder="Enter details for person"
+          />
+        </FormControl>
+      </div>
+    ),
+    // Add similar JSX for other tables as needed
   };
 
   const handleCheckboxChange = (event) => {
@@ -93,6 +130,22 @@ const OMOPCheckboxes = () => {
               />
             )}
           </div>
+          <Grid
+            item
+            xs={12}
+            lg={3}
+            sx={{
+              // justifyContent: "center",
+              display: "flex",
+              flexWrap: "wrap",
+              // margin: "20px",
+            }}
+          >
+            {/* Render additional UI components for the table if it's selected */}
+            {selectedOMOPTables.includes(table) &&
+              CustomizedFieldsForTable[table]}
+          </Grid>
+
           <br />
         </>
       ))}

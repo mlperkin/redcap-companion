@@ -45,7 +45,7 @@ export default function NavBar(props) {
     switch (path) {
       case "/setupConnections":
         return 0;
-      case "/mappingData":
+      case "/mappedData":
         return 1;
       case "/output":
         return 2;
@@ -62,7 +62,7 @@ export default function NavBar(props) {
         navigate("/setupConnections");
         break;
       case 1:
-        navigate("/mappingData");
+        navigate("/mappedData");
         break;
       case 2:
         navigate("/output");
@@ -135,7 +135,7 @@ export default function NavBar(props) {
             aria-label="simple tabs example"
           >
             <Tab label="Connections Setup" disabled={isExecuting} />
-            <Tab label="Mapping Data" disabled={isExecuting} />
+            <Tab label="Mapped Data" disabled={isExecuting} />
             <Tab label="Output to OMOP" />
           </Tabs>
 

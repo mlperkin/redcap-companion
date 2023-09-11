@@ -6,7 +6,7 @@ import React, {
   createContext,
 } from "react";
 import { Routes, Route } from "react-router-dom";
-import MappingDataPage from "./pages/MappingDataPage";
+import MappedDataPage from "./pages/MappedDataPage";
 import ConnectionsSetupPage from "./pages/ConnectionsSetupPage";
 import OutputPage from "./pages/OutputPage";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -26,8 +26,8 @@ function App({ mode }) {
         {/* set init page */}
         <Route path="/" element={<ConnectionsSetupPage mode={mode} />} />
         <Route
-          path="/mappingData"
-          element={<MappingDataPage mode={mode} />}
+          path="/mappedData"
+          element={<MappedDataPage mode={mode} />}
         />
         <Route
           path="/setupConnections"

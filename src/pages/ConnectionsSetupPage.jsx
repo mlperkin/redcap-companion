@@ -9,7 +9,7 @@ const ConnectionsSetupPage = () => {
   const navigate = useNavigate();
 
   function handleClick() {
-    navigate("/mappingData");
+    navigate("/mappedData");
   }
   return (
     <>

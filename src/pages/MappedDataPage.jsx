@@ -13,7 +13,7 @@ import { decryptData } from "../utils/encryption";
 
 const { ipcRenderer } = window.require("electron");
 
-const MappingDataPage = (props) => {
+const MappedDataPage = (props) => {
   const [forms, setForms] = useState([]);
   const [formData, setFormData] = useState();
   const [formDataLoaded, setFormDataLoaded] = useState();
@@ -99,7 +99,7 @@ const MappingDataPage = (props) => {
           }}
         >
           <Box sx={{ marginTop: "20px" }}>
-            <h1>Mapping Data</h1>
+            <h1>Mapped Data</h1>
           </Box>
           <FilePicker props={props} forms={forms} />
           <Box>
@@ -129,4 +129,4 @@ const MappingDataPage = (props) => {
   );
 };
 
-export default MappingDataPage;
+export default MappedDataPage;
