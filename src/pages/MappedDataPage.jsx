@@ -102,6 +102,7 @@ const MappedDataPage = (props) => {
             <h1>Mapped Data</h1>
           </Box>
           <FilePicker props={props} forms={forms} />
+          <br/>
           <Box>
             <BootstrapTooltip title="Go Prev">
               <ArrowCircleLeftIcon

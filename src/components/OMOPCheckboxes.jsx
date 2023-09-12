@@ -7,15 +7,33 @@ import {
   Select,
   MenuItem,
   TextField,
-  InputLabel,
+  // InputLabel,
   FormControl,
-  Grid
+  Grid,
 } from "@mui/material";
 import { useDataContext } from "./context/DataContext";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 const OMOPCheckboxes = () => {
-  const { selectedOMOPTables, setSelectedOMOPTables } = useDataContext();
+  const {
+    selectedOMOPTables,
+    setSelectedOMOPTables,
+    checkboxFieldData,
+    setCheckboxFieldData,
+  } = useDataContext();
+
+  // Unified handler for all changes
+  const handleFormChange = (tableName, fieldName, event) => {
+    const newValue = event.target.value;
+    setCheckboxFieldData((prevData) => ({
+      ...prevData,
+      [tableName]: {
+        ...prevData[tableName],
+        [fieldName]: newValue,
+      },
+    }));
+  };
+
   const OMOP_TABLES = [
     "person",
     "observation_period",
@@ -23,7 +41,7 @@ const OMOPCheckboxes = () => {
     "observation",
   ];
 
-  const MANDATORY_TABLES = ["person", "observation_period"];
+  // const MANDATORY_TABLES = ["person", "observation_period"];
 
   const TABLE_TOOLTIPS = {
     person:
@@ -50,7 +68,7 @@ const OMOPCheckboxes = () => {
   const CustomizedFieldsForTable = {
     person: (
       <div>
-        <FormControl fullWidth margin="normal">
+        {/* <FormControl fullWidth margin="normal">
           <InputLabel id="demo-simple-select-label">Select Option</InputLabel>
           <Select
             labelId="demo-simple-select-label"
@@ -60,13 +78,64 @@ const OMOPCheckboxes = () => {
             <MenuItem value="option1">Option 1</MenuItem>
             <MenuItem value="option2">Option 2</MenuItem>
           </Select>
-        </FormControl>
+        </FormControl> */}
+        {/* <FormControl fullWidth margin="normal">
+          <InputLabel id="demo-simple-select-label">Select Option</InputLabel>
+          <Select
+            labelId="demo-simple-select-label"
+            id="demo-simple-select"
+            defaultValue={checkboxFieldData.person.selectValue}
+            onChange={handleSelectChange}
+          >
+            <MenuItem value="option1">Option 1</MenuItem>
+            <MenuItem value="option2">Option 2</MenuItem>
+          </Select>
+        </FormControl> */}
 
         <FormControl fullWidth margin="normal">
           <TextField
-            label="Enter Details"
-            placeholder="Enter details for person"
+            label="ID"
+            placeholder="Enter field label for person"
+            value={
+              checkboxFieldData.person
+                ? checkboxFieldData.person.idTextValue
+                : ""
+            }
+            onChange={(e) => handleFormChange("person", "idTextValue", e)}
           />
+          <br />
+          <span>
+            <TextField
+              label="Birthdate"
+              placeholder="Enter field label for birthdate"
+              value={
+                checkboxFieldData.person
+                  ? checkboxFieldData.person.birthdateTextValue
+                  : ""
+              }
+              onChange={(e) => handleFormChange("person", "birthdateTextValue", e)}
+            />
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              defaultValue={checkboxFieldData.person.selectValue}
+              onChange={(e) => handleFormChange("person", "birthdateSelectValue", e)}
+            >
+              <MenuItem value="option1">YYYY-MM-DD</MenuItem>
+              <MenuItem value="option2">YYYY/MM/DD</MenuItem>
+            </Select>
+            <br/><br/>
+            <TextField
+              label="Gender"
+              placeholder="Enter field label for gender"
+              value={
+                checkboxFieldData.person
+                  ? checkboxFieldData.person.genderTextValue
+                  : ""
+              }
+              onChange={(e) => handleFormChange("person", "genderTextValue", e)}
+            />
+          </span>
         </FormControl>
       </div>
     ),
@@ -133,7 +202,7 @@ const OMOPCheckboxes = () => {
           <Grid
             item
             xs={12}
-            lg={3}
+            lg={6}
             sx={{
               // justifyContent: "center",
               display: "flex",

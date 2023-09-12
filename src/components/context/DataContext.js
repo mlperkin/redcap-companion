@@ -1,5 +1,5 @@
 // DataContext.js
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState } from "react";
 
 const DataContext = createContext();
 
@@ -10,7 +10,7 @@ export const DataProvider = ({ children }) => {
   const [columns, setColumns] = useState([]);
   const [initialLoad, setInitialLoad] = useState(true);
   const [showREDCapAPIInput, setShowREDCapAPIInput] = useState(false);
-  const [selectedFilename, setSelectedFilename] = useState('');
+  const [selectedFilename, setSelectedFilename] = useState("");
   const [selectedDatabase, setSelectedDatabase] = useState("");
   const [isRedcapConnected, setIsRedcapConnected] = useState(null); // Use null initially for an undetermined state
   const [isExecuting, setIsExecuting] = useState(null); // Use null initially for an undetermined state
@@ -18,6 +18,9 @@ export const DataProvider = ({ children }) => {
   const [ddData, setDDData] = useState([]);
   const [redcapFormName, setRedcapFormName] = useState();
   const [selectedOMOPTables, setSelectedOMOPTables] = useState([]);
+  const [checkboxFieldData, setCheckboxFieldData] = useState({
+    person: {},
+  });
 
   return (
     <DataContext.Provider
@@ -45,7 +48,9 @@ export const DataProvider = ({ children }) => {
         redcapFormName,
         setRedcapFormName,
         selectedOMOPTables,
-        setSelectedOMOPTables
+        setSelectedOMOPTables,
+        checkboxFieldData,
+        setCheckboxFieldData,
       }}
     >
       {children}

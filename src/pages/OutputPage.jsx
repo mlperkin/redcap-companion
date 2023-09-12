@@ -687,6 +687,7 @@ const OutputPage = () => {
               </Table>
             </Paper>
           </Container>
+          <br/>
           <Box>
             <BootstrapTooltip title="Go Prev">
               <ArrowCircleLeftIcon

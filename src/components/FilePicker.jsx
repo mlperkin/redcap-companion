@@ -1,11 +1,20 @@
 // FilePicker.js
-import React, { useState } from "react";
-import { Box, Button, Container, Divider, Typography, Tooltip } from "@mui/material";
+import React, { useState, useMemo } from "react";
+import {
+  Box,
+  Button,
+  Container,
+  Divider,
+  Typography,
+  Tooltip,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import CheckIcon from "@mui/icons-material/Check";
 import FormSelect from "./FormSelect";
 import Paper from "@mui/material/Paper";
 import { useDataContext } from "./context/DataContext";
+import { MaterialReactTable } from 'material-react-table';
+
 const { ipcRenderer } = window.require("electron");
 
 function FilePicker(props) {
@@ -52,49 +61,55 @@ function FilePicker(props) {
         });
         console.log("form name", _formName);
         console.log("onlyMappedData", onlyMappedData);
-        // if(!_formName) throw new Error('No form name detected')
         setRedcapFormName(_formName);
         setDDData(onlyMappedData);
-        console.log("mappeddata", onlyMappedData);
         setShowREDCapAPIInput(false);
-
-        // setColumns(
-        //   Object.keys(onlyMappedData[0]).map((key) => ({
-        //     field: key,
-        //     width: 150,
-        //   }))
-        // );
-        // setRows(onlyMappedData.map((item, index) => ({ id: index, ...item })));
-
-        // setSelectedFilename(data.title);
 
         const truncateString = (str, num) => {
           if (str.length <= num) return str;
-          return str.slice(0, num) + '...';
-        }
-        setColumns([
+          return str.slice(0, num) + "...";
+        };
+        // setColumns([
+        //   {
+        //     field: "field_name",
+        //     headerName: "Field Name",
+        //     width: 150,
+        //   },
+        //   {
+        //     field: "field_type",
+        //     headerName: "Field Type",
+        //     width: 130,
+        //   },
+        //   {
+        //     field: "field_annotation",
+        //     headerName: "Field Annotation",
+        //     width: 350,
+        //     renderCell: (params) => (
+        //       <AnnotationCell annotation={params.value} />
+        //     ),
+        //   },
+        // ]);
+
+        const newColumns = [
           {
-            field: 'field_name',
-            headerName: 'Field Name',
-            width: 150,
+            header: 'Field Name',
+            accessorKey: 'field_name',
           },
           {
-            field: 'field_annotation',
-            headerName: 'Field Annotation',
-            width: 350,
-            renderCell: (params) => (
-              <Tooltip title={params.value}>
-                <span>
-                  {truncateString(params.value, 50)} 
-                </span>
-              </Tooltip>
-            ),
+            header: 'Field Annotation',
+            accessorKey: 'field_annotation',
+            Cell: ({ row }) => <AnnotationCell annotation={row.original.field_annotation} row={row} />,
+
           },
-        ]);
-   
-        
-        
-        
+          {
+            header: 'Mapped To',
+            accessorKey: 'field_annotation.extraData.concept_id',
+            Cell: ({ row }) => <MappedCell annotation={row.original.field_annotation} row={row} />,
+
+          },
+        ];
+      
+        setColumns(newColumns);
         setRows(onlyMappedData.map((item, index) => ({ id: index, ...item })));
 
         setInitialLoad(false);
@@ -117,6 +132,52 @@ function FilePicker(props) {
     setSelectedFilename("");
     setDDData([]);
   };
+
+  function AnnotationCell({ annotation, row }) {
+    // Parse the annotation JSON
+    console.log('annot', annotation)
+    console.log('row', row)
+    const parsedAnnotation = JSON.parse(annotation);
+
+    // If the annotation is an object, display its items on separate lines
+    if (parsedAnnotation && typeof parsedAnnotation === "object") {
+      return (
+          <div>
+            {Object.values(parsedAnnotation).map((item, index) => (
+              <React.Fragment key={index}>
+                {item["Field Label"]} - {item["extraData"]["og_field_name_key"]}
+                <br />
+              </React.Fragment>
+            ))}
+          </div>
+      );
+    }
+
+    return <div>{annotation}</div>;
+  }
+
+  function MappedCell({ annotation, row }) {
+    // Parse the annotation JSON
+    console.log('annot', annotation)
+    console.log('row', row)
+    const parsedAnnotation = JSON.parse(annotation);
+
+    // If the annotation is an object, display its items on separate lines
+    if (parsedAnnotation && typeof parsedAnnotation === "object") {
+      return (
+          <div>
+            {Object.values(parsedAnnotation).map((item, index) => (
+              <React.Fragment key={index}>
+                {item["SNOMED Name"]} - {item["extraData"]["concept_id"]}
+                <br />
+              </React.Fragment>
+            ))}
+          </div>
+      );
+    }
+
+    return <div>{annotation}</div>;
+  }
 
   // Rest of your component code...
   return (
@@ -156,21 +217,23 @@ function FilePicker(props) {
               <>
                 <h3>{selectedFilename}</h3>
                 <Typography>Mapped Data Found</Typography>
-                <DataGrid
+                <MaterialReactTable columns={columns} data={ddData} />
+                {/* <DataGrid
                   rows={rows}
                   columns={columns}
-                  autoHeight
+                  rowHeight={100}
                   autoWidth
                   initialState={{
                     pagination: { paginationModel: { pageSize: 5 } }, // Set pageSize to 5
                   }}
                   pageSizeOptions={[5, 10, 25]} // Customize pagination options
-                />
+                /> */}
               </>
             )}
           </>
         )}
         {ddParseErr && <Typography>Error parsing data dictionary</Typography>}
+       
       </Paper>
     </Container>
   );
