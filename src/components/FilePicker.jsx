@@ -186,7 +186,7 @@ function FilePicker(props) {
         REDCap API
       </Button>
       <Button
-        color="warning"
+        color="success"
         sx={{ margin: "10px" }}
         variant="contained"
         onClick={handleButtonClick}

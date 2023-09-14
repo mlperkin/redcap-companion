@@ -19,7 +19,12 @@ export const DataProvider = ({ children }) => {
   const [redcapFormName, setRedcapFormName] = useState();
   const [selectedOMOPTables, setSelectedOMOPTables] = useState([]);
   const [checkboxFieldData, setCheckboxFieldData] = useState({
-    person: {},
+    person: {
+      idTextValue: "",
+      birthdateTextValue: "",
+      genderTextValue: "",
+      //... other fields ...
+    },
   });
 
   return (

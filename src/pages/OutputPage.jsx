@@ -10,6 +10,7 @@ import {
   TableRow,
   Tooltip,
   Typography,
+  FormControl,
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import { useDataContext } from "../components/context/DataContext";
@@ -22,6 +23,8 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import { decryptData } from "../utils/encryption";
 import OMOPCheckboxes from "../components/OMOPCheckboxes";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Checkbox from "@mui/material/Checkbox";
 // import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
 const { ipcRenderer } = window.require("electron");
@@ -39,8 +42,14 @@ const OutputPage = () => {
     ddData,
     redcapFormName,
     selectedOMOPTables,
+    checkboxFieldData
   } = useDataContext();
 
+  // State for checkboxes
+  const [checkedFormats, setCheckedFormats] = useState({
+    SQL: false,
+    CSV: false,
+  });
   const [checksPassed, setChecksPassed] = useState(0);
   const [isValid, setIsValid] = useState(true); //set true, if any checks fail then set to false
   // const [redcapAPITest, setRedcapAPITest] = useState("");
@@ -49,7 +58,8 @@ const OutputPage = () => {
     redcapAPIKey: "",
     redcapAPIURL: "",
   });
-  // const [formDataLoaded, setFormDataLoaded] = useState(false);
+
+  const outputFormats = ["SQL", "CSV"];
   const [dbCreds, setDBCreds] = useState();
   // const [mergedData, setMergedData] = useState([]);
 
@@ -214,18 +224,10 @@ const OutputPage = () => {
     }
   };
 
-  const showExecResults = () => {
-    if (execStatus === true) {
-      return <Typography>Success!</Typography>;
-    } else if (execStatus === false) {
-      return <Typography>Failed!</Typography>;
-    }
-  };
-
   async function output() {
     setIsExecuting(true);
     setExecStatus(null);
-
+    console.log("output format is", checkedFormats);
     //the steps involved here
     // 1. get all redcap records for selected form
     let redCapRecords = await getRedcapRecords();
@@ -234,18 +236,11 @@ const OutputPage = () => {
     // 3. iterate through this merged list to create SQL CSV files (for upsert on mysql and postgresql)
     // setMergedData(mergedRedcapRecords);
     await generateOutput(mergedRedcapRecords);
-
-    //for development
-    // setTimeout(() => {
-    //   setIsExecuting(false);
-    // }, 5000);
   }
 
   //the steps involved here
   // 1. get all redcap records for selected form
   async function getRedcapRecords() {
-    // console.log("get redcap records for this form", selectedFilename);
-    // console.log("get records for this redcap instance", formData);
     // Call the main process function via ipcRenderer
     let modFormData = { ...formData, formName: redcapFormName };
     const redcapRecords = await ipcRenderer.invoke(
@@ -258,9 +253,6 @@ const OutputPage = () => {
   }
   // 2. match redcap records field_names with field_names from data dictionary
   async function matchAndMergeRedcapRecords(redCapRecords) {
-    // console.log("match these redcap records", redCapRecords);
-    // console.log("with this data", ddData);
-
     if (!redCapRecords) return;
 
     redCapRecords.forEach((obj1) => {
@@ -285,6 +277,7 @@ const OutputPage = () => {
     console.log("generate output", selectedDatabase);
     console.log("output to this", selectedDatabase);
     console.log("with these creds", dbCreds);
+    console.log('checkbox field data', checkboxFieldData)
     if (!matchedAndMergedRedcapRecords.length) return;
 
     //we now need to iterate through this merged data and generate SQL
@@ -324,62 +317,19 @@ const OutputPage = () => {
       return newObj;
     });
 
-    console.log("filteredData", filteredData);
-
-    // generateCSV(matchedAndMergedRedcapRecords);
-    // generateJSON(filteredData);
-    generateSQLFiles(filteredData);
+    generateOutputFiles(filteredData);
 
     setExecStatus(true);
     setIsExecuting(false);
   }
 
-  // function generateCSV(data) {
-  //   //csv output
-  //   // Generate CSV
-  //   const header = Object.keys(data[0]).join(",");
-  //   const rows = data.map((row) => Object.values(row).join(",")).join("\n");
-  //   const csvContent = header + "\n" + rows;
-
-  //   // Create a Blob with the CSV content
-  //   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-
-  //   // Create a link and click it to trigger the download
-  //   const url = URL.createObjectURL(blob);
-  //   const link = document.createElement("a");
-  //   link.href = url;
-  //   link.setAttribute("download", "outputData.csv"); // You can name the file whatever you want
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  // }
-
-  // function generateJSON(data) {
-  //   // Convert data to JSON format with indentation
-  //   const jsonContent = JSON.stringify(data, null, 4); // 4 spaces of indentation
-
-  //   // Create a Blob with the JSON content
-  //   const blob = new Blob([jsonContent], {
-  //     type: "application/json;charset=utf-8;",
-  //   });
-
-  //   // Create a link and click it to trigger the download
-  //   const url = URL.createObjectURL(blob);
-  //   const link = document.createElement("a");
-  //   link.href = url;
-  //   link.setAttribute("download", "outputData.json"); // Naming the file as .json
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  // }
-
-  function generateSQLFiles(data) {
+  function generateOutputFiles(data) {
     //A good rule of thumb is to always create the PERSON table first The VISIT_OCCURRENCE table must be created before the standardized clinical data tables as they all refer to the VISIT_OCCURRENCE_ID
-
     let personSQLContent = "";
     let observationSQLContent = "";
     let observationPeriodSQLContent = "";
     let excludedData = [];
+
     // Step 1: Process data to derive earliest start and latest stop for each demguid
     const observationPeriods = {};
 
@@ -394,6 +344,7 @@ const OutputPage = () => {
     observationPeriodSQLContent += "BEGIN\n\n";
     data.forEach((item) => {
       const demguid = item.demguid;
+      if (!item.impd_brthdtc) return;
       const birthDateValue = item.impd_brthdtc.redcap_value;
       let birthYear, birthMonth, birthDay;
       const [year, month, day] = birthDateValue.split("-");
@@ -401,14 +352,6 @@ const OutputPage = () => {
       birthYear = dateObj.getFullYear();
       birthMonth = dateObj.getMonth() + 1;
       birthDay = dateObj.getDate();
-
-      //define min criteria needed for person to exist in tables
-      if (!birthYear || !birthDateValue) {
-        //this data gets outputted to excludedData.csv file
-        // console.log("dropping", item);
-        // excludedData.push(item);
-        // return;
-      }
 
       // Define possible races and their corresponding values
       const raceValues = [
@@ -497,13 +440,98 @@ const OutputPage = () => {
     observationPeriodSQLContent += "END $$;";
 
     console.log("selectedOMOPTables", selectedOMOPTables);
-    if (selectedOMOPTables.includes("person"))
-      downloadSQL(personSQLContent, "person.sql");
-    if (selectedOMOPTables.includes("observation_period"))
-      downloadSQL(observationPeriodSQLContent, "observation_period.sql");
-    if (selectedOMOPTables.includes("observation"))
-      downloadSQL(observationSQLContent, "observation.sql");
-    if (excludedData && excludedData.length) downloadExcludedData(excludedData);
+
+    // Configuration for tables and their corresponding SQL content
+    const tableConfig = {
+      person: {
+        SQL: personSQLContent,
+        CSV: sqlToCSV(personSQLContent),
+      },
+      observation_period: {
+        SQL: observationPeriodSQLContent,
+        CSV: sqlToCSV(observationPeriodSQLContent),
+      },
+      observation: {
+        SQL: observationSQLContent,
+        CSV: sqlToCSV(observationSQLContent),
+      },
+      //... add more tables here as needed...
+    };
+
+    // Loop through selected tables and trigger download
+    selectedOMOPTables.forEach((table) => {
+      if (tableConfig.hasOwnProperty(table)) {
+        downloadFilesForTable(table, tableConfig[table]);
+      } else {
+        console.warn(`No configuration found for table: ${table}`);
+      }
+    });
+  }
+
+  // Generic download function
+  function downloadFilesForTable(table, contentObj) {
+    if (checkedFormats.SQL) {
+      downloadSQL(contentObj.SQL, `${table}.sql`);
+    }
+    if (checkedFormats.CSV) {
+      downloadCSV(contentObj.CSV, `${table}.csv`);
+    }
+  }
+
+  function downloadCSV(content, filename) {
+    console.log("download csv", content);
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+  }
+
+  function extractValue(data) {
+    if (typeof data === "object" && data.hasOwnProperty("redcap_value")) {
+      return data.redcap_value;
+    }
+    return data;
+  }
+
+  function sqlToCSV(sqlContent) {
+    // Extract values after the "VALUES" keyword
+    const valueMatches = sqlContent.match(/VALUES\s*\(([^)]+)\)/g);
+
+    if (!valueMatches || valueMatches.length < 1) {
+      console.error("Invalid SQL content");
+      return;
+    }
+
+    // Extract the headers only once
+    const headerMatch = sqlContent.match(
+      /\((person_id, birth_datetime,.*ethnicity_concept_id)\)/
+    );
+    if (!headerMatch) {
+      console.error("Could not find headers");
+      return;
+    }
+    const headers = headerMatch[1].split(",").map((s) => s.trim());
+
+    // Convert values to CSV format
+    const values = valueMatches.map((valueSet) => {
+      return valueSet
+        .replace(/VALUES\s*\(/, "") // Remove the "VALUES(" prefix
+        .replace(/\);?$/, "") // Remove closing parenthesis and optional semicolon
+        .split(",")
+        .map((s) => s.trim())
+        .join(",");
+    });
+
+    // Join headers and values
+    return headers.join(",") + "\n" + values.join("\n");
   }
 
   function downloadSQL(sqlContent, fileName) {
@@ -546,6 +574,16 @@ const OutputPage = () => {
     link.click();
     document.body.removeChild(link);
   }
+
+  // Checkbox change handler
+  const handleCheckboxChange = (event) => {
+    const { name, checked } = event.target;
+    setCheckedFormats((prevState) => ({
+      ...prevState,
+      [name]: checked,
+    }));
+  };
+
   return (
     <>
       <Container maxWidth="xl">
@@ -653,23 +691,44 @@ const OutputPage = () => {
                   <TableRow>
                     <TableCell>
                       <br />
-                    
-                      <h3>Output OMOP Tables   <Tooltip
-                        title="Select OMOP Tables you want to generate output for
+
+                      <h3>
+                        Output OMOP Tables{" "}
+                        <Tooltip
+                          title="Select OMOP Tables you want to generate output for
                         "
-                      >
-                        <HelpOutlineIcon />
-                      </Tooltip></h3>
+                        >
+                          <HelpOutlineIcon />
+                        </Tooltip>
+                      </h3>
                       <OMOPCheckboxes />
+                      <br />
+
+                      <h3>Output Format</h3>
+                      {outputFormats.map((format) => (
+                        <FormControlLabel
+                          key={format}
+                          control={
+                            <Checkbox
+                              name={format}
+                              checked={checkedFormats[format]}
+                              onChange={handleCheckboxChange}
+                            />
+                          }
+                          label={format}
+                        />
+                      ))}
+
+                      <br />
                       <Button
                         disabled={!isValid || isExecuting}
                         onClick={output}
+                        color="success"
                         variant="contained"
                         sx={{ marginTop: "10px" }}
                       >
                         Output to OMOP
                       </Button>
-                      <br />
                       <Box sx={{ margin: "20px" }}>
                         {isExecuting ? (
                           <>
@@ -687,7 +746,7 @@ const OutputPage = () => {
               </Table>
             </Paper>
           </Container>
-          <br/>
+          <br />
           <Box>
             <BootstrapTooltip title="Go Prev">
               <ArrowCircleLeftIcon

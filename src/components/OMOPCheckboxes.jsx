@@ -14,7 +14,7 @@ import {
 import { useDataContext } from "./context/DataContext";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
-const OMOPCheckboxes = () => {
+const OMOPCheckboxes = ({}) => {
   const {
     selectedOMOPTables,
     setSelectedOMOPTables,
@@ -25,6 +25,7 @@ const OMOPCheckboxes = () => {
   // Unified handler for all changes
   const handleFormChange = (tableName, fieldName, event) => {
     const newValue = event.target.value;
+    console.log('set checkbox field data', newValue)
     setCheckboxFieldData((prevData) => ({
       ...prevData,
       [tableName]: {
@@ -41,7 +42,7 @@ const OMOPCheckboxes = () => {
     "observation",
   ];
 
-  // const MANDATORY_TABLES = ["person", "observation_period"];
+  const MANDATORY_TABLES = ["person", "observation_period"];
 
   const TABLE_TOOLTIPS = {
     person:
@@ -68,68 +69,50 @@ const OMOPCheckboxes = () => {
   const CustomizedFieldsForTable = {
     person: (
       <div>
-        {/* <FormControl fullWidth margin="normal">
-          <InputLabel id="demo-simple-select-label">Select Option</InputLabel>
-          <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            defaultValue="option1"
-          >
-            <MenuItem value="option1">Option 1</MenuItem>
-            <MenuItem value="option2">Option 2</MenuItem>
-          </Select>
-        </FormControl> */}
-        {/* <FormControl fullWidth margin="normal">
-          <InputLabel id="demo-simple-select-label">Select Option</InputLabel>
-          <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            defaultValue={checkboxFieldData.person.selectValue}
-            onChange={handleSelectChange}
-          >
-            <MenuItem value="option1">Option 1</MenuItem>
-            <MenuItem value="option2">Option 2</MenuItem>
-          </Select>
-        </FormControl> */}
-
         <FormControl fullWidth margin="normal">
           <TextField
             label="ID"
-            placeholder="Enter field label for person"
+            placeholder="Enter your field label for unique patient ID"
             value={
               checkboxFieldData.person
                 ? checkboxFieldData.person.idTextValue
                 : ""
             }
             onChange={(e) => handleFormChange("person", "idTextValue", e)}
+            required
           />
           <br />
           <span>
             <TextField
               label="Birthdate"
-              placeholder="Enter field label for birthdate"
+              placeholder="Enter your field label for patient birthdate"
               value={
                 checkboxFieldData.person
                   ? checkboxFieldData.person.birthdateTextValue
                   : ""
               }
-              onChange={(e) => handleFormChange("person", "birthdateTextValue", e)}
+              onChange={(e) =>
+                handleFormChange("person", "birthdateTextValue", e)
+              }
             />
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
-              defaultValue={checkboxFieldData.person.selectValue}
-              onChange={(e) => handleFormChange("person", "birthdateSelectValue", e)}
+              defaultValue="YYYY-MM-DD"
+              onChange={(e) =>
+                handleFormChange("person", "birthdateSelectValue", e)
+              }
             >
-              <MenuItem value="option1">YYYY-MM-DD</MenuItem>
-              <MenuItem value="option2">YYYY/MM/DD</MenuItem>
+              <MenuItem value="YYYY-MM-DD">YYYY-MM-DD</MenuItem>
+              <MenuItem value="YYYY/MM/DD">YYYY/MM/DD</MenuItem>
             </Select>
-            <br/><br/>
+            <br />
+            <br />
             <TextField
               label="Gender"
-              placeholder="Enter field label for gender"
+              placeholder="Enter your field label for gender"
               value={
-                checkboxFieldData.person
+                checkboxFieldData.person.genderTextValue
                   ? checkboxFieldData.person.genderTextValue
                   : ""
               }
@@ -160,7 +143,7 @@ const OMOPCheckboxes = () => {
   return (
     <div>
       {OMOP_TABLES.map((table) => (
-        <>
+        <React.Fragment key={table}>
           <div
             style={{
               display: "inline-flex",
@@ -216,7 +199,7 @@ const OMOPCheckboxes = () => {
           </Grid>
 
           <br />
-        </>
+        </React.Fragment>
       ))}
     </div>
   );
