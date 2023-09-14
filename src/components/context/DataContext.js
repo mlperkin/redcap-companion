@@ -25,6 +25,10 @@ export const DataProvider = ({ children }) => {
       genderTextValue: "",
       //... other fields ...
     },
+    observation_period: {
+      earliestObservationDateTextValue: "",
+      latestObservationDateTextValue: "",
+    },
   });
 
   return (

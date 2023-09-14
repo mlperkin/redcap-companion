@@ -42,7 +42,7 @@ const OutputPage = () => {
     ddData,
     redcapFormName,
     selectedOMOPTables,
-    checkboxFieldData
+    checkboxFieldData,
   } = useDataContext();
 
   // State for checkboxes
@@ -277,7 +277,9 @@ const OutputPage = () => {
     console.log("generate output", selectedDatabase);
     console.log("output to this", selectedDatabase);
     console.log("with these creds", dbCreds);
-    console.log('checkbox field data', checkboxFieldData)
+    console.log("checkbox field data", checkboxFieldData);
+    let personID = checkboxFieldData.person.idTextValue;
+    console.log("personid", personID);
     if (!matchedAndMergedRedcapRecords.length) return;
 
     //we now need to iterate through this merged data and generate SQL
@@ -286,19 +288,19 @@ const OutputPage = () => {
     const filteredData = matchedAndMergedRedcapRecords.map((item) => {
       let newObj = {};
 
-      // Keep the 'demguid' key-value pair
-      if (item.demguid) {
-        newObj.demguid = item.demguid;
+      // Keep the 'personID' key-value pair
+      if (item[personID]) {
+        newObj[personID] = item[personID];
       }
 
       // Keep the 'enroll date' key-value pair
-      if (item.imp_enroll_date) {
-        newObj.imp_enroll_date = item.imp_enroll_date;
+      if (item[checkboxFieldData.observation_period.earliestObservationDateTextValue]) {
+        newObj[checkboxFieldData.observation_period.earliestObservationDateTextValue] = item[checkboxFieldData.observation_period.earliestObservationDateTextValue];
       }
 
       // Keep the 'follw up date' key-value pair
-      if (item.imp_followup_date) {
-        newObj.imp_followup_date = item.imp_followup_date;
+      if (item[checkboxFieldData.observation_period.latestObservationDateTextValue]) {
+        newObj[checkboxFieldData.observation_period.latestObservationDateTextValue] = item[checkboxFieldData.observation_period.latestObservationDateTextValue];
       }
 
       console.log("item", item["redcap_repeat_instrument"]);
@@ -323,125 +325,117 @@ const OutputPage = () => {
     setIsExecuting(false);
   }
 
-  function generateOutputFiles(data) {
-    //A good rule of thumb is to always create the PERSON table first The VISIT_OCCURRENCE table must be created before the standardized clinical data tables as they all refer to the VISIT_OCCURRENCE_ID
-    let personSQLContent = "";
-    let observationSQLContent = "";
-    let observationPeriodSQLContent = "";
-    let excludedData = [];
+  // Constants
+  const RACE_VALUES = [
+    { race: "WHITE", value: 8527 },
+    { race: "BLACK", value: 8516 },
+    { race: "ASIAN", value: 8515 },
+  ];
+  const ETHNICITY_CONCEPT_ID_PLACEHOLDER = 38003564;
+  const GENDER_CONCEPT_ID = "8507";
 
-    // Step 1: Process data to derive earliest start and latest stop for each demguid
+  function getRandomRaceValue() {
+    const randomRaceIndex = Math.floor(Math.random() * RACE_VALUES.length);
+    return RACE_VALUES[randomRaceIndex]?.value || 0;
+  }
+
+  function processPersonData(item) {
+    let content = "";
+    const personID = item[checkboxFieldData.person.idTextValue];
+    const birthDateValue =
+      item[checkboxFieldData.person.birthdateTextValue]?.redcap_value;
+    const [year, month, day] = birthDateValue?.split("-") || [];
+    const birthYear = new Date(year, month - 1, day).getFullYear();
+    if (birthYear && birthDateValue) {
+      content += `-- Inserting data for personID = ${personID} into person table\n`;
+      content += `INSERT INTO person (person_id, birth_datetime,  gender_concept_id, year_of_birth, month_of_birth, day_of_birth, race_concept_id, ethnicity_concept_id) VALUES `;
+      content += `('${personID}', '${birthDateValue}', ${GENDER_CONCEPT_ID}, ${birthYear}, ${parseInt(
+        month
+      )}, ${parseInt(
+        day
+      )}, ${getRandomRaceValue()}, ${ETHNICITY_CONCEPT_ID_PLACEHOLDER});\n\n`;
+    }
+    return content;
+  }
+
+  function processObservationData(item) {
+    let content = "";
+    const personID = item[checkboxFieldData.person.idTextValue];
+    const birthDateConceptId =
+      item.checkboxFieldData?.person?.birthdateTextValue?.mapping_metadata
+        ?.extraData?.concept_id;
+    const ageValue = item.imp_age?.redcap_value;
+    const ageConceptId =
+      item.imp_age?.mapping_metadata?.imp_age?.extraData?.concept_id;
+    const observationEntries = [
+      { conceptId: birthDateConceptId, value: item[checkboxFieldData.person.birthdateTextValue]?.redcap_value },
+      { conceptId: ageConceptId, value: ageValue },
+    ];
+    observationEntries.forEach(({ conceptId, value }) => {
+      content += `-- Inserting observation for personID = ${personID}\n`;
+      content += `INSERT INTO observation (observation_id, person_id, observation_concept_id, value_as_string, observation_date, observation_type_concept_id) `;
+      content += `VALUES ((SELECT COALESCE(MAX(observation_id), 0) + 1 FROM observation), '${personID}', ${conceptId}, '${value}', CURRENT_DATE, 123456);\n\n`;
+    });
+    return content;
+  }
+
+  function processObservationPeriods(data) {
     const observationPeriods = {};
-
-    personSQLContent += "DO $$ \nDECLARE \n";
-    observationPeriodSQLContent += "DO $$ \nDECLARE \n";
-    observationSQLContent += "DO $$ \nDECLARE \n";
-    observationSQLContent +=
-      "    observation_type_concept_id_val BIGINT := 123456; -- placeholder, replace with correct value\n";
-
-    personSQLContent += "BEGIN\n\n";
-    observationSQLContent += "BEGIN\n\n";
-    observationPeriodSQLContent += "BEGIN\n\n";
     data.forEach((item) => {
-      const demguid = item.demguid;
-      if (!item.impd_brthdtc) return;
-      const birthDateValue = item.impd_brthdtc.redcap_value;
-      let birthYear, birthMonth, birthDay;
-      const [year, month, day] = birthDateValue.split("-");
-      let dateObj = new Date(year, month - 1, day);
-      birthYear = dateObj.getFullYear();
-      birthMonth = dateObj.getMonth() + 1;
-      birthDay = dateObj.getDate();
-
-      // Define possible races and their corresponding values
-      const raceValues = [
-        { race: "WHITE", value: 8527 },
-        { race: "BLACK", value: 8516 },
-        { race: "ASIAN", value: 8515 },
-      ];
-
-      // Choose a random race from the array
-      const randomRaceIndex = Math.floor(Math.random() * raceValues.length);
-      const selectedRace = raceValues[randomRaceIndex];
-
-      // Use the selected race's value or default to 0 if not found
-      const raceConceptIdPlaceholder = selectedRace ? selectedRace.value : 0;
-      //Placerholder data
-      const ethnicityConceptIdPlaceholder = 38003564; // adjust this if you have a specific value
-      const genderConceptId = "8507"; //need to get this from the data
-      if (birthYear && birthDateValue) {
-        // Insert into person table
-        personSQLContent += `-- Inserting data for demguid = ${demguid} into person table\n`;
-        if (birthYear) {
-          personSQLContent += `INSERT INTO person (person_id, birth_datetime,  gender_concept_id, year_of_birth, month_of_birth, day_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
-          personSQLContent += `('${demguid}', '${birthDateValue}', ${genderConceptId}, ${birthYear}, ${birthMonth}, ${birthDay}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
-        } else {
-          personSQLContent += `INSERT INTO person (person_id, birth_datetime, gender_concept_id, year_of_birth, race_concept_id, ethnicity_concept_id) VALUES \n`;
-          personSQLContent += `('${demguid}', '${birthDateValue}', ${genderConceptId}, ${birthYear}, ${raceConceptIdPlaceholder}, ${ethnicityConceptIdPlaceholder});\n\n`;
-        }
-      }
-
-      const birthDateConceptId =
-        item.impd_brthdtc.mapping_metadata.impd_brthdtc.extraData.concept_id;
-      const ageValue = item.imp_age.redcap_value;
-      const ageConceptId =
-        item.imp_age.mapping_metadata.imp_age.extraData.concept_id;
-
-      // Insert into observation table
-      observationSQLContent += `-- Inserting birthDate observation for demguid = ${demguid}\n`;
-      observationSQLContent += `INSERT INTO observation (observation_id, person_id, observation_concept_id, value_as_string, observation_date, observation_type_concept_id) \n`;
-      observationSQLContent += `VALUES ((SELECT COALESCE(MAX(observation_id), 0) + 1 FROM observation), '${demguid}', ${birthDateConceptId}, '${birthDateValue}', CURRENT_DATE, observation_type_concept_id_val);\n\n`;
-
-      // Insert into observation table
-      observationSQLContent += `-- Inserting age observation for demguid = ${demguid}\n`;
-      observationSQLContent += `INSERT INTO observation (observation_id, person_id, observation_concept_id, value_as_string, observation_date, observation_type_concept_id) \n`;
-      observationSQLContent += `VALUES ((SELECT COALESCE(MAX(observation_id), 0) + 2 FROM observation), '${demguid}', ${ageConceptId}, '${ageValue}', CURRENT_DATE, observation_type_concept_id_val);\n\n`;
-
-      // initialize if not yet done
-      if (!observationPeriods[demguid]) {
-        observationPeriods[demguid] = {
-          start: new Date(item.imp_enroll_date),
-          stop: new Date(
-            item.imp_followup_date
-              ? item.imp_followup_date
-              : item.imp_enroll_date
-          ),
+      const personID = item[checkboxFieldData.person.idTextValue];
+      if (!observationPeriods[personID]) {
+        observationPeriods[personID] = {
+          start: new Date(item[checkboxFieldData.observation_period.earliestObservationDateTextValue]),
+          stop: new Date(item[checkboxFieldData.observation_period.latestObservationDateTextValue] || item[checkboxFieldData.observation_period.earliestObservationDateTextValue]),
         };
       } else {
-        // Update start if the current item's start is earlier
         if (
-          new Date(item.imp_enroll_date) < observationPeriods[demguid].start
+          new Date(item[checkboxFieldData.observation_period.earliestObservationDateTextValue]) < observationPeriods[personID].start
         ) {
-          observationPeriods[demguid].start = new Date(item.imp_enroll_date);
+          observationPeriods[personID].start = new Date(item[checkboxFieldData.observation_period.earliestObservationDateTextValue]);
         }
-
-        // Update stop if the current item's stop is later
         if (
-          new Date(item.imp_followup_date) > observationPeriods[demguid].stop
+          new Date(item[checkboxFieldData.observation_period.latestObservationDateTextValue]) > observationPeriods[personID].stop
         ) {
-          observationPeriods[demguid].stop = new Date(item.imp_followup_date);
+          observationPeriods[personID].stop = new Date(item[checkboxFieldData.observation_period.latestObservationDateTextValue]);
         }
       }
-    }); //end data loop
+    });
+    return observationPeriods;
+  }
+
+  function generateObservationPeriodSQL(observationPeriods) {
+    let content = "";
+    for (let personID in observationPeriods) {
+      content += `-- Inserting observation period for personID = ${personID}\n`;
+      content += `INSERT INTO observation_period (observation_period_id, person_id, observation_period_start_date, observation_period_end_date, period_type_concept_id) `;
+      content += `VALUES ((SELECT COALESCE(MAX(observation_period_id), 0) + 1 FROM observation_period), '${personID}', '${formatDateToSQL(
+        observationPeriods[personID].start
+      )}', '${formatDateToSQL(
+        observationPeriods[personID].stop
+      )}', 44814724);\n\n`;
+    }
+    return content;
+  }
+
+  function generateOutputFiles(data) {
+    let personSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
+    let observationSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
+    let observationPeriodSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
+
+    data.forEach((item) => {
+      personSQLContent += processPersonData(item);
+      observationSQLContent += processObservationData(item);
+    });
+
+    const observationPeriods = processObservationPeriods(data);
+    observationPeriodSQLContent +=
+      generateObservationPeriodSQL(observationPeriods);
 
     personSQLContent += "END $$;";
     observationSQLContent += "END $$;";
-
-    // Step 2: Create SQL statements for the observation_period table using the derived data
-    for (let demguid in observationPeriods) {
-      observationPeriodSQLContent += `-- Inserting observation period for demguid = ${demguid}\n`;
-      observationPeriodSQLContent += `INSERT INTO observation_period (observation_period_id, person_id, observation_period_start_date, observation_period_end_date, period_type_concept_id) \n`;
-      observationPeriodSQLContent += `VALUES ((SELECT COALESCE(MAX(observation_period_id), 0) + 1 FROM observation_period), '${demguid}', '${formatDateToSQL(
-        observationPeriods[demguid].start
-      )}', '${formatDateToSQL(
-        observationPeriods[demguid].stop
-      )}', 44814724);\n\n`;
-    }
     observationPeriodSQLContent += "END $$;";
 
-    console.log("selectedOMOPTables", selectedOMOPTables);
-
-    // Configuration for tables and their corresponding SQL content
     const tableConfig = {
       person: {
         SQL: personSQLContent,
@@ -455,10 +449,8 @@ const OutputPage = () => {
         SQL: observationSQLContent,
         CSV: sqlToCSV(observationSQLContent),
       },
-      //... add more tables here as needed...
     };
 
-    // Loop through selected tables and trigger download
     selectedOMOPTables.forEach((table) => {
       if (tableConfig.hasOwnProperty(table)) {
         downloadFilesForTable(table, tableConfig[table]);
@@ -478,6 +470,29 @@ const OutputPage = () => {
     }
   }
 
+  function extractValue(data) {
+    if (typeof data === "object" && data.hasOwnProperty("redcap_value")) {
+      return data.redcap_value;
+    }
+    return data;
+  }
+
+  function downloadSQL(sqlContent, fileName) {
+    // Create a Blob with the SQL content
+    const blob = new Blob([sqlContent], {
+      type: "text/plain;charset=utf-8;",
+    });
+
+    // Create a link and click it to trigger the download
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   function downloadCSV(content, filename) {
     console.log("download csv", content);
     const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
@@ -492,13 +507,6 @@ const OutputPage = () => {
     link.click();
 
     document.body.removeChild(link);
-  }
-
-  function extractValue(data) {
-    if (typeof data === "object" && data.hasOwnProperty("redcap_value")) {
-      return data.redcap_value;
-    }
-    return data;
   }
 
   function sqlToCSV(sqlContent) {
@@ -532,22 +540,6 @@ const OutputPage = () => {
 
     // Join headers and values
     return headers.join(",") + "\n" + values.join("\n");
-  }
-
-  function downloadSQL(sqlContent, fileName) {
-    // Create a Blob with the SQL content
-    const blob = new Blob([sqlContent], {
-      type: "text/plain;charset=utf-8;",
-    });
-
-    // Create a link and click it to trigger the download
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", fileName);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   }
 
   // Additional utility function to convert a Date object to YYYY-MM-DD string

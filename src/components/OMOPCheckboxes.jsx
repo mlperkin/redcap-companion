@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Checkbox,
   FormControlLabel,
@@ -25,15 +25,27 @@ const OMOPCheckboxes = ({}) => {
   // Unified handler for all changes
   const handleFormChange = (tableName, fieldName, event) => {
     const newValue = event.target.value;
-    console.log('set checkbox field data', newValue)
-    setCheckboxFieldData((prevData) => ({
-      ...prevData,
-      [tableName]: {
-        ...prevData[tableName],
-        [fieldName]: newValue,
-      },
-    }));
+    console.log("set checkbox field data", newValue);
+    setCheckboxFieldData((prevData) => {
+      const updatedData = {
+        ...prevData,
+        [tableName]: {
+          ...prevData[tableName],
+          [fieldName]: newValue,
+        },
+      };
+      localStorage.setItem("checkboxFieldData", JSON.stringify(updatedData)); // Storing into localStorage
+      return updatedData;
+    });
   };
+
+  useEffect(() => {
+    const storedData = localStorage.getItem("checkboxFieldData");
+    console.log('got stored data', JSON.parse(storedData))
+    if (storedData) {
+      setCheckboxFieldData(JSON.parse(storedData));
+    }
+  }, []);
 
   const OMOP_TABLES = [
     "person",
@@ -118,6 +130,50 @@ const OMOPCheckboxes = ({}) => {
               }
               onChange={(e) => handleFormChange("person", "genderTextValue", e)}
             />
+          </span>
+        </FormControl>
+      </div>
+    ),
+    observation_period: (
+      <div>
+        <FormControl fullWidth margin="normal">
+          <TextField
+            label="Earliest Observation Date"
+            placeholder="Enter your field label for earliest observation date"
+            value={
+              checkboxFieldData.observation_period
+                ? checkboxFieldData.observation_period.earliestObservationDateTextValue
+                : ""
+            }
+            onChange={(e) =>
+              handleFormChange(
+                "observation_period",
+                "earliestObservationDateTextValue",
+                e
+              )
+            }
+            required
+          />
+          <br />
+          <span>
+            <TextField
+              label="Latest Observation Date"
+              placeholder="Enter your field label for latest observation date"
+              value={
+                checkboxFieldData.observation_period
+                  ? checkboxFieldData.observation_period.latestObservationDateTextValue
+                  : ""
+              }
+              onChange={(e) =>
+                handleFormChange(
+                  "observation_period",
+                  "latestObservationDateTextValue",
+                  e
+                )
+              }
+            />
+
+            <br />
           </span>
         </FormControl>
       </div>
