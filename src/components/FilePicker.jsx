@@ -13,7 +13,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import FormSelect from "./FormSelect";
 import Paper from "@mui/material/Paper";
 import { useDataContext } from "./context/DataContext";
-import { MaterialReactTable } from 'material-react-table';
+import { MaterialReactTable } from "material-react-table";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -92,23 +92,41 @@ function FilePicker(props) {
 
         const newColumns = [
           {
-            header: 'Field Name',
-            accessorKey: 'field_name',
+            header: "Field Name",
+            accessorKey: "field_name",
           },
           {
-            header: 'Field Annotation',
-            accessorKey: 'field_annotation',
-            Cell: ({ row }) => <AnnotationCell annotation={row.original.field_annotation} row={row} />,
-
+            header: "Field Annotation",
+            accessorKey: "field_annotation",
+            Cell: ({ row }) => (
+              <AnnotationCell
+                annotation={row.original.field_annotation}
+                row={row}
+              />
+            ),
           },
           {
-            header: 'Mapped To',
-            accessorKey: 'field_annotation.extraData.concept_id',
-            Cell: ({ row }) => <MappedCell annotation={row.original.field_annotation} row={row} />,
-
+            header: "Mapped To",
+            accessorKey: "field_annotation.extraData.concept_id",
+            Cell: ({ row }) => (
+              <MappedCell
+                annotation={row.original.field_annotation}
+                row={row}
+              />
+            ),
+          },
+          {
+            header: "Domain",
+            accessorKey: "field_annotation.extraData['Domain ID']",
+            Cell: ({ row }) => (
+              <DomainCell
+                annotation={row.original.field_annotation}
+                row={row}
+              />
+            ),
           },
         ];
-      
+
         setColumns(newColumns);
         setRows(onlyMappedData.map((item, index) => ({ id: index, ...item })));
 
@@ -135,21 +153,21 @@ function FilePicker(props) {
 
   function AnnotationCell({ annotation, row }) {
     // Parse the annotation JSON
-    console.log('annot', annotation)
-    console.log('row', row)
+    console.log("annot", annotation);
+    console.log("row", row);
     const parsedAnnotation = JSON.parse(annotation);
 
     // If the annotation is an object, display its items on separate lines
     if (parsedAnnotation && typeof parsedAnnotation === "object") {
       return (
-          <div>
-            {Object.values(parsedAnnotation).map((item, index) => (
-              <React.Fragment key={index}>
-                {item["Field Label"]} - {item["extraData"]["og_field_name_key"]}
-                <br />
-              </React.Fragment>
-            ))}
-          </div>
+        <div>
+          {Object.values(parsedAnnotation).map((item, index) => (
+            <React.Fragment key={index}>
+              {item["Field Label"]} - {item["extraData"]["og_field_name_key"]}
+              <br />
+            </React.Fragment>
+          ))}
+        </div>
       );
     }
 
@@ -158,28 +176,50 @@ function FilePicker(props) {
 
   function MappedCell({ annotation, row }) {
     // Parse the annotation JSON
-    console.log('annot', annotation)
-    console.log('row', row)
+    console.log("annot", annotation);
+    console.log("row", row);
     const parsedAnnotation = JSON.parse(annotation);
 
     // If the annotation is an object, display its items on separate lines
     if (parsedAnnotation && typeof parsedAnnotation === "object") {
       return (
-          <div>
-            {Object.values(parsedAnnotation).map((item, index) => (
-              <React.Fragment key={index}>
-                {item["SNOMED Name"]} - {item["extraData"]["concept_id"]}
-                <br />
-              </React.Fragment>
-            ))}
-          </div>
+        <div>
+          {Object.values(parsedAnnotation).map((item, index) => (
+            <React.Fragment key={index}>
+              {item["SNOMED Name"]} - {item["extraData"]["concept_id"]}
+              <br />
+            </React.Fragment>
+          ))}
+        </div>
       );
     }
 
     return <div>{annotation}</div>;
   }
 
-  // Rest of your component code...
+  function DomainCell({ annotation, row }) {
+    // Parse the annotation JSON
+    console.log("annot", annotation);
+    console.log("row", row);
+    const parsedAnnotation = JSON.parse(annotation);
+
+    // If the annotation is an object, display its items on separate lines
+    if (parsedAnnotation && typeof parsedAnnotation === "object") {
+      return (
+        <div>
+          {Object.values(parsedAnnotation).map((item, index) => (
+            <React.Fragment key={index}>
+              {item["Domain ID"]}
+              <br />
+            </React.Fragment>
+          ))}
+        </div>
+      );
+    }
+
+    return <div>{annotation}</div>;
+  }
+
   return (
     <Container>
       <Button variant="contained" onClick={handleREDCapAPIButtonClick}>
@@ -216,7 +256,7 @@ function FilePicker(props) {
             {ddData && (
               <>
                 <h3>{selectedFilename}</h3>
-                <Typography>Mapped Data Found</Typography>
+                <Typography variant="h6" gutterBottom>OMOP Mapped Data Found</Typography>
                 <MaterialReactTable columns={columns} data={ddData} />
                 {/* <DataGrid
                   rows={rows}
@@ -233,7 +273,6 @@ function FilePicker(props) {
           </>
         )}
         {ddParseErr && <Typography>Error parsing data dictionary</Typography>}
-       
       </Paper>
     </Container>
   );

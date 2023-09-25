@@ -22,7 +22,9 @@ export const DataProvider = ({ children }) => {
     person: {
       idTextValue: "",
       birthdateTextValue: "",
-      genderTextValue: "",
+      raceTextValue: "",
+      maleGenderTextValue: "",
+      femaleGenderTextValue: "",
       //... other fields ...
     },
     observation_period: {

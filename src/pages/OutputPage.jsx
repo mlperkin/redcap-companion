@@ -25,6 +25,9 @@ import OMOPCheckboxes from "../components/OMOPCheckboxes";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
+import UploadIcon from '@mui/icons-material/Upload';
+import DownloadIcon from '@mui/icons-material/Download';
+
 // import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
 const { ipcRenderer } = window.require("electron");
@@ -294,13 +297,31 @@ const OutputPage = () => {
       }
 
       // Keep the 'enroll date' key-value pair
-      if (item[checkboxFieldData.observation_period.earliestObservationDateTextValue]) {
-        newObj[checkboxFieldData.observation_period.earliestObservationDateTextValue] = item[checkboxFieldData.observation_period.earliestObservationDateTextValue];
+      if (
+        item[
+          checkboxFieldData.observation_period.earliestObservationDateTextValue
+        ]
+      ) {
+        newObj[
+          checkboxFieldData.observation_period.earliestObservationDateTextValue
+        ] =
+          item[
+            checkboxFieldData.observation_period.earliestObservationDateTextValue
+          ];
       }
 
       // Keep the 'follw up date' key-value pair
-      if (item[checkboxFieldData.observation_period.latestObservationDateTextValue]) {
-        newObj[checkboxFieldData.observation_period.latestObservationDateTextValue] = item[checkboxFieldData.observation_period.latestObservationDateTextValue];
+      if (
+        item[
+          checkboxFieldData.observation_period.latestObservationDateTextValue
+        ]
+      ) {
+        newObj[
+          checkboxFieldData.observation_period.latestObservationDateTextValue
+        ] =
+          item[
+            checkboxFieldData.observation_period.latestObservationDateTextValue
+          ];
       }
 
       console.log("item", item["redcap_repeat_instrument"]);
@@ -368,7 +389,10 @@ const OutputPage = () => {
     const ageConceptId =
       item.imp_age?.mapping_metadata?.imp_age?.extraData?.concept_id;
     const observationEntries = [
-      { conceptId: birthDateConceptId, value: item[checkboxFieldData.person.birthdateTextValue]?.redcap_value },
+      {
+        conceptId: birthDateConceptId,
+        value: item[checkboxFieldData.person.birthdateTextValue]?.redcap_value,
+      },
       { conceptId: ageConceptId, value: ageValue },
     ];
     observationEntries.forEach(({ conceptId, value }) => {
@@ -385,19 +409,48 @@ const OutputPage = () => {
       const personID = item[checkboxFieldData.person.idTextValue];
       if (!observationPeriods[personID]) {
         observationPeriods[personID] = {
-          start: new Date(item[checkboxFieldData.observation_period.earliestObservationDateTextValue]),
-          stop: new Date(item[checkboxFieldData.observation_period.latestObservationDateTextValue] || item[checkboxFieldData.observation_period.earliestObservationDateTextValue]),
+          start: new Date(
+            item[
+              checkboxFieldData.observation_period.earliestObservationDateTextValue
+            ]
+          ),
+          stop: new Date(
+            item[
+              checkboxFieldData.observation_period
+                .latestObservationDateTextValue
+            ] ||
+              item[
+                checkboxFieldData.observation_period
+                  .earliestObservationDateTextValue
+              ]
+          ),
         };
       } else {
         if (
-          new Date(item[checkboxFieldData.observation_period.earliestObservationDateTextValue]) < observationPeriods[personID].start
+          new Date(
+            item[
+              checkboxFieldData.observation_period.earliestObservationDateTextValue
+            ]
+          ) < observationPeriods[personID].start
         ) {
-          observationPeriods[personID].start = new Date(item[checkboxFieldData.observation_period.earliestObservationDateTextValue]);
+          observationPeriods[personID].start = new Date(
+            item[
+              checkboxFieldData.observation_period.earliestObservationDateTextValue
+            ]
+          );
         }
         if (
-          new Date(item[checkboxFieldData.observation_period.latestObservationDateTextValue]) > observationPeriods[personID].stop
+          new Date(
+            item[
+              checkboxFieldData.observation_period.latestObservationDateTextValue
+            ]
+          ) > observationPeriods[personID].stop
         ) {
-          observationPeriods[personID].stop = new Date(item[checkboxFieldData.observation_period.latestObservationDateTextValue]);
+          observationPeriods[personID].stop = new Date(
+            item[
+              checkboxFieldData.observation_period.latestObservationDateTextValue
+            ]
+          );
         }
       }
     });
@@ -683,19 +736,32 @@ const OutputPage = () => {
                   <TableRow>
                     <TableCell>
                       <br />
-
-                      <h3>
-                        Output OMOP Tables{" "}
-                        <Tooltip
-                          title="Select OMOP Tables you want to generate output for
-                        "
-                        >
-                          <HelpOutlineIcon />
-                        </Tooltip>
-                      </h3>
+                      <Tooltip title="Import Config" placement="top">
+                      <Button
+                        disabled={!isValid || isExecuting}
+                        onClick={output}
+                        color="success"
+                        variant="contained"
+                        sx={{ marginTop: "10px" }}
+                      >
+                        <UploadIcon />
+                      </Button>
+                      </Tooltip>
+                     
+                      <Tooltip title="Export Config" placement="top">
+                      <Button
+                        disabled={!isValid || isExecuting}
+                        onClick={output}
+                        color="success"
+                        variant="contained"
+                        sx={{ marginTop: "10px", marginLeft: '20px' }}
+                      >
+                        <DownloadIcon />
+                      </Button>
+                      </Tooltip>
+                      
                       <OMOPCheckboxes />
                       <br />
-
                       <h3>Output Format</h3>
                       {outputFormats.map((format) => (
                         <FormControlLabel
@@ -710,7 +776,6 @@ const OutputPage = () => {
                           label={format}
                         />
                       ))}
-
                       <br />
                       <Button
                         disabled={!isValid || isExecuting}
