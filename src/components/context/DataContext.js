@@ -16,6 +16,7 @@ export const DataProvider = ({ children }) => {
   const [isExecuting, setIsExecuting] = useState(null); // Use null initially for an undetermined state
   const [execStatus, setExecStatus] = useState(null); //null initially for undetermined state
   const [ddData, setDDData] = useState([]);
+  const [tablesData, setTablesData] = useState([]);
   const [redcapFormName, setRedcapFormName] = useState();
   const [selectedOMOPTables, setSelectedOMOPTables] = useState([]);
   const [checkboxFieldData, setCheckboxFieldData] = useState({
@@ -62,6 +63,8 @@ export const DataProvider = ({ children }) => {
         setSelectedOMOPTables,
         checkboxFieldData,
         setCheckboxFieldData,
+        tablesData,
+        setTablesData,
       }}
     >
       {children}

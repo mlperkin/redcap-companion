@@ -1,25 +1,27 @@
 // FilePicker.js
-import React, { useState, useMemo } from "react";
-import {
-  Box,
-  Button,
-  Container,
-  Divider,
-  Typography,
-  Tooltip,
-} from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import React, { useState } from "react";
+import { Box, Button, Container, Divider, Typography } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import FormSelect from "./FormSelect";
 import Paper from "@mui/material/Paper";
 import { useDataContext } from "./context/DataContext";
 import { MaterialReactTable } from "material-react-table";
+import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@mui/icons-material/Close";
+import { useTheme } from "@mui/material/styles";
+import Grid from "@mui/material/Grid";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import { Alert, Snackbar } from "@mui/material";
 
 const { ipcRenderer } = window.require("electron");
 
 function FilePicker(props) {
+  const theme = useTheme();
+
   const {
-    rows,
     setRows,
     columns,
     setColumns,
@@ -31,10 +33,79 @@ function FilePicker(props) {
     setSelectedFilename,
     ddData,
     setDDData,
+    tablesData,
+    setTablesData,
     setRedcapFormName,
   } = useDataContext();
 
   const [ddParseErr, setDDParseErr] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  const checklistData = [
+    { id: 5929, label: "Birth Year" },
+    { id: 8507, label: "Male" },
+    { id: 8532, label: "Female" },
+    { id: 38003563, label: "Hispanic or Latino" },
+    { id: 38003564, label: "Not Hispanic" },
+
+    // ... you can add more here later
+  ];
+
+  const isIdPresentInTablesData = (id) => {
+    if (tablesData.length) {
+      console.log("tablesData", tablesData[0]);
+      console.log("tablesData2", tablesData[0].data[0].field_annotation);
+    }
+
+    return tablesData.some((table, tableIndex) => {
+      console.log(`Processing table ${tableIndex}:`, table);
+
+      return table.data.some((row, rowIndex) => {
+        console.log(`Row ${rowIndex} field_annotation:`, row.field_annotation);
+
+        let parsedAnnotation;
+        try {
+          parsedAnnotation = JSON.parse(row.field_annotation);
+        } catch (error) {
+          console.error(
+            `Error parsing field_annotation for row ${rowIndex}:`,
+            error
+          );
+          return false; // continue to next row if there's an error
+        }
+
+        // Process each property of the parsedAnnotation
+        for (const property in parsedAnnotation) {
+          console.log(
+            `Property "${property}" of parsedAnnotation for row ${rowIndex}:`,
+            parsedAnnotation[property]
+          );
+
+          const extraData = parsedAnnotation[property]?.extraData;
+          console.log(
+            `Extracted extraData for property "${property}" of row ${rowIndex}:`,
+            extraData
+          );
+
+          const conceptId = extraData?.concept_id;
+          console.log(
+            `concept_id for property "${property}" of row ${rowIndex}:`,
+            conceptId
+          );
+
+          if (conceptId === id) {
+            console.log(
+              `Match found for concept_id in property "${property}" of row ${rowIndex}`
+            );
+            return true;
+          }
+        }
+
+        console.log(`No match found for row ${rowIndex}`);
+        return false;
+      });
+    });
+  };
 
   const handleButtonClick = async () => {
     const data = await ipcRenderer.invoke("open-file-dialog");
@@ -48,7 +119,8 @@ function FilePicker(props) {
         setDDData([]);
         setDDParseErr(false);
         setSelectedFilename();
-        let _formName;
+        let _formName, _fileName;
+        if (data.title) _fileName = data.title;
         let onlyMappedData = data.contents.filter((item) => {
           try {
             // Attempt to parse the field_annotation as JSON
@@ -59,36 +131,17 @@ function FilePicker(props) {
             return false; // If parsing failed, exclude this item from the filtered result
           }
         });
+
         console.log("form name", _formName);
         console.log("onlyMappedData", onlyMappedData);
+        if (!onlyMappedData.length) {
+          //show error notification here
+          setOpenSnackbar(true);
+          return;
+        }
         setRedcapFormName(_formName);
         setDDData(onlyMappedData);
         setShowREDCapAPIInput(false);
-
-        const truncateString = (str, num) => {
-          if (str.length <= num) return str;
-          return str.slice(0, num) + "...";
-        };
-        // setColumns([
-        //   {
-        //     field: "field_name",
-        //     headerName: "Field Name",
-        //     width: 150,
-        //   },
-        //   {
-        //     field: "field_type",
-        //     headerName: "Field Type",
-        //     width: 130,
-        //   },
-        //   {
-        //     field: "field_annotation",
-        //     headerName: "Field Annotation",
-        //     width: 350,
-        //     renderCell: (params) => (
-        //       <AnnotationCell annotation={params.value} />
-        //     ),
-        //   },
-        // ]);
 
         const newColumns = [
           {
@@ -127,6 +180,15 @@ function FilePicker(props) {
           },
         ];
 
+        // after extracting onlyMappedData, instead of setDDData(onlyMappedData)
+        const newTableData = {
+          filename: _fileName || _formName || "Untitled",
+          data: onlyMappedData,
+          columns: newColumns,
+          rows: onlyMappedData.map((item, index) => ({ id: index, ...item })),
+        };
+        setTablesData((prev) => [...prev, newTableData]);
+
         setColumns(newColumns);
         setRows(onlyMappedData.map((item, index) => ({ id: index, ...item })));
 
@@ -151,10 +213,16 @@ function FilePicker(props) {
     setDDData([]);
   };
 
+  const removeTable = (indexToRemove) => {
+    setTablesData((prevData) =>
+      prevData.filter((_, index) => index !== indexToRemove)
+    );
+  };
+
   function AnnotationCell({ annotation, row }) {
     // Parse the annotation JSON
-    console.log("annot", annotation);
-    console.log("row", row);
+    // console.log("annot", annotation);
+    // console.log("row", row);
     const parsedAnnotation = JSON.parse(annotation);
 
     // If the annotation is an object, display its items on separate lines
@@ -163,7 +231,7 @@ function FilePicker(props) {
         <div>
           {Object.values(parsedAnnotation).map((item, index) => (
             <React.Fragment key={index}>
-              {item["Field Label"]} - {item["extraData"]["og_field_name_key"]}
+              {item["Field Label"]} {item["extraData"]["og_field_name_key"]}
               <br />
             </React.Fragment>
           ))}
@@ -176,8 +244,8 @@ function FilePicker(props) {
 
   function MappedCell({ annotation, row }) {
     // Parse the annotation JSON
-    console.log("annot", annotation);
-    console.log("row", row);
+    // console.log("annot", annotation);
+    // console.log("row", row);
     const parsedAnnotation = JSON.parse(annotation);
 
     // If the annotation is an object, display its items on separate lines
@@ -199,8 +267,8 @@ function FilePicker(props) {
 
   function DomainCell({ annotation, row }) {
     // Parse the annotation JSON
-    console.log("annot", annotation);
-    console.log("row", row);
+    // console.log("annot", annotation);
+    // console.log("row", row);
     const parsedAnnotation = JSON.parse(annotation);
 
     // If the annotation is an object, display its items on separate lines
@@ -221,60 +289,120 @@ function FilePicker(props) {
   }
 
   return (
-    <Container>
-      <Button variant="contained" onClick={handleREDCapAPIButtonClick}>
-        REDCap API
-      </Button>
-      <Button
-        color="success"
-        sx={{ margin: "10px" }}
-        variant="contained"
-        onClick={handleButtonClick}
-      >
-        Local Mapped File
-      </Button>
-      <Paper elevation={3}>
+    // <Container>
+    <Grid container spacing={3}>
+      {/* Checklist Column */}
+      <Grid item xs={3}>
+        <Paper elevation={3}>
+          <h3>Required Mappings</h3>
+          <List>
+            {checklistData.map((item) => (
+              <ListItem key={item.id}>
+                <ListItemIcon>
+                  {isIdPresentInTablesData(item.id) ? (
+                    <CheckIcon style={{ color: theme.palette.success.main }} />
+                  ) : (
+                    <CloseIcon style={{ color: theme.palette.error.main }} />
+                  )}
+                </ListItemIcon>
+                <ListItemText primary={item.label} />
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
+      </Grid>
+      <Grid item xs={9}>
+        <Button variant="contained" onClick={handleREDCapAPIButtonClick}>
+          REDCap API
+        </Button>
+        <Button
+          color="success"
+          sx={{ margin: "10px" }}
+          variant="contained"
+          onClick={handleButtonClick}
+        >
+          Add Local Mapped File
+        </Button>
+
         {initialLoad ? (
           <></>
         ) : showREDCapAPIInput ? (
           <>
-            <Divider sx={{}} />
-            <Box sx={{ textAlign: "center", marginTop: 1, marginBottom: 1 }}>
-              <CheckIcon sx={{ color: "green" }} />
-              <br />
-              <Typography variant="h6" sx={{ mr: 1 }}>
-                REDCap Connectivity
-              </Typography>
-            </Box>
-            <Divider sx={{}} />
-            <Box sx={{ marginTop: 1, marginBottom: 1 }}>
-              <FormSelect props={props} />
-            </Box>
+            <Paper elevation={3}>
+              <Divider sx={{}} />
+              <Box sx={{ textAlign: "center", marginTop: 1, marginBottom: 1 }}>
+                <CheckIcon sx={{ color: "green" }} />
+                <br />
+                <Typography variant="h6" sx={{ mr: 1 }}>
+                  REDCap Connectivity
+                </Typography>
+              </Box>
+              <Divider sx={{}} />
+              <Box sx={{ marginTop: 1, marginBottom: 1 }}>
+                <FormSelect props={props} />
+              </Box>
+            </Paper>
           </>
         ) : (
           <>
-            {ddData && (
-              <>
-                <h3>{selectedFilename}</h3>
-                <Typography variant="h6" gutterBottom>OMOP Mapped Data Found</Typography>
-                <MaterialReactTable columns={columns} data={ddData} />
-                {/* <DataGrid
-                  rows={rows}
-                  columns={columns}
-                  rowHeight={100}
-                  autoWidth
-                  initialState={{
-                    pagination: { paginationModel: { pageSize: 5 } }, // Set pageSize to 5
-                  }}
-                  pageSizeOptions={[5, 10, 25]} // Customize pagination options
-                /> */}
-              </>
-            )}
+            {tablesData.map((table, index) => (
+              <Box mb={3} key={index}>
+                {" "}
+                {/* This introduces margin-bottom spacing between each Paper */}
+                <Paper elevation={3}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "8px 16px", // Added padding for better spacing inside Paper
+                    }}
+                  >
+                    <h3 style={{ margin: 0 }}>{table.filename}</h3>
+                    <IconButton
+                      edge="end"
+                      aria-label="delete"
+                      onClick={() => removeTable(index)}
+                      style={{
+                        color: theme.palette.error.main,
+                        marginRight: "10px",
+                      }}
+                    >
+                      <CloseIcon />
+                    </IconButton>
+                  </div>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    style={{ paddingLeft: "16px" }}
+                  >
+                    OMOP Mapped Data Found
+                  </Typography>
+                  <MaterialReactTable
+                    columns={table.columns}
+                    data={table.data}
+                  />
+                </Paper>
+              </Box>
+            ))}
           </>
         )}
         {ddParseErr && <Typography>Error parsing data dictionary</Typography>}
-      </Paper>
-    </Container>
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={5000}
+          onClose={() => setOpenSnackbar(false)}
+        >
+          <Alert
+            onClose={() => setOpenSnackbar(false)}
+            severity="error"
+            variant="filled"
+          >
+            No mapped data found!
+          </Alert>
+        </Snackbar>
+      </Grid>
+    </Grid>
   );
 }
 

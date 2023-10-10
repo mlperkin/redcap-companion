@@ -46,7 +46,7 @@ const OMOPCheckboxes = () => {
     if (storedData) {
       setCheckboxFieldData(JSON.parse(storedData));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const OMOP_CLINICAL_DATA_TABLES = [
@@ -162,18 +162,34 @@ const OMOPCheckboxes = () => {
                 handleFormChange("person", "maleGenderTextValue", e)
               }
             />
-            <TextField
-              label="Female"
-              placeholder="Enter your field label for female"
-              value={
-                checkboxFieldData.person.femaleGenderTextValue
-                  ? checkboxFieldData.person.femaleGenderTextValue
-                  : ""
-              }
-              onChange={(e) =>
-                handleFormChange("person", "femaleGenderTextValue", e)
-              }
-            />
+            <br />
+            <br />
+            <span>
+              <TextField
+                label="Female"
+                placeholder="Enter your field label for female"
+                value={
+                  checkboxFieldData.person.femaleGenderTextValue
+                    ? checkboxFieldData.person.femaleGenderTextValue
+                    : ""
+                }
+                onChange={(e) =>
+                  handleFormChange("person", "femaleGenderTextValue", e)
+                }
+              />
+              <TextField
+                label="Female Answer Value"
+                placeholder="The female answer value"
+                value={
+                  checkboxFieldData.person.femaleGenderAnswerValue
+                    ? checkboxFieldData.person.femaleGenderAnswerValue
+                    : ""
+                }
+                onChange={(e) =>
+                  handleFormChange("person", "femaleGenderTextValue", e)
+                }
+              />
+            </span>
           </span>
         </FormControl>
       </div>
@@ -317,7 +333,7 @@ const OMOPCheckboxes = () => {
             ))}
           </Grid>
         </Paper>
-        <Paper elevation={1} >
+        <Paper elevation={1}>
           <Grid xs={12}>
             <h2>
               Health System Data Tables{" "}

@@ -4,6 +4,7 @@ import {
   Button,
   Container,
   Divider,
+  Grid,
   Table,
   TableBody,
   TableCell,
@@ -22,11 +23,11 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { decryptData } from "../utils/encryption";
 import OMOPCheckboxes from "../components/OMOPCheckboxes";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+// import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
-import UploadIcon from '@mui/icons-material/Upload';
-import DownloadIcon from '@mui/icons-material/Download';
+import UploadIcon from "@mui/icons-material/Upload";
+import DownloadIcon from "@mui/icons-material/Download";
 
 // import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
@@ -193,7 +194,7 @@ const OutputPage = () => {
                   marginTop: "auto",
                 }}
               >
-                Test Connection
+                Test
               </Button>
             </>
           )}
@@ -218,7 +219,7 @@ const OutputPage = () => {
                   marginTop: "auto",
                 }}
               >
-                Test Connection
+                Test
               </Button>
             </>
           )}
@@ -362,20 +363,45 @@ const OutputPage = () => {
 
   function processPersonData(item) {
     let content = "";
+
+    // Extracting personID
     const personID = item[checkboxFieldData.person.idTextValue];
+    if (!personID) {
+      console.error("Person ID missing");
+      return content;
+    }
+
+    // Extracting birth date details
     const birthDateValue =
       item[checkboxFieldData.person.birthdateTextValue]?.redcap_value;
+    if (!birthDateValue) {
+      console.error(`Birth date missing for personID = ${personID}`);
+      return content;
+    }
+
     const [year, month, day] = birthDateValue?.split("-") || [];
     const birthYear = new Date(year, month - 1, day).getFullYear();
-    if (birthYear && birthDateValue) {
+
+    if (birthYear) {
       content += `-- Inserting data for personID = ${personID} into person table\n`;
-      content += `INSERT INTO person (person_id, birth_datetime,  gender_concept_id, year_of_birth, month_of_birth, day_of_birth, race_concept_id, ethnicity_concept_id) VALUES `;
-      content += `('${personID}', '${birthDateValue}', ${GENDER_CONCEPT_ID}, ${birthYear}, ${parseInt(
-        month
-      )}, ${parseInt(
-        day
-      )}, ${getRandomRaceValue()}, ${ETHNICITY_CONCEPT_ID_PLACEHOLDER});\n\n`;
+
+      // Using parameterized SQL
+      content += `
+        INSERT INTO person 
+        (person_id, birth_datetime, gender_concept_id, year_of_birth, month_of_birth, day_of_birth, race_concept_id, ethnicity_concept_id) 
+        VALUES 
+        (?, ?, ?, ?, ?, ?, ?, ?);\n\n`;
+      content = content
+        .replace("?", personID)
+        .replace("?", birthDateValue)
+        .replace("?", GENDER_CONCEPT_ID)
+        .replace("?", birthYear)
+        .replace("?", parseInt(month))
+        .replace("?", parseInt(day))
+        .replace("?", getRandomRaceValue())
+        .replace("?", ETHNICITY_CONCEPT_ID_PLACEHOLDER);
     }
+
     return content;
   }
 
@@ -632,21 +658,19 @@ const OutputPage = () => {
   return (
     <>
       <Container maxWidth="xl">
-        <Box
-          component="main"
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            flexGrow: 1,
-            minHeight: "90vh",
-            textAlign: "center",
-          }}
-        >
-          <Box sx={{ marginTop: "20px" }}>
-            <h1 sx={{ textAlign: "center" }}>Output to OMOP</h1>
-          </Box>
-
-          <Container>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              marginTop="16px"
+            >
+              <h1>Output to OMOP</h1>
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            {" "}
             <Paper elevation={3} sx={{ padding: "16px" }}>
               <Table>
                 <TableBody>
@@ -729,98 +753,113 @@ const OutputPage = () => {
               </Table>
               <Divider />
             </Paper>
-            <Divider />
-            <Paper>
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>
-                      <br />
-                      <Tooltip title="Import Config" placement="top">
-                      <Button
-                        disabled={!isValid || isExecuting}
-                        onClick={output}
-                        color="success"
-                        variant="contained"
-                        sx={{ marginTop: "10px" }}
-                      >
-                        <UploadIcon />
-                      </Button>
-                      </Tooltip>
-                     
-                      <Tooltip title="Export Config" placement="top">
-                      <Button
-                        disabled={!isValid || isExecuting}
-                        onClick={output}
-                        color="success"
-                        variant="contained"
-                        sx={{ marginTop: "10px", marginLeft: '20px' }}
-                      >
-                        <DownloadIcon />
-                      </Button>
-                      </Tooltip>
-                      
-                      <OMOPCheckboxes />
-                      <br />
-                      <h3>Output Format</h3>
-                      {outputFormats.map((format) => (
-                        <FormControlLabel
-                          key={format}
-                          control={
-                            <Checkbox
-                              name={format}
-                              checked={checkedFormats[format]}
-                              onChange={handleCheckboxChange}
-                            />
-                          }
-                          label={format}
-                        />
-                      ))}
-                      <br />
-                      <Button
-                        disabled={!isValid || isExecuting}
-                        onClick={output}
-                        color="success"
-                        variant="contained"
-                        sx={{ marginTop: "10px" }}
-                      >
-                        Output to OMOP
-                      </Button>
-                      <Box sx={{ margin: "20px" }}>
-                        {isExecuting ? (
-                          <>
-                            <CircularProgress />
-                            {executionText()}{" "}
-                          </>
-                        ) : null}
+          </Grid>
+          {/* Right Column (Main content) */}
+          <Grid item xs={12} md={8}>
+            <Box
+              component="main"
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                flexGrow: 1,
+                minHeight: "90vh",
+                textAlign: "center",
+              }}
+            >
+              <Container>
+                <Divider />
+                <Paper>
+                  <Table>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>
+                          <br />
+                          <Tooltip title="Import Config" placement="top">
+                            <Button
+                              disabled={!isValid || isExecuting}
+                              onClick={output}
+                              color="success"
+                              variant="contained"
+                              sx={{ marginTop: "10px" }}
+                            >
+                              <UploadIcon />
+                            </Button>
+                          </Tooltip>
 
-                        {/* {showExecResults()} */}
-                      </Box>
-                    </TableCell>
-                    <TableCell> </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </Paper>
-          </Container>
-          <br />
-          <Box>
-            <BootstrapTooltip title="Go Prev">
-              <ArrowCircleLeftIcon
-                onClick={handleClickPrev}
-                sx={{ cursor: "pointer" }}
-                color="primary"
-                fontSize="large"
-              />
-            </BootstrapTooltip>
-            <ArrowCircleLeftIcon
-              sx={{ opacity: 0 }}
-              color="primary"
-              fontSize="large"
-            />
-          </Box>
-        </Box>
-        {/* {JSON.stringify(mergedData)} */}
+                          <Tooltip title="Export Config" placement="top">
+                            <Button
+                              disabled={!isValid || isExecuting}
+                              onClick={output}
+                              color="success"
+                              variant="contained"
+                              sx={{ marginTop: "10px", marginLeft: "20px" }}
+                            >
+                              <DownloadIcon />
+                            </Button>
+                          </Tooltip>
+
+                          <OMOPCheckboxes />
+                          <br />
+                          <h3>Output Format</h3>
+                          {outputFormats.map((format) => (
+                            <FormControlLabel
+                              key={format}
+                              control={
+                                <Checkbox
+                                  name={format}
+                                  checked={checkedFormats[format]}
+                                  onChange={handleCheckboxChange}
+                                />
+                              }
+                              label={format}
+                            />
+                          ))}
+                          <br />
+                          <Button
+                            disabled={!isValid || isExecuting}
+                            onClick={output}
+                            color="success"
+                            variant="contained"
+                            sx={{ marginTop: "10px" }}
+                          >
+                            Output to OMOP
+                          </Button>
+                          <Box sx={{ margin: "20px" }}>
+                            {isExecuting ? (
+                              <>
+                                <CircularProgress />
+                                {executionText()}{" "}
+                              </>
+                            ) : null}
+
+                            {/* {showExecResults()} */}
+                          </Box>
+                        </TableCell>
+                        <TableCell> </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </Paper>
+              </Container>
+              <br />
+              <Box>
+                <BootstrapTooltip title="Go Prev">
+                  <ArrowCircleLeftIcon
+                    onClick={handleClickPrev}
+                    sx={{ cursor: "pointer" }}
+                    color="primary"
+                    fontSize="large"
+                  />
+                </BootstrapTooltip>
+                <ArrowCircleLeftIcon
+                  sx={{ opacity: 0 }}
+                  color="primary"
+                  fontSize="large"
+                />
+              </Box>
+            </Box>
+          </Grid>
+        </Grid>
       </Container>
     </>
   );
