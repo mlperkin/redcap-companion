@@ -2,14 +2,14 @@
   "name": "redcap-companion",
   "version": "0.1.0",
   "private": true,
-  "description": "Electron-React-Material",
+  "description": "Redcap to OMOP Desktop Companion",
   "author": "Matt Perkins",
   "main": "public/electron.js",
   "homepage": "./",
   "build": {
     "appId": "demo.example",
     "win": {
-      "icon": "build/icon.png"
+      "icon": "build/logo512_white.png"
     }
   },
   "dependencies": {

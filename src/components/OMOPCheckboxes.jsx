@@ -77,169 +77,169 @@ const OMOPCheckboxes = () => {
   };
 
   const TABLE_CHIP_DETAILS = {
-    person: { label: "Mandatory", variant: "outlined", color: "info" },
-    observation_period: {
-      label: "Mandatory",
-      variant: "outlined",
-      color: "info",
-    },
+    // person: { label: "Mandatory", variant: "outlined", color: "info" },
+    // observation_period: {
+    //   label: "Mandatory",
+    //   variant: "outlined",
+    //   color: "info",
+    // },
     // Add other tables and chip details as needed
   };
 
   const CustomizedFieldsForTable = {
-    person: (
-      <div>
-        <FormControl fullWidth margin="normal">
-          <TextField
-            label="ID"
-            placeholder="Enter your field label for unique patient ID"
-            value={
-              checkboxFieldData.person
-                ? checkboxFieldData.person.idTextValue
-                : ""
-            }
-            onChange={(e) => handleFormChange("person", "idTextValue", e)}
-            required
-          />
-          <br />
-          <span>
-            <TextField
-              label="Birthdate"
-              placeholder="Enter your field label for patient birthdate"
-              value={
-                checkboxFieldData.person
-                  ? checkboxFieldData.person.birthdateTextValue
-                  : ""
-              }
-              onChange={(e) =>
-                handleFormChange("person", "birthdateTextValue", e)
-              }
-            />
-            <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              defaultValue="YYYY-MM-DD"
-              onChange={(e) =>
-                handleFormChange("person", "birthdateSelectValue", e)
-              }
-            >
-              <MenuItem value="YYYY-MM-DD">YYYY-MM-DD</MenuItem>
-              <MenuItem value="YYYY/MM/DD">YYYY/MM/DD</MenuItem>
-              <MenuItem value="DD-MM-YYYY">DD-MM-YYYY</MenuItem>
-              <MenuItem value="DD/MM/YYYY">DD/MM/YYYY</MenuItem>
-              <MenuItem value="MM-DD-YYYY">MM-DD-YYYY</MenuItem>
-              <MenuItem value="MM/DD/YYYY">MM/DD/YYYY</MenuItem>
-              <MenuItem value="YYYY.MM.DD">YYYY.MM.DD</MenuItem>
-              <MenuItem value="DD.MM.YYYY">DD.MM.YYYY</MenuItem>
-              <MenuItem value="MM.DD.YYYY">MM.DD.YYYY</MenuItem>
-              <MenuItem value="DD MMM YYYY">
-                DD MMM YYYY (e.g., 12 Sep 2023)
-              </MenuItem>
-            </Select>
-            <br />
-            <br />
-            <TextField
-              label="Race"
-              placeholder="Enter your field label for race"
-              value={
-                checkboxFieldData.person.raceTextValue
-                  ? checkboxFieldData.person.raceTextValue
-                  : ""
-              }
-              onChange={(e) => handleFormChange("person", "raceTextValue", e)}
-            />
-            <br />
-            <br />
-            <TextField
-              label="Male"
-              placeholder="Enter your field label for male"
-              value={
-                checkboxFieldData.person.maleGenderTextValue
-                  ? checkboxFieldData.person.maleGenderTextValue
-                  : ""
-              }
-              onChange={(e) =>
-                handleFormChange("person", "maleGenderTextValue", e)
-              }
-            />
-            <br />
-            <br />
-            <span>
-              <TextField
-                label="Female"
-                placeholder="Enter your field label for female"
-                value={
-                  checkboxFieldData.person.femaleGenderTextValue
-                    ? checkboxFieldData.person.femaleGenderTextValue
-                    : ""
-                }
-                onChange={(e) =>
-                  handleFormChange("person", "femaleGenderTextValue", e)
-                }
-              />
-              <TextField
-                label="Female Answer Value"
-                placeholder="The female answer value"
-                value={
-                  checkboxFieldData.person.femaleGenderAnswerValue
-                    ? checkboxFieldData.person.femaleGenderAnswerValue
-                    : ""
-                }
-                onChange={(e) =>
-                  handleFormChange("person", "femaleGenderTextValue", e)
-                }
-              />
-            </span>
-          </span>
-        </FormControl>
-      </div>
-    ),
-    observation_period: (
-      <div>
-        <FormControl fullWidth margin="normal">
-          <TextField
-            label="Earliest Observation Date"
-            placeholder="Enter your field label for earliest observation date"
-            value={
-              checkboxFieldData.observation_period
-                ? checkboxFieldData.observation_period
-                    .earliestObservationDateTextValue
-                : ""
-            }
-            onChange={(e) =>
-              handleFormChange(
-                "observation_period",
-                "earliestObservationDateTextValue",
-                e
-              )
-            }
-            required
-          />
-          <br />
-          <span>
-            <TextField
-              label="Latest Observation Date"
-              placeholder="Enter your field label for latest observation date"
-              value={
-                checkboxFieldData.observation_period
-                  ? checkboxFieldData.observation_period
-                      .latestObservationDateTextValue
-                  : ""
-              }
-              onChange={(e) =>
-                handleFormChange(
-                  "observation_period",
-                  "latestObservationDateTextValue",
-                  e
-                )
-              }
-            />
+    // person: (
+    //   <div>
+    //     <FormControl fullWidth margin="normal">
+    //       <TextField
+    //         label="ID"
+    //         placeholder="Enter your field label for unique patient ID"
+    //         value={
+    //           checkboxFieldData.person
+    //             ? checkboxFieldData.person.idTextValue
+    //             : ""
+    //         }
+    //         onChange={(e) => handleFormChange("person", "idTextValue", e)}
+    //         required
+    //       />
+    //       <br />
+    //       <span>
+    //         <TextField
+    //           label="Birthdate"
+    //           placeholder="Enter your field label for patient birthdate"
+    //           value={
+    //             checkboxFieldData.person
+    //               ? checkboxFieldData.person.birthdateTextValue
+    //               : ""
+    //           }
+    //           onChange={(e) =>
+    //             handleFormChange("person", "birthdateTextValue", e)
+    //           }
+    //         />
+    //         <Select
+    //           labelId="demo-simple-select-label"
+    //           id="demo-simple-select"
+    //           defaultValue="YYYY-MM-DD"
+    //           onChange={(e) =>
+    //             handleFormChange("person", "birthdateSelectValue", e)
+    //           }
+    //         >
+    //           <MenuItem value="YYYY-MM-DD">YYYY-MM-DD</MenuItem>
+    //           <MenuItem value="YYYY/MM/DD">YYYY/MM/DD</MenuItem>
+    //           <MenuItem value="DD-MM-YYYY">DD-MM-YYYY</MenuItem>
+    //           <MenuItem value="DD/MM/YYYY">DD/MM/YYYY</MenuItem>
+    //           <MenuItem value="MM-DD-YYYY">MM-DD-YYYY</MenuItem>
+    //           <MenuItem value="MM/DD/YYYY">MM/DD/YYYY</MenuItem>
+    //           <MenuItem value="YYYY.MM.DD">YYYY.MM.DD</MenuItem>
+    //           <MenuItem value="DD.MM.YYYY">DD.MM.YYYY</MenuItem>
+    //           <MenuItem value="MM.DD.YYYY">MM.DD.YYYY</MenuItem>
+    //           <MenuItem value="DD MMM YYYY">
+    //             DD MMM YYYY (e.g., 12 Sep 2023)
+    //           </MenuItem>
+    //         </Select>
+    //         <br />
+    //         <br />
+    //         <TextField
+    //           label="Race"
+    //           placeholder="Enter your field label for race"
+    //           value={
+    //             checkboxFieldData.person.raceTextValue
+    //               ? checkboxFieldData.person.raceTextValue
+    //               : ""
+    //           }
+    //           onChange={(e) => handleFormChange("person", "raceTextValue", e)}
+    //         />
+    //         <br />
+    //         <br />
+    //         <TextField
+    //           label="Male"
+    //           placeholder="Enter your field label for male"
+    //           value={
+    //             checkboxFieldData.person.maleGenderTextValue
+    //               ? checkboxFieldData.person.maleGenderTextValue
+    //               : ""
+    //           }
+    //           onChange={(e) =>
+    //             handleFormChange("person", "maleGenderTextValue", e)
+    //           }
+    //         />
+    //         <br />
+    //         <br />
+    //         <span>
+    //           <TextField
+    //             label="Female"
+    //             placeholder="Enter your field label for female"
+    //             value={
+    //               checkboxFieldData.person.femaleGenderTextValue
+    //                 ? checkboxFieldData.person.femaleGenderTextValue
+    //                 : ""
+    //             }
+    //             onChange={(e) =>
+    //               handleFormChange("person", "femaleGenderTextValue", e)
+    //             }
+    //           />
+    //           <TextField
+    //             label="Female Answer Value"
+    //             placeholder="The female answer value"
+    //             value={
+    //               checkboxFieldData.person.femaleGenderAnswerValue
+    //                 ? checkboxFieldData.person.femaleGenderAnswerValue
+    //                 : ""
+    //             }
+    //             onChange={(e) =>
+    //               handleFormChange("person", "femaleGenderTextValue", e)
+    //             }
+    //           />
+    //         </span>
+    //       </span>
+    //     </FormControl>
+    //   </div>
+    // ),
+    // observation_period: (
+    //   <div>
+    //     <FormControl fullWidth margin="normal">
+    //       <TextField
+    //         label="Earliest Observation Date"
+    //         placeholder="Enter your field label for earliest observation date"
+    //         value={
+    //           checkboxFieldData.observation_period
+    //             ? checkboxFieldData.observation_period
+    //                 .earliestObservationDateTextValue
+    //             : ""
+    //         }
+    //         onChange={(e) =>
+    //           handleFormChange(
+    //             "observation_period",
+    //             "earliestObservationDateTextValue",
+    //             e
+    //           )
+    //         }
+    //         required
+    //       />
+    //       <br />
+    //       <span>
+    //         <TextField
+    //           label="Latest Observation Date"
+    //           placeholder="Enter your field label for latest observation date"
+    //           value={
+    //             checkboxFieldData.observation_period
+    //               ? checkboxFieldData.observation_period
+    //                   .latestObservationDateTextValue
+    //               : ""
+    //           }
+    //           onChange={(e) =>
+    //             handleFormChange(
+    //               "observation_period",
+    //               "latestObservationDateTextValue",
+    //               e
+    //             )
+    //           }
+    //         />
 
-            <br />
-          </span>
-        </FormControl>
-      </div>
-    ),
+    //         <br />
+    //       </span>
+    //     </FormControl>
+    //   </div>
+    // ),
     // Add similar JSX for other tables as needed
   };
 

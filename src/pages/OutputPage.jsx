@@ -9,9 +9,8 @@ import {
   TableBody,
   TableCell,
   TableRow,
-  Tooltip,
   Typography,
-  FormControl,
+  // FormControl,
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import { useDataContext } from "../components/context/DataContext";
@@ -26,8 +25,7 @@ import OMOPCheckboxes from "../components/OMOPCheckboxes";
 // import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
-import UploadIcon from "@mui/icons-material/Upload";
-import DownloadIcon from "@mui/icons-material/Download";
+
 
 // import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
@@ -41,7 +39,7 @@ const OutputPage = () => {
     setIsRedcapConnected,
     isExecuting,
     setIsExecuting,
-    execStatus,
+    // execStatus,
     setExecStatus,
     ddData,
     redcapFormName,
@@ -52,9 +50,9 @@ const OutputPage = () => {
   // State for checkboxes
   const [checkedFormats, setCheckedFormats] = useState({
     SQL: false,
-    CSV: false,
+    CSV: true,
   });
-  const [checksPassed, setChecksPassed] = useState(0);
+  // const [checksPassed, setChecksPassed] = useState(0);
   const [isValid, setIsValid] = useState(true); //set true, if any checks fail then set to false
   // const [redcapAPITest, setRedcapAPITest] = useState("");
   const [isTesting, setIsTesting] = useState(false);
@@ -124,7 +122,7 @@ const OutputPage = () => {
 
     setIsValid(passedChecks === totalChecks); // Set to true if all checks pass
     // Set the number of checks that passed to display the fraction (e.g., "1/2")
-    setChecksPassed(passedChecks);
+    // setChecksPassed(passedChecks);
   }, [
     isRedcapConnected,
     ddData,
@@ -182,7 +180,7 @@ const OutputPage = () => {
             <CircularProgress />
           ) : (
             <>
-              Not Connected
+              Error!
               <CancelIcon style={{ color: "red", marginLeft: "5px" }} />
               <Button
                 onClick={testRedcapAPI}
@@ -549,12 +547,12 @@ const OutputPage = () => {
     }
   }
 
-  function extractValue(data) {
-    if (typeof data === "object" && data.hasOwnProperty("redcap_value")) {
-      return data.redcap_value;
-    }
-    return data;
-  }
+  // function extractValue(data) {
+  //   if (typeof data === "object" && data.hasOwnProperty("redcap_value")) {
+  //     return data.redcap_value;
+  //   }
+  //   return data;
+  // }
 
   function downloadSQL(sqlContent, fileName) {
     // Create a Blob with the SQL content
@@ -629,22 +627,22 @@ const OutputPage = () => {
     return `${year}-${month}-${day}`;
   }
 
-  function downloadExcludedData(data) {
-    let _dataString = JSON.stringify(data, null, 2);
-    // Create a Blob with the SQL content
-    const blob = new Blob([_dataString], {
-      type: "text/plain;charset=utf-8;",
-    });
+  // function downloadExcludedData(data) {
+  //   let _dataString = JSON.stringify(data, null, 2);
+  //   // Create a Blob with the SQL content
+  //   const blob = new Blob([_dataString], {
+  //     type: "text/plain;charset=utf-8;",
+  //   });
 
-    // Create a link and click it to trigger the download
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "excludedData.json");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  //   // Create a link and click it to trigger the download
+  //   const url = URL.createObjectURL(blob);
+  //   const link = document.createElement("a");
+  //   link.href = url;
+  //   link.setAttribute("download", "excludedData.json");
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // }
 
   // Checkbox change handler
   const handleCheckboxChange = (event) => {
@@ -774,7 +772,7 @@ const OutputPage = () => {
                       <TableRow>
                         <TableCell>
                           <br />
-                          <Tooltip title="Import Config" placement="top">
+                          {/* <Tooltip title="Import Config" placement="top">
                             <Button
                               disabled={!isValid || isExecuting}
                               onClick={output}
@@ -796,7 +794,7 @@ const OutputPage = () => {
                             >
                               <DownloadIcon />
                             </Button>
-                          </Tooltip>
+                          </Tooltip> */}
 
                           <OMOPCheckboxes />
                           <br />

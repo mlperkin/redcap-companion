@@ -14,7 +14,7 @@ import Papa from "papaparse";
 import { saveAs } from "file-saver";
 import Skeleton from "@mui/material/Skeleton";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
-import { encryptData, decryptData } from "../utils/encryption";
+import { decryptData } from "../utils/encryption";
 import { useDataContext } from "./context/DataContext";
 
 const { ipcRenderer } = window.require("electron");
@@ -32,7 +32,7 @@ export default function FormSelect({ props }) {
   const [csvFilename, setCSVFilename] = useState("");
   const [selectedRows, setSelectedRows] = useState([]);
   const [formData, setFormData] = useState();
-  const [formDataLoaded, setFormDataLoaded] = useState();
+  // const [formDataLoaded, setFormDataLoaded] = useState();
   const [noMappedResults, setNoMappedResults] = useState();
 
   var tableInstanceRef = useRef(null);
@@ -61,7 +61,7 @@ export default function FormSelect({ props }) {
       }
     }
 
-    setFormDataLoaded(false);
+    // setFormDataLoaded(false);
 
     // Request the store data from the main process when the component mounts
     ipcRenderer.invoke("getStoreData").then((data) => {
@@ -69,7 +69,7 @@ export default function FormSelect({ props }) {
       if (decryptedData) {
         setFormData(decryptedData);
       }
-      setFormDataLoaded(true);
+      // setFormDataLoaded(true);
     });
   }, [ddData]);
 
