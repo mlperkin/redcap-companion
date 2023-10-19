@@ -25,7 +25,7 @@ function createWindow() {
     width: 1280,
     height: 900,
     titleBarStyle: "hidden",
-    minWidth: 650, // Set the minimum width here
+    minWidth: 1280, // Set the minimum width here
     minHeight: 600, // Set the minimum height here
     frame: false, // Set frame to false for a frameless window
     webPreferences: {

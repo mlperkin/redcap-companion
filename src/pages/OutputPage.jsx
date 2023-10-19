@@ -26,7 +26,6 @@ import OMOPCheckboxes from "../components/OMOPCheckboxes";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 
-
 // import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
 const { ipcRenderer } = window.require("electron");
@@ -45,6 +44,7 @@ const OutputPage = () => {
     redcapFormName,
     selectedOMOPTables,
     checkboxFieldData,
+    extraMappedData,
   } = useDataContext();
 
   // State for checkboxes
@@ -230,6 +230,7 @@ const OutputPage = () => {
     setIsExecuting(true);
     setExecStatus(null);
     console.log("output format is", checkedFormats);
+    console.log("extramapped", extraMappedData);
     //the steps involved here
     // 1. get all redcap records for selected form
     let redCapRecords = await getRedcapRecords();
@@ -813,27 +814,32 @@ const OutputPage = () => {
                             />
                           ))}
                           <br />
-                          <Button
-                            disabled={!isValid || isExecuting}
-                            onClick={output}
-                            color="success"
-                            variant="contained"
-                            sx={{ marginTop: "10px" }}
-                          >
-                            Output to OMOP
-                          </Button>
-                          <Box sx={{ margin: "20px" }}>
-                            {isExecuting ? (
-                              <>
-                                <CircularProgress />
-                                {executionText()}{" "}
-                              </>
-                            ) : null}
-
-                            {/* {showExecResults()} */}
-                          </Box>
                         </TableCell>
                         <TableCell> </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell></TableCell>
+                        <TableCell>
+                            <Button
+                              disabled={!isValid || isExecuting}
+                              onClick={output}
+                              color="success"
+                              variant="contained"
+                              sx={{ marginTop: "10px" }}
+                            >
+                              Output to OMOP
+                            </Button>
+                            <Box sx={{ margin: "20px" }}>
+                              {isExecuting ? (
+                                <>
+                                  <CircularProgress />
+                                  {executionText()}{" "}
+                                </>
+                              ) : null}
+
+                              {/* {showExecResults()} */}
+                            </Box>
+                        </TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>

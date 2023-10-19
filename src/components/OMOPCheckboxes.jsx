@@ -262,7 +262,7 @@ const OMOPCheckboxes = () => {
     <>
       <Grid container>
         <Paper elevation={1}>
-          <Grid xs={12}>
+          <Grid item xs={12}>
             <h2>
               Clinical Data Tables{" "}
               <Tooltip
@@ -334,7 +334,7 @@ const OMOPCheckboxes = () => {
           </Grid>
         </Paper>
         <Paper elevation={1}>
-          <Grid xs={12}>
+          <Grid item xs={12}>
             <h2>
               Health System Data Tables{" "}
               <Tooltip
