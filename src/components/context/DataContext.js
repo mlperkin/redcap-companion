@@ -140,10 +140,11 @@ export const DataProvider = ({ children }) => {
           .replace(/\s+/g, "_")
           .replace(/[^a-zA-Z0-9_]/g, "")
       ] = {
-        concept_id: entry.id,
+        concept_id: entry.concept_id,
         textfieldValue: "",
         format: null,
         ogValue: null,
+        ogKey: null,
       };
     });
 
@@ -157,6 +158,7 @@ export const DataProvider = ({ children }) => {
         textfieldValue: "",
         format: null,
         ogValue: null,
+        ogKey: null,
       };
     });
 
@@ -205,6 +207,7 @@ export const DataProvider = ({ children }) => {
         extraMappedData,
         setExtraMappedData,
         checklistData,
+        initialState
       }}
     >
       {children}

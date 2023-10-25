@@ -171,6 +171,7 @@ export default function FormSelect({ props }) {
 
           var newObject = {
             field_name: appendedFieldName,
+            choice: choice.key,
             form_name: obj.form_name,
             section_header: obj.section_header,
             field_type: obj.field_type,

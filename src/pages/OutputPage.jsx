@@ -271,22 +271,75 @@ const OutputPage = () => {
         }
       });
     });
-    // console.log("obj1", redCapRecords);
 
-    return redCapRecords;
+    console.log("mergedRedcapRecords", redCapRecords);
+    let storedData = localStorage.getItem("extraMappedData");
+    const mergedData = {};
+    if (storedData) {
+      storedData = JSON.parse(storedData);
+      console.log("storedData", storedData);
+
+      const mergedDataArray = [];
+
+      redCapRecords.forEach((record) => {
+        const mergedRecord = {};
+
+        for (let key in storedData) {
+          mergedRecord[key] = {};
+
+          for (let attribute in storedData[key]) {
+            const details = storedData[key][attribute];
+
+            if (details.textfieldValue !== "") {
+              const field = details.textfieldValue;
+
+              if (record[field]) {
+                if (
+                  typeof record[field] === "string" &&
+                  details.format === "YYYY-MM-DD"
+                ) {
+                  mergedRecord[key][attribute] = record[field].split("-")[0];
+                } else {
+                  mergedRecord[key][attribute] = record[field];
+                }
+              }
+            } else if (details.concept_id) {
+              const ogField = details.ogKey || "";
+              const ogValue = details.ogValue || "";
+
+              if (
+                record[ogField] &&
+                record[ogField].redcap_value.toString() === ogValue
+              ) {
+                mergedRecord[key][attribute] = details.concept_id;
+              }
+            }
+          }
+        }
+
+        mergedDataArray.push(mergedRecord);
+      });
+
+      console.log("mergedDataArray", mergedDataArray);
+      return mergedDataArray;
+    } else {
+      console.log("No storedData found in localStorage");
+      return redCapRecords;
+    }
   }
   // 4. iterate through this merged list to create SQL CSV files (for upsert on mysql and postgresql)
   async function generateOutput(matchedAndMergedRedcapRecords) {
     console.log("generate output", selectedDatabase);
-    console.log("output to this", selectedDatabase);
-    console.log("with these creds", dbCreds);
-    console.log("checkbox field data", checkboxFieldData);
+    // console.log("output to this", selectedDatabase);
+    // console.log("with these creds", dbCreds);
+    // console.log("checkbox field data", checkboxFieldData);
     let personID = checkboxFieldData.person.idTextValue;
     console.log("personid", personID);
     if (!matchedAndMergedRedcapRecords.length) return;
 
     //we now need to iterate through this merged data and generate SQL
     console.log("gen output with this data", matchedAndMergedRedcapRecords);
+    console.log("merge more metadata", extraMappedData);
 
     const filteredData = matchedAndMergedRedcapRecords.map((item) => {
       let newObj = {};
@@ -324,7 +377,7 @@ const OutputPage = () => {
           ];
       }
 
-      console.log("item", item["redcap_repeat_instrument"]);
+      // console.log("item", item["redcap_repeat_instrument"]);
 
       // Check each key in the object to see if it has an object with 'redcap_value' as a key
       for (let key in item) {
@@ -820,25 +873,25 @@ const OutputPage = () => {
                       <TableRow>
                         <TableCell></TableCell>
                         <TableCell>
-                            <Button
-                              disabled={!isValid || isExecuting}
-                              onClick={output}
-                              color="success"
-                              variant="contained"
-                              sx={{ marginTop: "10px" }}
-                            >
-                              Output to OMOP
-                            </Button>
-                            <Box sx={{ margin: "20px" }}>
-                              {isExecuting ? (
-                                <>
-                                  <CircularProgress />
-                                  {executionText()}{" "}
-                                </>
-                              ) : null}
+                          <Button
+                            disabled={!isValid || isExecuting}
+                            onClick={output}
+                            color="success"
+                            variant="contained"
+                            sx={{ marginTop: "10px" }}
+                          >
+                            Output to OMOP
+                          </Button>
+                          <Box sx={{ margin: "20px" }}>
+                            {isExecuting ? (
+                              <>
+                                <CircularProgress />
+                                {executionText()}{" "}
+                              </>
+                            ) : null}
 
-                              {/* {showExecResults()} */}
-                            </Box>
+                            {/* {showExecResults()} */}
+                          </Box>
                         </TableCell>
                       </TableRow>
                     </TableBody>

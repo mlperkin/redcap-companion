@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
-  Checkbox,
   Divider,
   Typography,
   TextField,
@@ -27,6 +26,7 @@ import ListItemText from "@mui/material/ListItemText";
 import { Alert, Snackbar } from "@mui/material";
 import UploadIcon from "@mui/icons-material/Upload";
 import DownloadIcon from "@mui/icons-material/Download";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -48,25 +48,23 @@ function FilePicker(props) {
     extraMappedData,
     setExtraMappedData,
     checklistData,
+    initialState,
   } = useDataContext();
 
   const [ddParseErr, setDDParseErr] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
   useEffect(() => {
+    // console.log("useeffect store", extraMappedData);
     localStorage.setItem("extraMappedData", JSON.stringify(extraMappedData));
-    console.log("extraMapped", extraMappedData);
-    console.log("checklist", checklistData);
-    console.log("len", checklistData.length);
   }, [extraMappedData]);
 
-  const isIdPresentInTablesData = (id) => {
+  const isIdPresentInTablesData = (item) => {
+    // console.log("item", item);
+    // console.log("tablesdata", tablesData);
+    let id = item.concept_id;
     // console.log("the id", id);
     if (!id) return false;
-    if (tablesData.length) {
-      // console.log("tablesData", tablesData[0]);
-      // console.log("tablesData2", tablesData[0].data[0].field_annotation);
-    }
 
     return tablesData.some((table, tableIndex) => {
       return table.data.some((row, rowIndex) => {
@@ -83,32 +81,20 @@ function FilePicker(props) {
           return false; // continue to next row if there's an error
         }
 
+        // console.log('parsedanno', parsedAnnotation)
+
         // Process each property of the parsedAnnotation
         for (const property in parsedAnnotation) {
-          // console.log(
-          //   `Property "${property}" of parsedAnnotation for row ${rowIndex}:`,
-          //   parsedAnnotation[property]
-          // );
-
           const extraData = parsedAnnotation[property]?.extraData;
-          // console.log(
-          //   `Extracted extraData for property "${property}" of row ${rowIndex}:`,
-          //   extraData
-          // );
-
           const conceptId = extraData?.concept_id;
-          // console.log(
-          //   `concept_id for property "${property}" of row ${rowIndex}:`,
-          //   conceptId
-          // );
-
+          // console.log('extra', extraData)
+          let ogValue = extraData?.og_field_name_key;
+          let ogKey = extraData?.og_field_name;
           if (conceptId === id) {
-            // console.log(
-            //   `Match found for concept_id in property "${property}" of row ${rowIndex}`
-            // );
-            // console.log("row", row);
-            // console.log("data context stuf", extraMappedData);
             //update extraMappedData with mappedData values and stuff
+            if (ogValue) {
+              updateOgValueAndKeyInLocalStorage(id, ogValue, ogKey);
+            }
 
             return true;
           }
@@ -119,6 +105,30 @@ function FilePicker(props) {
       });
     });
   };
+
+  function updateOgValueAndKeyInLocalStorage(conceptId, newOgValue, newOgKey) {
+    // Retrieve the existing data from local storage
+
+    let storedData = localStorage.getItem("extraMappedData");
+    if (storedData) {
+      storedData = JSON.parse(storedData);
+
+      // Traverse the 'person' object
+      for (const key in storedData.person) {
+        if (storedData.person[key].concept_id === conceptId) {
+          storedData.person[key].ogValue = newOgValue;
+          storedData.person[key].ogKey = newOgKey;
+          break; // Exit once the matching concept_id is found
+        }
+      }
+
+      // Traverse the 'observation_period' object if needed
+      // (In this case, it seems there's no concept_id in observation_period, so I'm omitting it)
+
+      // setExtraMappedData(storedData)
+      localStorage.setItem("extraMappedData", JSON.stringify(storedData));
+    }
+  }
 
   const handleButtonClick = async () => {
     const data = await ipcRenderer.invoke("open-file-dialog");
@@ -162,13 +172,17 @@ function FilePicker(props) {
             accessorKey: "field_name",
           },
           {
-            header: "Field Annotation",
+            header: "Field Label",
             accessorKey: "field_annotation",
             Cell: ({ row }) => (
-              <AnnotationCell
-                annotation={row.original.field_annotation}
-                row={row}
-              />
+              <LabelCell annotation={row.original.field_annotation} row={row} />
+            ),
+          },
+          {
+            header: "Value",
+            accessorKey: "field_annotation_value",
+            Cell: ({ row }) => (
+              <ValueCell annotation={row.original.field_annotation} row={row} />
             ),
           },
           {
@@ -230,10 +244,8 @@ function FilePicker(props) {
     );
   };
 
-  function AnnotationCell({ annotation, row }) {
+  function LabelCell({ annotation, row }) {
     // Parse the annotation JSON
-    // console.log("annot", annotation);
-    // console.log("row", row);
     const parsedAnnotation = JSON.parse(annotation);
 
     // If the annotation is an object, display its items on separate lines
@@ -242,7 +254,28 @@ function FilePicker(props) {
         <div>
           {Object.values(parsedAnnotation).map((item, index) => (
             <React.Fragment key={index}>
-              {item["Field Label"]} {item["extraData"]["og_field_name_key"]}
+              {item["Field Label"]}
+              <br />
+            </React.Fragment>
+          ))}
+        </div>
+      );
+    }
+
+    return <div>{annotation}</div>;
+  }
+
+  function ValueCell({ annotation, row }) {
+    // Parse the annotation JSON
+    const parsedAnnotation = JSON.parse(annotation);
+
+    // If the annotation is an object, display its items on separate lines
+    if (parsedAnnotation && typeof parsedAnnotation === "object") {
+      return (
+        <div>
+          {Object.values(parsedAnnotation).map((item, index) => (
+            <React.Fragment key={index}>
+              {item["extraData"]["og_field_name_key"]}
               <br />
             </React.Fragment>
           ))}
@@ -255,8 +288,6 @@ function FilePicker(props) {
 
   function MappedCell({ annotation, row }) {
     // Parse the annotation JSON
-    // console.log("annot", annotation);
-    // console.log("row", row);
     const parsedAnnotation = JSON.parse(annotation);
 
     // If the annotation is an object, display its items on separate lines
@@ -278,8 +309,6 @@ function FilePicker(props) {
 
   function DomainCell({ annotation, row }) {
     // Parse the annotation JSON
-    // console.log("annot", annotation);
-    // console.log("row", row);
     const parsedAnnotation = JSON.parse(annotation);
 
     // If the annotation is an object, display its items on separate lines
@@ -299,9 +328,17 @@ function FilePicker(props) {
     return <div>{annotation}</div>;
   }
 
-  function importConfig() {}
+  function importConfig() {
+    console.log('import')
+  }
 
-  function exportConfig() {}
+  function exportConfig() {
+    console.log('export')
+  }
+
+  function clearConfig() {
+    setExtraMappedData(initialState)
+  }
   return (
     // <Container>
     <>
@@ -312,7 +349,7 @@ function FilePicker(props) {
             <Tooltip title="Import Config" placement="top">
               <Button
                 // disabled={!isValid || isExecuting}
-                onClick={importConfig()}
+                onClick={importConfig}
                 color="success"
                 variant="contained"
                 sx={{ marginTop: "10px" }}
@@ -324,12 +361,24 @@ function FilePicker(props) {
             <Tooltip title="Export Config" placement="top">
               <Button
                 // disabled={!isValid || isExecuting}
-                onClick={exportConfig()}
+                onClick={exportConfig}
                 color="success"
                 variant="contained"
                 sx={{ marginTop: "10px", marginLeft: "20px" }}
               >
                 <DownloadIcon />
+              </Button>
+            </Tooltip>
+            <br />
+            <Tooltip title="Clear" placement="top">
+              <Button
+                // disabled={!isValid || isExecuting}
+                onClick={clearConfig}
+                color="error"
+                variant="contained"
+                sx={{ marginTop: "10px" }}
+              >
+                <RestartAltIcon />
               </Button>
             </Tooltip>
 
@@ -340,13 +389,15 @@ function FilePicker(props) {
                 {checklistData[0].person.map((item) => (
                   <ListItem key={item.label}>
                     <ListItemIcon>
-                      {isIdPresentInTablesData(item.concept_id) ||
+                      {isIdPresentInTablesData(item) ||
                       (item.extraFields &&
                         item.extraFields.some(
                           (field) =>
                             field.type === "textfield" &&
                             extraMappedData.person[item.id].textfieldValue &&
-                            extraMappedData.person[item.id].textfieldValue.trim() !== ""
+                            extraMappedData.person[
+                              item.id
+                            ].textfieldValue.trim() !== ""
                         )) ? (
                         <CheckIcon
                           style={{ color: theme.palette.success.main }}
@@ -370,7 +421,8 @@ function FilePicker(props) {
                               variant="outlined"
                               size="small"
                               value={
-                                extraMappedData.person[uniqueKey].textfieldValue || ""
+                                extraMappedData.person[uniqueKey]
+                                  .textfieldValue || ""
                               }
                               onChange={(e) =>
                                 setExtraMappedData((prev) => ({
@@ -435,7 +487,8 @@ function FilePicker(props) {
                         item.extraFields.some(
                           (field) =>
                             field.type === "textfield" &&
-                            extraMappedData.observation_period[item.id].textfieldValue &&
+                            extraMappedData.observation_period[item.id]
+                              .textfieldValue &&
                             extraMappedData.observation_period[
                               item.id
                             ].textfieldValue.trim() !== ""
@@ -468,7 +521,6 @@ function FilePicker(props) {
                         {item.extraFields &&
                           item.extraFields.map((field) => {
                             const uniqueKey = `${item.id}`;
-                                console.log('uniqkey', uniqueKey)
                             if (field.type === "textfield") {
                               return (
                                 <Grid item key={uniqueKey + "-" + field}>
