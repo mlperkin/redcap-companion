@@ -15,15 +15,16 @@
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "@mui/icons-material": "^5.14.3",
-    "@mui/material": "^5.14.5",
+    "@mui/icons-material": "^5.14.15",
+    "@mui/material": "^5.14.15",
     "@mui/x-data-grid": "^6.11.2",
-    "axios": "^1.4.0",
-    "crypto-js": "^4.1.1",
+    "axios": "^1.5.1",
+    "crypto-js": "^4.2.0",
     "csv-parser": "^3.0.0",
     "electron-is-dev": "^2.0.0",
     "electron-store": "^8.1.0",
     "file-saver": "^2.0.5",
+    "material-react-table": "^1.15.1",
     "mysql2": "^3.6.0",
     "node-machine-id": "^1.1.12",
     "papaparse": "^5.4.1",
@@ -32,7 +33,7 @@
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.15.0",
-    "uuid": "^9.0.0",
+    "uuid": "^9.0.1",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz"
   },
   "scripts": {
@@ -69,7 +70,7 @@
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@svgr/webpack": "^8.1.0",
-    "concurrently": "^8.2.0",
+    "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "dotenv": "^16.3.1",
     "electron": "^25.6.0",
