@@ -338,62 +338,63 @@ const OutputPage = () => {
     if (!matchedAndMergedRedcapRecords.length) return;
 
     //we now need to iterate through this merged data and generate SQL
-    console.log("gen output with this data", matchedAndMergedRedcapRecords);
-    console.log("merge more metadata", extraMappedData);
+    // console.log("gen output with this data", matchedAndMergedRedcapRecords);
+    // console.log("merge more metadata", extraMappedData);
 
-    const filteredData = matchedAndMergedRedcapRecords.map((item) => {
-      let newObj = {};
+    // const filteredData = matchedAndMergedRedcapRecords.map((item) => {
+    //   let newObj = {};
 
-      // Keep the 'personID' key-value pair
-      if (item[personID]) {
-        newObj[personID] = item[personID];
-      }
+    //   // Keep the 'personID' key-value pair
+    //   if (item[personID]) {
+    //     newObj[personID] = item[personID];
+    //   }
 
-      // Keep the 'enroll date' key-value pair
-      if (
-        item[
-          checkboxFieldData.observation_period.earliestObservationDateTextValue
-        ]
-      ) {
-        newObj[
-          checkboxFieldData.observation_period.earliestObservationDateTextValue
-        ] =
-          item[
-            checkboxFieldData.observation_period.earliestObservationDateTextValue
-          ];
-      }
+    //   // Keep the 'enroll date' key-value pair
+    //   if (
+    //     item[
+    //       checkboxFieldData.observation_period.earliestObservationDateTextValue
+    //     ]
+    //   ) {
+    //     newObj[
+    //       checkboxFieldData.observation_period.earliestObservationDateTextValue
+    //     ] =
+    //       item[
+    //         checkboxFieldData.observation_period.earliestObservationDateTextValue
+    //       ];
+    //   }
 
-      // Keep the 'follw up date' key-value pair
-      if (
-        item[
-          checkboxFieldData.observation_period.latestObservationDateTextValue
-        ]
-      ) {
-        newObj[
-          checkboxFieldData.observation_period.latestObservationDateTextValue
-        ] =
-          item[
-            checkboxFieldData.observation_period.latestObservationDateTextValue
-          ];
-      }
+    //   // Keep the 'follw up date' key-value pair
+    //   if (
+    //     item[
+    //       checkboxFieldData.observation_period.latestObservationDateTextValue
+    //     ]
+    //   ) {
+    //     newObj[
+    //       checkboxFieldData.observation_period.latestObservationDateTextValue
+    //     ] =
+    //       item[
+    //         checkboxFieldData.observation_period.latestObservationDateTextValue
+    //       ];
+    //   }
 
-      // console.log("item", item["redcap_repeat_instrument"]);
+    //   // console.log("item", item["redcap_repeat_instrument"]);
 
-      // Check each key in the object to see if it has an object with 'redcap_value' as a key
-      for (let key in item) {
-        if (
-          item[key] &&
-          typeof item[key] === "object" &&
-          item[key].hasOwnProperty("redcap_value")
-        ) {
-          newObj[key] = item[key];
-        }
-      }
+    //   // Check each key in the object to see if it has an object with 'redcap_value' as a key
+    //   for (let key in item) {
+    //     if (
+    //       item[key] &&
+    //       typeof item[key] === "object" &&
+    //       item[key].hasOwnProperty("redcap_value")
+    //     ) {
+    //       newObj[key] = item[key];
+    //     }
+    //   }
 
-      return newObj;
-    });
+    //   return newObj;
+    // });
 
-    generateOutputFiles(filteredData);
+ 
+    generateOutputFiles(matchedAndMergedRedcapRecords);
 
     setExecStatus(true);
     setIsExecuting(false);
@@ -414,47 +415,10 @@ const OutputPage = () => {
   }
 
   function processPersonData(item) {
-    let content = "";
-
-    // Extracting personID
-    const personID = item[checkboxFieldData.person.idTextValue];
-    if (!personID) {
-      console.error("Person ID missing");
-      return content;
-    }
-
-    // Extracting birth date details
-    const birthDateValue =
-      item[checkboxFieldData.person.birthdateTextValue]?.redcap_value;
-    if (!birthDateValue) {
-      console.error(`Birth date missing for personID = ${personID}`);
-      return content;
-    }
-
-    const [year, month, day] = birthDateValue?.split("-") || [];
-    const birthYear = new Date(year, month - 1, day).getFullYear();
-
-    if (birthYear) {
-      content += `-- Inserting data for personID = ${personID} into person table\n`;
-
-      // Using parameterized SQL
-      content += `
-        INSERT INTO person 
-        (person_id, birth_datetime, gender_concept_id, year_of_birth, month_of_birth, day_of_birth, race_concept_id, ethnicity_concept_id) 
-        VALUES 
-        (?, ?, ?, ?, ?, ?, ?, ?);\n\n`;
-      content = content
-        .replace("?", personID)
-        .replace("?", birthDateValue)
-        .replace("?", GENDER_CONCEPT_ID)
-        .replace("?", birthYear)
-        .replace("?", parseInt(month))
-        .replace("?", parseInt(day))
-        .replace("?", getRandomRaceValue())
-        .replace("?", ETHNICITY_CONCEPT_ID_PLACEHOLDER);
-    }
-
-    return content;
+    let gender_concept_id = item.person.male || item.person.female || null;
+    let ethnicity_concept_id = item.person.hispanic_or_latino || item.person.not_hispanic || null;
+  
+    return `INSERT INTO person (person_id, gender_concept_id, ethnicity_concept_id) VALUES ('${item.person.person_id}', ${gender_concept_id}, ${ethnicity_concept_id});\n`;
   }
 
   function processObservationData(item) {
@@ -482,72 +446,23 @@ const OutputPage = () => {
   }
 
   function processObservationPeriods(data) {
-    const observationPeriods = {};
-    data.forEach((item) => {
-      const personID = item[checkboxFieldData.person.idTextValue];
-      if (!observationPeriods[personID]) {
-        observationPeriods[personID] = {
-          start: new Date(
-            item[
-              checkboxFieldData.observation_period.earliestObservationDateTextValue
-            ]
-          ),
-          stop: new Date(
-            item[
-              checkboxFieldData.observation_period
-                .latestObservationDateTextValue
-            ] ||
-              item[
-                checkboxFieldData.observation_period
-                  .earliestObservationDateTextValue
-              ]
-          ),
-        };
-      } else {
-        if (
-          new Date(
-            item[
-              checkboxFieldData.observation_period.earliestObservationDateTextValue
-            ]
-          ) < observationPeriods[personID].start
-        ) {
-          observationPeriods[personID].start = new Date(
-            item[
-              checkboxFieldData.observation_period.earliestObservationDateTextValue
-            ]
-          );
-        }
-        if (
-          new Date(
-            item[
-              checkboxFieldData.observation_period.latestObservationDateTextValue
-            ]
-          ) > observationPeriods[personID].stop
-        ) {
-          observationPeriods[personID].stop = new Date(
-            item[
-              checkboxFieldData.observation_period.latestObservationDateTextValue
-            ]
-          );
-        }
-      }
+    return data.map(item => {
+      return {
+        person_id: item.person.person_id,
+        start_date: item.observation_period.start_date.redcap_value || null,
+        end_date: item.observation_period.end_date || null,
+      };
     });
-    return observationPeriods;
   }
 
   function generateObservationPeriodSQL(observationPeriods) {
-    let content = "";
-    for (let personID in observationPeriods) {
-      content += `-- Inserting observation period for personID = ${personID}\n`;
-      content += `INSERT INTO observation_period (observation_period_id, person_id, observation_period_start_date, observation_period_end_date, period_type_concept_id) `;
-      content += `VALUES ((SELECT COALESCE(MAX(observation_period_id), 0) + 1 FROM observation_period), '${personID}', '${formatDateToSQL(
-        observationPeriods[personID].start
-      )}', '${formatDateToSQL(
-        observationPeriods[personID].stop
-      )}', 44814724);\n\n`;
-    }
+    let content = '';
+    observationPeriods.forEach(period => {
+      content += `INSERT INTO observation_period (person_id, observation_period_start_date, observation_period_end_date) VALUES ('${period.person_id}', '${period.start_date}', '${period.end_date}');\n`;
+    });
     return content;
   }
+  
 
   function generateOutputFiles(data) {
     let personSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
