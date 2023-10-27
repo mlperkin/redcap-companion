@@ -84,19 +84,25 @@ function FilePicker(props) {
         // console.log('parsedanno', parsedAnnotation)
 
         // Process each property of the parsedAnnotation
+        // console.log('parsedAnno', parsedAnnotation)
         for (const property in parsedAnnotation) {
           const extraData = parsedAnnotation[property]?.extraData;
           const conceptId = extraData?.concept_id;
           // console.log('extra', extraData)
           let ogValue = extraData?.og_field_name_key;
           let ogKey = extraData?.og_field_name;
-          if (conceptId === id) {
+          let fieldName = parsedAnnotation[property]["Field Name"];
+          // console.log('fieldname', fieldName)
+          if (conceptId == id) {
+            // console.log('we match', conceptId)
             //update extraMappedData with mappedData values and stuff
-            if (ogValue) {
-              updateOgValueAndKeyInLocalStorage(id, ogValue, ogKey);
-            }
+            // if (ogValue) {
+            updateOgValueAndKeyInLocalStorage(id, ogValue, ogKey, fieldName);
+            // }
 
             return true;
+          } else {
+            // console.log('no match on ', conceptId)
           }
         }
 
@@ -106,7 +112,12 @@ function FilePicker(props) {
     });
   };
 
-  function updateOgValueAndKeyInLocalStorage(conceptId, newOgValue, newOgKey) {
+  function updateOgValueAndKeyInLocalStorage(
+    conceptId,
+    newOgValue,
+    newOgKey,
+    fieldName
+  ) {
     // Retrieve the existing data from local storage
 
     let storedData = localStorage.getItem("extraMappedData");
@@ -115,17 +126,26 @@ function FilePicker(props) {
 
       // Traverse the 'person' object
       for (const key in storedData.person) {
-        if (storedData.person[key].concept_id === conceptId) {
+        if (storedData.person[key].concept_id == conceptId) {
+          // console.log("we are updating", conceptId);
           storedData.person[key].ogValue = newOgValue;
           storedData.person[key].ogKey = newOgKey;
+          storedData.person[key].fieldName = fieldName;
+
+          // return;
+          // continue;
           break; // Exit once the matching concept_id is found
+        } else {
+          // console.log("we do not match this id", conceptId);
         }
+        // return;
       }
 
       // Traverse the 'observation_period' object if needed
       // (In this case, it seems there's no concept_id in observation_period, so I'm omitting it)
 
       // setExtraMappedData(storedData)
+      // console.log('storedData', storedData)
       localStorage.setItem("extraMappedData", JSON.stringify(storedData));
     }
   }
@@ -329,15 +349,15 @@ function FilePicker(props) {
   }
 
   function importConfig() {
-    console.log('import')
+    console.log("import");
   }
 
   function exportConfig() {
-    console.log('export')
+    console.log("export");
   }
 
   function clearConfig() {
-    setExtraMappedData(initialState)
+    setExtraMappedData(initialState);
   }
   return (
     // <Container>

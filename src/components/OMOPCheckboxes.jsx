@@ -42,7 +42,7 @@ const OMOPCheckboxes = () => {
 
   useEffect(() => {
     const storedData = localStorage.getItem("checkboxFieldData");
-    console.log("got stored data", JSON.parse(storedData));
+    // console.log("got stored data", JSON.parse(storedData));
     if (storedData) {
       setCheckboxFieldData(JSON.parse(storedData));
     }

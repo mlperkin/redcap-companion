@@ -72,12 +72,12 @@ const OutputPage = () => {
   // Function to load the data
   useEffect(() => {
     // setFormDataLoaded(false);
-    console.log("get store data");
+    // console.log("get store data");
     // Request the store data from the main process when the component mounts
     ipcRenderer.invoke("getStoreData").then((data) => {
       const redcapDecryptedData = decryptData(data.redcapFormData); // Decrypt the data
       const mysqlDecryptedData = decryptData(data.MySQLForm); // Decrypt the data
-      console.log("redcap", redcapDecryptedData);
+      // console.log("redcap", redcapDecryptedData);
       const savedPGFormData = localStorage.getItem("postgresFormData");
       let postgresDecryptedData;
       if (savedPGFormData) {
@@ -116,7 +116,7 @@ const OutputPage = () => {
     }
 
     if (ddData && ddData.length) passedChecks++;
-    console.info("redcapformname", redcapFormName);
+    // console.info("redcapformname", redcapFormName);
 
     if (redcapFormName) passedChecks++;
 
@@ -142,13 +142,13 @@ const OutputPage = () => {
   }
 
   async function testRedcapAPI(event) {
-    console.log("test redcap api!");
-    console.log("form", formData);
+    // console.log("test redcap api!");
+    // console.log("form", formData);
     event.preventDefault();
     setIsTesting(true);
     const { redcapAPIKey, redcapAPIURL } = formData;
     if (!redcapAPIKey || !redcapAPIURL) {
-      console.log("returning missing api key or url");
+      // console.log("returning missing api key or url");
       setIsRedcapConnected(false);
       setIsTesting(false);
       // setRedcapAPITest("Please provide both API key and URL.");
@@ -229,8 +229,8 @@ const OutputPage = () => {
   async function output() {
     setIsExecuting(true);
     setExecStatus(null);
-    console.log("output format is", checkedFormats);
-    console.log("extramapped", extraMappedData);
+    // console.log("output format is", checkedFormats);
+    // console.log("extramapped", extraMappedData);
     //the steps involved here
     // 1. get all redcap records for selected form
     let redCapRecords = await getRedcapRecords();
@@ -274,54 +274,79 @@ const OutputPage = () => {
 
     console.log("mergedRedcapRecords", redCapRecords);
     let storedData = localStorage.getItem("extraMappedData");
-    const mergedData = {};
     if (storedData) {
       storedData = JSON.parse(storedData);
-      console.log("storedData", storedData);
+      console.log("storedData (extraMapping", storedData);
 
-      const mergedDataArray = [];
+      const finalMergedDataArray = [];
 
+      //finally merge redcapRecords with the extra mapping data we have
       redCapRecords.forEach((record) => {
         const mergedRecord = {};
 
         for (let key in storedData) {
           mergedRecord[key] = {};
-
           for (let attribute in storedData[key]) {
-            const details = storedData[key][attribute];
-
-            if (details.textfieldValue !== "") {
-              const field = details.textfieldValue;
-
-              if (record[field]) {
-                if (
-                  typeof record[field] === "string" &&
-                  details.format === "YYYY-MM-DD"
-                ) {
-                  mergedRecord[key][attribute] = record[field].split("-")[0];
-                } else {
-                  mergedRecord[key][attribute] = record[field];
-                }
-              }
-            } else if (details.concept_id) {
-              const ogField = details.ogKey || "";
-              const ogValue = details.ogValue || "";
-
+            const storedDataDetails = storedData[key][attribute];
+            // console.log('storedDataDetails', storedDataDetails)
+            // if (storedDataDetails.textfieldValue !== "") {
+            const field = storedDataDetails.textfieldValue;
+            // console.log('storedDataDetails', storedDataDetails)
+            // console.log('field', field)
+            // console.log('record', record)
+            if (record[field]) {
               if (
-                record[ogField] &&
-                record[ogField].redcap_value.toString() === ogValue
+                typeof record[field] === "string" &&
+                storedDataDetails.format === "YYYY-MM-DD"
               ) {
-                mergedRecord[key][attribute] = details.concept_id;
+                mergedRecord[key][attribute] = record[field].split("-")[0];
+              } else {
+                mergedRecord[key][attribute] = record[field];
+              }
+            }
+            // }
+
+            if (storedDataDetails.concept_id) {
+              const ogKey =
+                storedDataDetails.ogKey || storedDataDetails.fieldName || "";
+              const ogValue = storedDataDetails.ogValue || "";
+              console.log("ogKey", ogKey + "-" + ogValue);
+              console.log("record", record);
+              console.log("value", record[ogKey].redcap_value.toString());
+              //if we have the odd exception like birthdate
+              if (
+                !storedDataDetails.ogKey &&
+                storedDataDetails.fieldName &&
+                storedDataDetails.format !== ""
+              ) {
+                console.log("format", storedDataDetails.format);
+                //get date format and then get only the year
+                const dateValue = record[ogKey].redcap_value.toString();
+                const format = storedDataDetails.format;
+                let birthYear;
+
+                try {
+                  birthYear = extractYearFromDate(dateValue, format);
+                  console.log("birthYear", birthYear);
+                } catch (error) {
+                  console.error(error.message);
+                }
+                mergedRecord[key][attribute] = birthYear;
+              } else if (
+                record[ogKey] &&
+                record[ogKey].redcap_value.toString() === ogValue
+              ) {
+                mergedRecord[key][attribute] = storedDataDetails.concept_id;
               }
             }
           }
         }
 
-        mergedDataArray.push(mergedRecord);
+        finalMergedDataArray.push(mergedRecord);
       });
 
-      console.log("mergedDataArray", mergedDataArray);
-      return mergedDataArray;
+      console.log("finalMergedDataArray", finalMergedDataArray);
+      return finalMergedDataArray;
     } else {
       console.log("No storedData found in localStorage");
       return redCapRecords;
@@ -329,96 +354,47 @@ const OutputPage = () => {
   }
   // 4. iterate through this merged list to create SQL CSV files (for upsert on mysql and postgresql)
   async function generateOutput(matchedAndMergedRedcapRecords) {
-    console.log("generate output", selectedDatabase);
-    // console.log("output to this", selectedDatabase);
-    // console.log("with these creds", dbCreds);
-    // console.log("checkbox field data", checkboxFieldData);
+    console.log("selectedDatabase", selectedDatabase);
     let personID = checkboxFieldData.person.idTextValue;
     console.log("personid", personID);
     if (!matchedAndMergedRedcapRecords.length) return;
 
-    //we now need to iterate through this merged data and generate SQL
-    // console.log("gen output with this data", matchedAndMergedRedcapRecords);
-    // console.log("merge more metadata", extraMappedData);
-
-    // const filteredData = matchedAndMergedRedcapRecords.map((item) => {
-    //   let newObj = {};
-
-    //   // Keep the 'personID' key-value pair
-    //   if (item[personID]) {
-    //     newObj[personID] = item[personID];
-    //   }
-
-    //   // Keep the 'enroll date' key-value pair
-    //   if (
-    //     item[
-    //       checkboxFieldData.observation_period.earliestObservationDateTextValue
-    //     ]
-    //   ) {
-    //     newObj[
-    //       checkboxFieldData.observation_period.earliestObservationDateTextValue
-    //     ] =
-    //       item[
-    //         checkboxFieldData.observation_period.earliestObservationDateTextValue
-    //       ];
-    //   }
-
-    //   // Keep the 'follw up date' key-value pair
-    //   if (
-    //     item[
-    //       checkboxFieldData.observation_period.latestObservationDateTextValue
-    //     ]
-    //   ) {
-    //     newObj[
-    //       checkboxFieldData.observation_period.latestObservationDateTextValue
-    //     ] =
-    //       item[
-    //         checkboxFieldData.observation_period.latestObservationDateTextValue
-    //       ];
-    //   }
-
-    //   // console.log("item", item["redcap_repeat_instrument"]);
-
-    //   // Check each key in the object to see if it has an object with 'redcap_value' as a key
-    //   for (let key in item) {
-    //     if (
-    //       item[key] &&
-    //       typeof item[key] === "object" &&
-    //       item[key].hasOwnProperty("redcap_value")
-    //     ) {
-    //       newObj[key] = item[key];
-    //     }
-    //   }
-
-    //   return newObj;
-    // });
-
- 
     generateOutputFiles(matchedAndMergedRedcapRecords);
 
     setExecStatus(true);
     setIsExecuting(false);
   }
 
-  // Constants
-  const RACE_VALUES = [
-    { race: "WHITE", value: 8527 },
-    { race: "BLACK", value: 8516 },
-    { race: "ASIAN", value: 8515 },
-  ];
-  const ETHNICITY_CONCEPT_ID_PLACEHOLDER = 38003564;
-  const GENDER_CONCEPT_ID = "8507";
+  function extractYearFromDate(dateValue, format) {
+    // Mapping of common date formats to regex patterns
+    const formatPatterns = {
+      "YYYY-MM-DD": /(\d{4})-\d{2}-\d{2}/,
+      "MM-DD-YYYY": /\d{2}-\d{2}-(\d{4})/,
+      "DD-MM-YYYY": /\d{2}-\d{2}-(\d{4})/,
+      "MM/DD/YYYY": /\d{2}\/\d{2}\/(\d{4})/,
+      "DD/MM/YYYY": /\d{2}\/\d{2}\/(\d{4})/,
+      // Add more formats as needed
+    };
 
-  function getRandomRaceValue() {
-    const randomRaceIndex = Math.floor(Math.random() * RACE_VALUES.length);
-    return RACE_VALUES[randomRaceIndex]?.value || 0;
+    const regex = formatPatterns[format];
+    if (!regex) {
+      throw new Error("Unsupported date format");
+    }
+
+    const match = dateValue.match(regex);
+    if (match && match[1]) {
+      return match[1]; // Return the year
+    } else {
+      throw new Error("Invalid date value for the given format");
+    }
   }
 
   function processPersonData(item) {
     let gender_concept_id = item.person.male || item.person.female || null;
-    let ethnicity_concept_id = item.person.hispanic_or_latino || item.person.not_hispanic || null;
-  
-    return `INSERT INTO person (person_id, gender_concept_id, ethnicity_concept_id) VALUES ('${item.person.person_id}', ${gender_concept_id}, ${ethnicity_concept_id});\n`;
+    let ethnicity_concept_id =
+      item.person.hispanic_or_latino || item.person.not_hispanic || null;
+
+    return `INSERT INTO person (person_id, year_of_birth, gender_concept_id, ethnicity_concept_id) VALUES ('${item.person.person_id}', ${item.person.birth_year}, ${gender_concept_id}, ${ethnicity_concept_id});\n`;
   }
 
   function processObservationData(item) {
@@ -446,7 +422,7 @@ const OutputPage = () => {
   }
 
   function processObservationPeriods(data) {
-    return data.map(item => {
+    return data.map((item) => {
       return {
         person_id: item.person.person_id,
         start_date: item.observation_period.start_date.redcap_value || null,
@@ -456,13 +432,12 @@ const OutputPage = () => {
   }
 
   function generateObservationPeriodSQL(observationPeriods) {
-    let content = '';
-    observationPeriods.forEach(period => {
+    let content = "";
+    observationPeriods.forEach((period) => {
       content += `INSERT INTO observation_period (person_id, observation_period_start_date, observation_period_end_date) VALUES ('${period.person_id}', '${period.start_date}', '${period.end_date}');\n`;
     });
     return content;
   }
-  
 
   function generateOutputFiles(data) {
     let personSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
@@ -556,6 +531,7 @@ const OutputPage = () => {
   }
 
   function sqlToCSV(sqlContent) {
+    console.log('the sql content' ,sqlContent)
     // Extract values after the "VALUES" keyword
     const valueMatches = sqlContent.match(/VALUES\s*\(([^)]+)\)/g);
 
@@ -566,7 +542,7 @@ const OutputPage = () => {
 
     // Extract the headers only once
     const headerMatch = sqlContent.match(
-      /\((person_id, birth_datetime,.*ethnicity_concept_id)\)/
+      /\((person_id, year_of_birth,.*ethnicity_concept_id)\)/
     );
     if (!headerMatch) {
       console.error("Could not find headers");
