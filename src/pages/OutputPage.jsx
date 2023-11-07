@@ -10,7 +10,6 @@ import {
   TableCell,
   TableRow,
   Typography,
-  // FormControl,
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import { useDataContext } from "../components/context/DataContext";
@@ -22,9 +21,20 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { decryptData } from "../utils/encryption";
 import OMOPCheckboxes from "../components/OMOPCheckboxes";
-// import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
+import {
+  processObservationPeriods,
+  generateObservationPeriodSQL,
+} from "../components/OMOPTableParsing/observation_period";
+import { processPersonData } from "../components/OMOPTableParsing/person";
+import {
+  extractYearFromDate,
+  sqlToCSV,
+  downloadCSV,
+  downloadSQL,
+  downloadExcludedData,
+} from "../utils/functions";
 
 // import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
@@ -68,11 +78,9 @@ const OutputPage = () => {
   const navigate = useNavigate();
 
   let totalChecks = 4; //how many total checks here
-
+  let excludedItems = [];
   // Function to load the data
   useEffect(() => {
-    // setFormDataLoaded(false);
-    // console.log("get store data");
     // Request the store data from the main process when the component mounts
     ipcRenderer.invoke("getStoreData").then((data) => {
       const redcapDecryptedData = decryptData(data.redcapFormData); // Decrypt the data
@@ -89,13 +97,10 @@ const OutputPage = () => {
       } else if (selectedDatabase === "PostgreSQL") {
         setDBCreds(postgresDecryptedData);
       }
-      // console.log("pg decrypt", postgresDecryptedData);
-      // console.log("mysql decrypted", mysqlDecryptedData);
+
       if (redcapDecryptedData) {
         setFormData(redcapDecryptedData);
-        // console.log("redcap decrypted data", redcapDecryptedData);
       }
-      // setFormDataLoaded(true);
     });
   }, [selectedDatabase]);
 
@@ -142,8 +147,6 @@ const OutputPage = () => {
   }
 
   async function testRedcapAPI(event) {
-    // console.log("test redcap api!");
-    // console.log("form", formData);
     event.preventDefault();
     setIsTesting(true);
     const { redcapAPIKey, redcapAPIURL } = formData;
@@ -229,8 +232,6 @@ const OutputPage = () => {
   async function output() {
     setIsExecuting(true);
     setExecStatus(null);
-    // console.log("output format is", checkedFormats);
-    // console.log("extramapped", extraMappedData);
     //the steps involved here
     // 1. get all redcap records for selected form
     let redCapRecords = await getRedcapRecords();
@@ -250,8 +251,6 @@ const OutputPage = () => {
       "getRedcapRecords",
       modFormData
     );
-
-    console.log("redcap records", redcapRecords);
     return redcapRecords;
   }
   // 2. match redcap records field_names with field_names from data dictionary
@@ -266,7 +265,7 @@ const OutputPage = () => {
               redcap_value: obj1[key],
               mapping_metadata: JSON.parse(obj2.field_annotation),
             };
-            break; // No need to continue checking other keys for this pair of objects
+            // break; // No need to continue checking other keys for this pair of objects
           }
         }
       });
@@ -276,7 +275,7 @@ const OutputPage = () => {
     let storedData = localStorage.getItem("extraMappedData");
     if (storedData) {
       storedData = JSON.parse(storedData);
-      console.log("storedData (extraMapping", storedData);
+      // console.log("storedData (extraMapping", storedData);
 
       const finalMergedDataArray = [];
 
@@ -288,31 +287,23 @@ const OutputPage = () => {
           mergedRecord[key] = {};
           for (let attribute in storedData[key]) {
             const storedDataDetails = storedData[key][attribute];
-            // console.log('storedDataDetails', storedDataDetails)
-            // if (storedDataDetails.textfieldValue !== "") {
             const field = storedDataDetails.textfieldValue;
-            // console.log('storedDataDetails', storedDataDetails)
-            // console.log('field', field)
-            // console.log('record', record)
             if (record[field]) {
               if (
                 typeof record[field] === "string" &&
                 storedDataDetails.format === "YYYY-MM-DD"
               ) {
-                mergedRecord[key][attribute] = record[field].split("-")[0];
+                // mergedRecord[key][attribute] = record[field].split("-")[0];
+                mergedRecord[key][attribute] = record[field];
               } else {
                 mergedRecord[key][attribute] = record[field];
               }
             }
-            // }
 
             if (storedDataDetails.concept_id) {
               const ogKey =
                 storedDataDetails.ogKey || storedDataDetails.fieldName || "";
               const ogValue = storedDataDetails.ogValue || "";
-              console.log("ogKey", ogKey + "-" + ogValue);
-              console.log("record", record);
-              console.log("value", record[ogKey].redcap_value.toString());
               //if we have the odd exception like birthdate
               if (
                 !storedDataDetails.ogKey &&
@@ -354,89 +345,10 @@ const OutputPage = () => {
   }
   // 4. iterate through this merged list to create SQL CSV files (for upsert on mysql and postgresql)
   async function generateOutput(matchedAndMergedRedcapRecords) {
-    console.log("selectedDatabase", selectedDatabase);
-    let personID = checkboxFieldData.person.idTextValue;
-    console.log("personid", personID);
     if (!matchedAndMergedRedcapRecords.length) return;
-
     generateOutputFiles(matchedAndMergedRedcapRecords);
-
     setExecStatus(true);
     setIsExecuting(false);
-  }
-
-  function extractYearFromDate(dateValue, format) {
-    // Mapping of common date formats to regex patterns
-    const formatPatterns = {
-      "YYYY-MM-DD": /(\d{4})-\d{2}-\d{2}/,
-      "MM-DD-YYYY": /\d{2}-\d{2}-(\d{4})/,
-      "DD-MM-YYYY": /\d{2}-\d{2}-(\d{4})/,
-      "MM/DD/YYYY": /\d{2}\/\d{2}\/(\d{4})/,
-      "DD/MM/YYYY": /\d{2}\/\d{2}\/(\d{4})/,
-      // Add more formats as needed
-    };
-
-    const regex = formatPatterns[format];
-    if (!regex) {
-      throw new Error("Unsupported date format");
-    }
-
-    const match = dateValue.match(regex);
-    if (match && match[1]) {
-      return match[1]; // Return the year
-    } else {
-      throw new Error("Invalid date value for the given format");
-    }
-  }
-
-  function processPersonData(item) {
-    let gender_concept_id = item.person.male || item.person.female || null;
-    let ethnicity_concept_id =
-      item.person.hispanic_or_latino || item.person.not_hispanic || null;
-
-    return `INSERT INTO person (person_id, year_of_birth, gender_concept_id, ethnicity_concept_id) VALUES ('${item.person.person_id}', ${item.person.birth_year}, ${gender_concept_id}, ${ethnicity_concept_id});\n`;
-  }
-
-  function processObservationData(item) {
-    let content = "";
-    const personID = item[checkboxFieldData.person.idTextValue];
-    const birthDateConceptId =
-      item.checkboxFieldData?.person?.birthdateTextValue?.mapping_metadata
-        ?.extraData?.concept_id;
-    const ageValue = item.imp_age?.redcap_value;
-    const ageConceptId =
-      item.imp_age?.mapping_metadata?.imp_age?.extraData?.concept_id;
-    const observationEntries = [
-      {
-        conceptId: birthDateConceptId,
-        value: item[checkboxFieldData.person.birthdateTextValue]?.redcap_value,
-      },
-      { conceptId: ageConceptId, value: ageValue },
-    ];
-    observationEntries.forEach(({ conceptId, value }) => {
-      content += `-- Inserting observation for personID = ${personID}\n`;
-      content += `INSERT INTO observation (observation_id, person_id, observation_concept_id, value_as_string, observation_date, observation_type_concept_id) `;
-      content += `VALUES ((SELECT COALESCE(MAX(observation_id), 0) + 1 FROM observation), '${personID}', ${conceptId}, '${value}', CURRENT_DATE, 123456);\n\n`;
-    });
-    return content;
-  }
-
-  function processObservationPeriods(data) {
-    return data.map((item) => {
-      return {
-        person_id: item.person.person_id,
-        start_date: item.observation_period.start_date.redcap_value || null,
-        end_date: item.observation_period.end_date || null,
-      };
-    });
-  }
-
-  function generateObservationPeriodSQL(observationPeriods) {
-    let content = "";
-    observationPeriods.forEach((period) => {
-      content += `INSERT INTO observation_period (person_id, observation_period_start_date, observation_period_end_date) VALUES ('${period.person_id}', '${period.start_date}', '${period.end_date}');\n`;
-    });
-    return content;
   }
 
   function generateOutputFiles(data) {
@@ -445,11 +357,11 @@ const OutputPage = () => {
     let observationPeriodSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
 
     data.forEach((item) => {
-      personSQLContent += processPersonData(item);
-      observationSQLContent += processObservationData(item);
+      personSQLContent += processPersonData(item, excludedItems);
+      // observationSQLContent += processObservationData(item);
     });
 
-    const observationPeriods = processObservationPeriods(data);
+    const observationPeriods = processObservationPeriods(data, excludedItems);
     observationPeriodSQLContent +=
       generateObservationPeriodSQL(observationPeriods);
 
@@ -466,6 +378,10 @@ const OutputPage = () => {
         SQL: observationPeriodSQLContent,
         CSV: sqlToCSV(observationPeriodSQLContent),
       },
+      visit_occurrence: {
+        SQL: personSQLContent,
+        CSV: sqlToCSV(personSQLContent),
+      },
       observation: {
         SQL: observationSQLContent,
         CSV: sqlToCSV(observationSQLContent),
@@ -479,6 +395,8 @@ const OutputPage = () => {
         console.warn(`No configuration found for table: ${table}`);
       }
     });
+
+    downloadExcludedData(excludedItems);
   }
 
   // Generic download function
@@ -490,104 +408,6 @@ const OutputPage = () => {
       downloadCSV(contentObj.CSV, `${table}.csv`);
     }
   }
-
-  // function extractValue(data) {
-  //   if (typeof data === "object" && data.hasOwnProperty("redcap_value")) {
-  //     return data.redcap_value;
-  //   }
-  //   return data;
-  // }
-
-  function downloadSQL(sqlContent, fileName) {
-    // Create a Blob with the SQL content
-    const blob = new Blob([sqlContent], {
-      type: "text/plain;charset=utf-8;",
-    });
-
-    // Create a link and click it to trigger the download
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", fileName);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  function downloadCSV(content, filename) {
-    console.log("download csv", content);
-    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", filename);
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    document.body.removeChild(link);
-  }
-
-  function sqlToCSV(sqlContent) {
-    console.log('the sql content' ,sqlContent)
-    // Extract values after the "VALUES" keyword
-    const valueMatches = sqlContent.match(/VALUES\s*\(([^)]+)\)/g);
-
-    if (!valueMatches || valueMatches.length < 1) {
-      console.error("Invalid SQL content");
-      return;
-    }
-
-    // Extract the headers only once
-    const headerMatch = sqlContent.match(
-      /\((person_id, year_of_birth,.*ethnicity_concept_id)\)/
-    );
-    if (!headerMatch) {
-      console.error("Could not find headers");
-      return;
-    }
-    const headers = headerMatch[1].split(",").map((s) => s.trim());
-
-    // Convert values to CSV format
-    const values = valueMatches.map((valueSet) => {
-      return valueSet
-        .replace(/VALUES\s*\(/, "") // Remove the "VALUES(" prefix
-        .replace(/\);?$/, "") // Remove closing parenthesis and optional semicolon
-        .split(",")
-        .map((s) => s.trim())
-        .join(",");
-    });
-
-    // Join headers and values
-    return headers.join(",") + "\n" + values.join("\n");
-  }
-
-  // Additional utility function to convert a Date object to YYYY-MM-DD string
-  function formatDateToSQL(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
-
-  // function downloadExcludedData(data) {
-  //   let _dataString = JSON.stringify(data, null, 2);
-  //   // Create a Blob with the SQL content
-  //   const blob = new Blob([_dataString], {
-  //     type: "text/plain;charset=utf-8;",
-  //   });
-
-  //   // Create a link and click it to trigger the download
-  //   const url = URL.createObjectURL(blob);
-  //   const link = document.createElement("a");
-  //   link.href = url;
-  //   link.setAttribute("download", "excludedData.json");
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  // }
 
   // Checkbox change handler
   const handleCheckboxChange = (event) => {
@@ -717,30 +537,6 @@ const OutputPage = () => {
                       <TableRow>
                         <TableCell>
                           <br />
-                          {/* <Tooltip title="Import Config" placement="top">
-                            <Button
-                              disabled={!isValid || isExecuting}
-                              onClick={output}
-                              color="success"
-                              variant="contained"
-                              sx={{ marginTop: "10px" }}
-                            >
-                              <UploadIcon />
-                            </Button>
-                          </Tooltip>
-
-                          <Tooltip title="Export Config" placement="top">
-                            <Button
-                              disabled={!isValid || isExecuting}
-                              onClick={output}
-                              color="success"
-                              variant="contained"
-                              sx={{ marginTop: "10px", marginLeft: "20px" }}
-                            >
-                              <DownloadIcon />
-                            </Button>
-                          </Tooltip> */}
-
                           <OMOPCheckboxes />
                           <br />
                           <h3>Output Format</h3>

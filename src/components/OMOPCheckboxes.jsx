@@ -62,7 +62,7 @@ const OMOPCheckboxes = () => {
 
   const OMOP_HEALTH_SYSTEM_DATA_TABLES = ["location", "care_site", "provider"];
 
-  // const MANDATORY_TABLES = ["person", "observation_period"];
+  const MANDATORY_TABLES = ["person", "observation_period"];
 
   const TABLE_TOOLTIPS = {
     person:
@@ -247,7 +247,7 @@ const OMOPCheckboxes = () => {
     const { name, checked } = event.target;
 
     // If the table is Mandatory, do not allow it to be unchecked
-    // if (MANDATORY_TABLES.includes(name) && !checked) return;
+    if (MANDATORY_TABLES.includes(name) && !checked) return;
 
     if (checked) {
       setSelectedOMOPTables((prevTables) => [...prevTables, name]);
@@ -288,7 +288,7 @@ const OMOPCheckboxes = () => {
                         name={table}
                         checked={selectedOMOPTables.includes(table)}
                         onChange={handleCheckboxChange}
-                        // disabled={MANDATORY_TABLES.includes(table)}
+                        disabled={MANDATORY_TABLES.includes(table)}
                       />
                     }
                     label={table}
@@ -360,7 +360,7 @@ const OMOPCheckboxes = () => {
                         name={table}
                         checked={selectedOMOPTables.includes(table)}
                         onChange={handleCheckboxChange}
-                        // disabled={MANDATORY_TABLES.includes(table)}
+                        disabled={MANDATORY_TABLES.includes(table)}
                       />
                     }
                     label={table}
