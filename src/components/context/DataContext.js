@@ -19,6 +19,7 @@ export const DataProvider = ({ children }) => {
   const [tablesData, setTablesData] = useState([]);
   const [redcapFormName, setRedcapFormName] = useState();
   const [selectedOMOPTables, setSelectedOMOPTables] = useState([]);
+  const [mandatoryOMOPTables, setMandatoryOMOPTables] = useState([]);
   const [checkboxFieldData, setCheckboxFieldData] = useState({
     person: {
       idTextValue: "",
@@ -200,6 +201,8 @@ export const DataProvider = ({ children }) => {
         setRedcapFormName,
         selectedOMOPTables,
         setSelectedOMOPTables,
+        mandatoryOMOPTables,
+        setMandatoryOMOPTables,
         checkboxFieldData,
         setCheckboxFieldData,
         tablesData,

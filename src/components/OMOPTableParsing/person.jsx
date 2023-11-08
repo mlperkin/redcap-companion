@@ -25,7 +25,7 @@ export function processPersonData(item,excludedItems) {
     if (reasons.length > 0) {
       item.person.invalid_reasons = reasons.join(", ");
       excludedItems.push(item);
-      return "";
+      return ""; // Return an empty string to signify no SQL statement was generated
     }
 
     return `INSERT INTO person (person_id, year_of_birth, gender_concept_id, ethnicity_concept_id) VALUES ('${item.person.person_id}', ${item.person.birth_year}, ${gender_concept_id}, ${ethnicity_concept_id});\n`;

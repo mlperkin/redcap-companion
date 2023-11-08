@@ -4,11 +4,11 @@ import {
   FormControlLabel,
   Tooltip,
   Chip,
-  Select,
-  MenuItem,
-  TextField,
+  // Select,
+  // MenuItem,
+  // TextField,
   // InputLabel,
-  FormControl,
+  // FormControl,
   Grid,
   Paper,
 } from "@mui/material";
@@ -19,30 +19,34 @@ const OMOPCheckboxes = () => {
   const {
     selectedOMOPTables,
     setSelectedOMOPTables,
-    checkboxFieldData,
+    // mandatoryOMOPTables,
+    setMandatoryOMOPTables,
+    // checkboxFieldData,
     setCheckboxFieldData,
   } = useDataContext();
 
   // Unified handler for all changes
-  const handleFormChange = (tableName, fieldName, event) => {
-    const newValue = event.target.value;
-    console.log("set checkbox field data", newValue);
-    setCheckboxFieldData((prevData) => {
-      const updatedData = {
-        ...prevData,
-        [tableName]: {
-          ...prevData[tableName],
-          [fieldName]: newValue,
-        },
-      };
-      localStorage.setItem("checkboxFieldData", JSON.stringify(updatedData)); // Storing into localStorage
-      return updatedData;
-    });
-  };
+  // const handleFormChange = (tableName, fieldName, event) => {
+  //   const newValue = event.target.value;
+  //   console.log("set checkbox field data", newValue);
+  //   setCheckboxFieldData((prevData) => {
+  //     const updatedData = {
+  //       ...prevData,
+  //       [tableName]: {
+  //         ...prevData[tableName],
+  //         [fieldName]: newValue,
+  //       },
+  //     };
+  //     localStorage.setItem("checkboxFieldData", JSON.stringify(updatedData)); // Storing into localStorage
+  //     return updatedData;
+  //   });
+  // };
 
   useEffect(() => {
     const storedData = localStorage.getItem("checkboxFieldData");
     // console.log("got stored data", JSON.parse(storedData));
+    console.log('set mand tables, ', MANDATORY_TABLES)
+    setMandatoryOMOPTables(MANDATORY_TABLES)
     if (storedData) {
       setCheckboxFieldData(JSON.parse(storedData));
     }
@@ -286,7 +290,7 @@ const OMOPCheckboxes = () => {
                     control={
                       <Checkbox
                         name={table}
-                        checked={selectedOMOPTables.includes(table)}
+                        checked={selectedOMOPTables.includes(table) || MANDATORY_TABLES.includes(table)}
                         onChange={handleCheckboxChange}
                         disabled={MANDATORY_TABLES.includes(table)}
                       />

@@ -53,8 +53,9 @@ const OutputPage = () => {
     ddData,
     redcapFormName,
     selectedOMOPTables,
-    checkboxFieldData,
-    extraMappedData,
+    mandatoryOMOPTables,
+    // checkboxFieldData,
+    // extraMappedData,
   } = useDataContext();
 
   // State for checkboxes
@@ -79,13 +80,14 @@ const OutputPage = () => {
 
   let totalChecks = 4; //how many total checks here
   let excludedItems = [];
+  
   // Function to load the data
   useEffect(() => {
     // Request the store data from the main process when the component mounts
     ipcRenderer.invoke("getStoreData").then((data) => {
       const redcapDecryptedData = decryptData(data.redcapFormData); // Decrypt the data
       const mysqlDecryptedData = decryptData(data.MySQLForm); // Decrypt the data
-      // console.log("redcap", redcapDecryptedData);
+      // console.log("dbcreds", dbCreds);
       const savedPGFormData = localStorage.getItem("postgresFormData");
       let postgresDecryptedData;
       if (savedPGFormData) {
@@ -94,15 +96,22 @@ const OutputPage = () => {
       if (selectedDatabase === "MySQL") {
         // console.log("mysql selected");
         setDBCreds(mysqlDecryptedData);
+        handleDBOutput("MySQL")
       } else if (selectedDatabase === "PostgreSQL") {
         setDBCreds(postgresDecryptedData);
+        handleDBOutput("Postgres")
       }
 
       if (redcapDecryptedData) {
         setFormData(redcapDecryptedData);
       }
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDatabase]);
+
+  function handleDBOutput(){
+    console.log('dbCreds', dbCreds)
+  }
 
   function handleClickPrev() {
     if (isExecuting) return;
@@ -388,7 +397,16 @@ const OutputPage = () => {
       },
     };
 
-    selectedOMOPTables.forEach((table) => {
+    // Assuming mandatoryOMOPTables is an array containing mandatory table names
+    console.log('manda', mandatoryOMOPTables)
+    const uniqueTables = new Set([
+      ...selectedOMOPTables,
+      ...mandatoryOMOPTables,
+    ]);
+
+    console.log('uniqueTables,', uniqueTables)
+
+    uniqueTables.forEach((table) => {
       if (tableConfig.hasOwnProperty(table)) {
         downloadFilesForTable(table, tableConfig[table]);
       } else {
