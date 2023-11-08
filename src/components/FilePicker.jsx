@@ -60,16 +60,11 @@ function FilePicker(props) {
   }, [extraMappedData]);
 
   const isIdPresentInTablesData = (item) => {
-    // console.log("item", item);
-    // console.log("tablesdata", tablesData);
     let id = item.concept_id;
-    // console.log("the id", id);
     if (!id) return false;
 
     return tablesData.some((table, tableIndex) => {
       return table.data.some((row, rowIndex) => {
-        // console.log(`Row ${rowIndex} field_annotation:`, row.field_annotation);
-
         let parsedAnnotation;
         try {
           parsedAnnotation = JSON.parse(row.field_annotation);
@@ -81,10 +76,7 @@ function FilePicker(props) {
           return false; // continue to next row if there's an error
         }
 
-        // console.log('parsedanno', parsedAnnotation)
-
         // Process each property of the parsedAnnotation
-        // console.log('parsedAnno', parsedAnnotation)
         for (const property in parsedAnnotation) {
           const extraData = parsedAnnotation[property]?.extraData;
           const conceptId = extraData?.concept_id;
@@ -93,7 +85,7 @@ function FilePicker(props) {
           let ogKey = extraData?.og_field_name;
           let fieldName = parsedAnnotation[property]["Field Name"];
           // console.log('fieldname', fieldName)
-          if (conceptId == id) {
+          if (conceptId === id) {
             // console.log('we match', conceptId)
             //update extraMappedData with mappedData values and stuff
             // if (ogValue) {
@@ -126,7 +118,7 @@ function FilePicker(props) {
 
       // Traverse the 'person' object
       for (const key in storedData.person) {
-        if (storedData.person[key].concept_id == conceptId) {
+        if (storedData.person[key].concept_id === conceptId) {
           // console.log("we are updating", conceptId);
           storedData.person[key].ogValue = newOgValue;
           storedData.person[key].ogKey = newOgKey;
