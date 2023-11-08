@@ -13,6 +13,7 @@ const { ipcRenderer } = window.require("electron");
 
 export default function PostgresForm({ dataObj }) {
   const [postgresHostName, setPostgresHostName] = useState("localhost");
+  const [postgresDBName, setPostgresDBName] = useState("");
   const [postgresPort, setPostgresPort] = useState("5432");
   const [postgresUsername, setPostgresUsername] = useState("");
   const [postgresPassword, setPostgresPassword] = useState("");
@@ -32,6 +33,7 @@ export default function PostgresForm({ dataObj }) {
         const decryptedData = decryptData(savedFormData); // Decrypt the data
         if (decryptedData) {
           setPostgresHostName(decryptedData.hostname);
+          setPostgresDBName(decryptedData.dbname);
           setPostgresPort(decryptedData.port);
           setPostgresUsername(decryptedData.username);
           setPostgresPassword(decryptedData.password);
@@ -48,6 +50,7 @@ export default function PostgresForm({ dataObj }) {
     const formData = {
       db: "PostgreSQL",
       hostname: postgresHostName,
+      dbname: postgresDBName,
       port: postgresPort,
       username: postgresUsername,
       password: postgresPassword,
@@ -58,6 +61,7 @@ export default function PostgresForm({ dataObj }) {
     }
   }, [
     postgresHostName,
+    postgresDBName,
     postgresPort,
     postgresUsername,
     postgresPassword,
@@ -70,6 +74,7 @@ export default function PostgresForm({ dataObj }) {
     let dbObj = {
       db: "PostgreSQL",
       hostname: postgresHostName,
+      dbname: postgresDBName,
       port: postgresPort,
       username: postgresUsername,
       password: postgresPassword,
@@ -87,7 +92,7 @@ export default function PostgresForm({ dataObj }) {
 
   return (
     <Paper elevation={3}>
-      <Box sx={{ textAlign: "center", paddingTop: '30px' }}>
+      <Box sx={{ textAlign: "center", paddingTop: "30px" }}>
         <img width={"70px"} src={PostgresLogoIcon} alt="postgresql logo" />
         {/* <h3>PostgreSQL Database Credentials</h3> */}
       </Box>
@@ -126,6 +131,15 @@ export default function PostgresForm({ dataObj }) {
           label="PostgreSQL Database Hostname"
           value={postgresHostName}
           onChange={(event) => setPostgresHostName(event.target.value)}
+          margin="normal"
+          required
+        />
+
+        <TextField
+          fullWidth
+          label="PostgreSQL Database Name"
+          value={postgresDBName}
+          onChange={(event) => setPostgresDBName(event.target.value)}
           margin="normal"
           required
         />

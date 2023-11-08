@@ -7,7 +7,7 @@ async function testMySQLConnection(dbConfig) {
     port: dbConfig.port,
     user: dbConfig.username,
     password: dbConfig.password,
-    database: 'mysql', // Replace with your target database name (e.g., the database you want to test the connection to)
+    database: dbConfig.dbname, // Replace with your target database name (e.g., the database you want to test the connection to)
   });
 
   return new Promise((resolve, reject) => {
@@ -32,7 +32,7 @@ async function testPostgreSQLConnection(dbConfig) {
     port: dbConfig.port,
     user: dbConfig.username,
     password: dbConfig.password,
-    database: 'postgres', // Replace with your target database name (e.g., the database you want to test the connection to)
+    database: dbConfig.dbname, // Replace with your target database name (e.g., the database you want to test the connection to)
   });
 
   try {

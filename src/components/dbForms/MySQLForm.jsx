@@ -13,6 +13,7 @@ const { ipcRenderer } = window.require("electron");
 
 export default function MySQLForm({ dataObj }) {
   const [mysqlHostName, setMysqlHostName] = useState("localhost");
+  const [mysqlDBName, setMysqlDBName] = useState("");
   const [mysqlPort, setMysqlPort] = useState("3306");
   const [mysqlUsername, setMysqlUsername] = useState("");
   const [mysqlPassword, setMysqlPassword] = useState("");
@@ -31,6 +32,7 @@ export default function MySQLForm({ dataObj }) {
       const decryptedData = await decryptData(data.MySQLForm); // Decrypt the data
       if (decryptedData) {
         setMysqlHostName(decryptedData.hostname);
+        setMysqlDBName(decryptedData.dbname);
         setMysqlPort(decryptedData.port);
         setMysqlUsername(decryptedData.username);
         setMysqlPassword(decryptedData.password);
@@ -51,6 +53,7 @@ export default function MySQLForm({ dataObj }) {
   useEffect(() => {
     const formData = {
       db: "MySQL",
+      dbname: mysqlDBName,
       hostname: mysqlHostName,
       port: mysqlPort,
       username: mysqlUsername,
@@ -60,13 +63,14 @@ export default function MySQLForm({ dataObj }) {
       const encryptedData = encryptData(formData); // Encrypt the data
       updateStoreData({ MySQLForm: encryptedData }); // Update the Electron store with the encrypted data
     }
-  }, [mysqlHostName, mysqlPort, mysqlUsername, mysqlPassword, formDataLoaded]);
+  }, [mysqlHostName, mysqlDBName, mysqlPort, mysqlUsername, mysqlPassword, formDataLoaded]);
 
   async function testDBConnection(event) {
     event.preventDefault();
     const formData = {
       db: "MySQL",
       hostname: mysqlHostName,
+      dbname: mysqlDBName,
       port: mysqlPort,
       username: mysqlUsername,
       password: mysqlPassword,
@@ -85,10 +89,9 @@ export default function MySQLForm({ dataObj }) {
 
   return (
     <Paper elevation={3}>
-      <Box sx={{ textAlign: "center", paddingTop: '30px' }}>
-      <img width={"70px"} src={MysqlLogoIcon} alt="mysql logo" />
+      <Box sx={{ textAlign: "center", paddingTop: "30px" }}>
+        <img width={"70px"} src={MysqlLogoIcon} alt="mysql logo" />
         {/* <h3>MySQL Database Credentials</h3> */}
-        
       </Box>
       <Box sx={{ display: "block", marginTop: "10px", textAlign: "center" }}>
         {isTesting ? (
@@ -125,6 +128,15 @@ export default function MySQLForm({ dataObj }) {
           label="MySQL Database Hostname"
           value={mysqlHostName}
           onChange={(event) => setMysqlHostName(event.target.value)}
+          margin="normal"
+          required
+        />
+
+        <TextField
+          fullWidth
+          label="MySQL Database Name"
+          value={mysqlDBName}
+          onChange={(event) => setMysqlDBName(event.target.value)}
           margin="normal"
           required
         />
