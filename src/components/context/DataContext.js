@@ -132,6 +132,7 @@ export const DataProvider = ({ children }) => {
     const baseStructure = {
       person: {},
       observation_period: {},
+      visit_occurrence: {},
     };
 
     checklistData[0].person.forEach((entry) => {

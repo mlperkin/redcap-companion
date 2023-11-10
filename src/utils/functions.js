@@ -55,54 +55,63 @@ export function downloadCSV(content, filename) {
   document.body.removeChild(link);
 }
 
-export function sqlToCSV(sqlContent) {
-  // Split the content into individual lines
+export function sqlToCSV(sqlContent, includeHeaders = true) {
   const lines = sqlContent.split("\n");
-
-  // Initialize CSV output and a flag to check if headers have been captured
   let csvContent = "";
-  let headersCaptured = false;
+  let headersMap = {};
 
   lines.forEach((line) => {
-    // Match the INSERT INTO line to extract column names, only if headers haven't been captured
-    if (!headersCaptured) {
-      const headerMatch = line.match(/INSERT INTO\s+\w+\s+\(([^)]+)\)/i);
-      if (headerMatch) {
-        // Split the column names into an array, trim each one
-        const headers = headerMatch[1].split(",").map((h) => h.trim());
-        csvContent += headers.join(",") + "\n";
-        headersCaptured = true;
+    // Match the INSERT INTO line to extract column names and table name
+    const headerMatch = line.match(/INSERT INTO\s+(\w+)\s+\(([^)]+)\)/i);
+    if (headerMatch) {
+      const tableName = headerMatch[1];
+      if (!headersMap[tableName]) {
+        const headers = headerMatch[2].split(",").map((h) => h.trim());
+        headersMap[tableName] = headers;
+        if (includeHeaders) {
+          csvContent += headers.join(",") + "\n";
+        }
       }
     }
 
     // Match the VALUES line to extract values
     const valuesMatch = line.match(/VALUES\s+\(([^)]+)\)/i);
     if (valuesMatch) {
-      // Handle the extraction of values, taking care of nested SELECT statements as before
+      // Similar handling of values as before, with improved handling for special characters
       let values = [];
       let valueBuffer = "";
       let inSelect = 0;
+      let inQuote = false;
+
       for (const char of valuesMatch[1]) {
-        if (char === "(") inSelect++;
-        if (char === ")") inSelect--;
-        if (char === "," && inSelect === 0) {
-          values.push(valueBuffer.trim());
+        if (char === '"' && valueBuffer.slice(-1) !== "\\") inQuote = !inQuote;
+        if (char === "(" && !inQuote) inSelect++;
+        if (char === ")" && !inQuote) inSelect--;
+        if (char === "," && inSelect === 0 && !inQuote) {
+          values.push(formatValue(valueBuffer.trim()));
           valueBuffer = "";
         } else {
           valueBuffer += char;
         }
       }
       if (valueBuffer) {
-        values.push(valueBuffer.trim());
+        values.push(formatValue(valueBuffer.trim()));
       }
 
-      // Replace 'undefined' with empty strings and join the values
-      const csvLine = values.map((v) => (v === "undefined" ? "" : v)).join(",");
-      csvContent += csvLine + "\n";
+      csvContent += values.join(",") + "\n";
     }
   });
 
   return csvContent;
+}
+
+function formatValue(value) {
+  if (value === "NULL") return "";
+  if (value.startsWith("'") && value.endsWith("'")) {
+    value = value.substring(1, value.length - 1).replace(/''/g, "'");
+  }
+  // Escaping quotes and other special characters in CSV
+  return `"${value.replace(/"/g, '""')}"`;
 }
 
 export function downloadExcludedData(data) {

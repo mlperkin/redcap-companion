@@ -45,7 +45,6 @@ const OMOPCheckboxes = () => {
   useEffect(() => {
     const storedData = localStorage.getItem("checkboxFieldData");
     // console.log("got stored data", JSON.parse(storedData));
-    console.log('set mand tables, ', MANDATORY_TABLES)
     setMandatoryOMOPTables(MANDATORY_TABLES)
     if (storedData) {
       setCheckboxFieldData(JSON.parse(storedData));

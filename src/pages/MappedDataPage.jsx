@@ -74,7 +74,7 @@ const MappedDataPage = (props) => {
     fetch(formData.redcapAPIURL, requestOptions)
       .then((response) => response.text())
       .then((result) => {
-        // console.log("result", JSON.parse(result));
+        console.log("result", JSON.parse(result));
         if (result) result = JSON.parse(result);
         const uniqueFormNames = [
           ...new Set(result.map((item) => item.form_name)),

@@ -28,6 +28,7 @@ import {
   generateObservationPeriodSQL,
 } from "../components/OMOPTableParsing/observation_period";
 import { processPersonData } from "../components/OMOPTableParsing/person";
+import { processVisitOccurrenceData } from "../components/OMOPTableParsing/visit_occurrence";
 import {
   extractYearFromDate,
   sqlToCSV,
@@ -80,7 +81,7 @@ const OutputPage = () => {
 
   let totalChecks = 4; //how many total checks here
   let excludedItems = [];
-  
+
   // Function to load the data
   useEffect(() => {
     // Request the store data from the main process when the component mounts
@@ -96,21 +97,21 @@ const OutputPage = () => {
       if (selectedDatabase === "MySQL") {
         // console.log("mysql selected");
         setDBCreds(mysqlDecryptedData);
-        handleDBOutput("MySQL")
+        handleDBOutput("MySQL");
       } else if (selectedDatabase === "PostgreSQL") {
         setDBCreds(postgresDecryptedData);
-        handleDBOutput("Postgres")
+        handleDBOutput("Postgres");
       }
 
       if (redcapDecryptedData) {
         setFormData(redcapDecryptedData);
       }
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDatabase]);
 
-  function handleDBOutput(){
-    console.log('dbCreds', dbCreds)
+  function handleDBOutput() {
+    console.log("dbCreds", dbCreds);
   }
 
   function handleClickPrev() {
@@ -319,7 +320,7 @@ const OutputPage = () => {
                 storedDataDetails.fieldName &&
                 storedDataDetails.format !== ""
               ) {
-                console.log("format", storedDataDetails.format);
+                // console.log("format", storedDataDetails.format);
                 //get date format and then get only the year
                 const dateValue = record[ogKey].redcap_value.toString();
                 const format = storedDataDetails.format;
@@ -327,7 +328,6 @@ const OutputPage = () => {
 
                 try {
                   birthYear = extractYearFromDate(dateValue, format);
-                  console.log("birthYear", birthYear);
                 } catch (error) {
                   console.error(error.message);
                 }
@@ -360,24 +360,38 @@ const OutputPage = () => {
     setIsExecuting(false);
   }
 
-  function generateOutputFiles(data) {
+  async function generateOutputFiles(data) {
     let personSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
     let observationSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
     let observationPeriodSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
+    let visit_occurrenceSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
 
-    data.forEach((item) => {
-      personSQLContent += processPersonData(item, excludedItems);
-      // observationSQLContent += processObservationData(item);
-    });
+    // Process person and observation period first
+    for (const item of data) {
+      personSQLContent += await processPersonData(item, excludedItems);
+    }
 
-    const observationPeriods = processObservationPeriods(data, excludedItems);
+    const observationPeriods = await processObservationPeriods(
+      data,
+      excludedItems
+    );
     observationPeriodSQLContent +=
       generateObservationPeriodSQL(observationPeriods);
+
+    // Now remaining tables can be ETL'd
+    for (const item of data) {
+      visit_occurrenceSQLContent += processVisitOccurrenceData(
+        item,
+        excludedItems,
+        observationPeriods
+      );
+    }
 
     personSQLContent += "END $$;";
     observationSQLContent += "END $$;";
     observationPeriodSQLContent += "END $$;";
-
+    visit_occurrenceSQLContent += "END $$;";
+    console.log("personsql", personSQLContent);
     const tableConfig = {
       person: {
         SQL: personSQLContent,
@@ -388,8 +402,8 @@ const OutputPage = () => {
         CSV: sqlToCSV(observationPeriodSQLContent),
       },
       visit_occurrence: {
-        SQL: personSQLContent,
-        CSV: sqlToCSV(personSQLContent),
+        SQL: visit_occurrenceSQLContent,
+        CSV: sqlToCSV(visit_occurrenceSQLContent),
       },
       observation: {
         SQL: observationSQLContent,
@@ -398,13 +412,11 @@ const OutputPage = () => {
     };
 
     // Assuming mandatoryOMOPTables is an array containing mandatory table names
-    console.log('manda', mandatoryOMOPTables)
+
     const uniqueTables = new Set([
       ...selectedOMOPTables,
       ...mandatoryOMOPTables,
     ]);
-
-    console.log('uniqueTables,', uniqueTables)
 
     uniqueTables.forEach((table) => {
       if (tableConfig.hasOwnProperty(table)) {
