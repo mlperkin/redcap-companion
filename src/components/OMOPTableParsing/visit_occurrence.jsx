@@ -1,7 +1,11 @@
-export function processVisitOccurrenceData(item, excludedItems, observationPeriods) {
+export function processVisitOccurrenceData(
+  item,
+  excludedItems,
+  observationPeriods,
+  currentVisitOccurrenceId
+) {
   console.log("processVisitOccurrenceData", item);
   let reasons = [];
-
   //DOCS https://ohdsi.github.io/CommonDataModel/cdm54.html#VISIT_OCCURRENCE
 
   // Assuming item has properties that map to visit_occurrence columns like visit_concept_id, visit_start_date, etc.
@@ -9,7 +13,6 @@ export function processVisitOccurrenceData(item, excludedItems, observationPerio
   if (!item.person.person_id) {
     reasons.push("Missing person_id");
   }
-  
 
   // visit_occurrence_id	Use this to identify unique interactions between a person and the health care system. This identifier links across the other CDM event tables to associate events with a visit.
 
@@ -20,11 +23,11 @@ export function processVisitOccurrenceData(item, excludedItems, observationPerio
   }
   //grab start and end dates from obsPeriod data
   observationPeriods.forEach((obsPeriod) => {
-    if(obsPeriod.person_id.toString() === item.person.person_id.toString()){
-      item.visit_occurrence.start_date = obsPeriod.start_date
-      item.visit_occurrence.end_date = obsPeriod.end_date
+    if (obsPeriod.person_id.toString() === item.person.person_id.toString()) {
+      item.visit_occurrence.start_date = obsPeriod.start_date;
+      item.visit_occurrence.end_date = obsPeriod.end_date;
     }
-  })
+  });
 
   // For inpatient visits, the start date is typically the admission date. For outpatient visits the start date and end date will be the same.
   if (!item.visit_occurrence.start_date) {
@@ -48,7 +51,12 @@ export function processVisitOccurrenceData(item, excludedItems, observationPerio
     return ""; // Return an empty string to signify no SQL statement was generated
   }
 
-  // Construct the INSERT statement using the valid item data
-  return `INSERT INTO visit_occurrence (visit_occurrence_id, person_id, visit_concept_id, visit_start_date, visit_end_date, visit_type_concept_id) 
-  VALUES ((SELECT COALESCE(MAX(visit_occurrence_id), 0) + 1 FROM visit_occurrence), ${item.person.person_id}, ${item.visit_occurrence.visit_concept_id}, '${item.visit_occurrence.start_date}', '${item.visit_occurrence.end_date}', ${item.visit_occurrence.visit_type_concept_id});\n`;
+  // Construct the SQL INSERT statement
+  let sql = `INSERT INTO visit_occurrence (visit_occurrence_id, person_id, visit_concept_id, visit_start_date, visit_end_date, visit_type_concept_id) 
+VALUES (${currentVisitOccurrenceId}, ${item.person.person_id}, ${item.visit_occurrence.visit_concept_id}, '${item.visit_occurrence.start_date}', '${item.visit_occurrence.end_date}', ${item.visit_occurrence.visit_type_concept_id});\n`;
+
+  // Increment the visit_occurrence_id for the next record
+  currentVisitOccurrenceId++;
+
+  return sql;
 }

@@ -379,11 +379,14 @@ const OutputPage = () => {
       generateObservationPeriodSQL(observationPeriods);
 
     // Now remaining tables can be ETL'd
+    let currentVisitOccurrenceId = 0;
     for (const item of data) {
+      currentVisitOccurrenceId++;
       visit_occurrenceSQLContent += processVisitOccurrenceData(
         item,
         excludedItems,
-        observationPeriods
+        observationPeriods,
+        currentVisitOccurrenceId
       );
     }
 
