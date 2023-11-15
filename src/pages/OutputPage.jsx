@@ -24,18 +24,19 @@ import OMOPCheckboxes from "../components/OMOPCheckboxes";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import {
-  processObservationPeriods,
-  generateObservationPeriodSQL,
-} from "../components/OMOPTableParsing/observation_period";
-import { processPersonData } from "../components/OMOPTableParsing/person";
-import { processVisitOccurrenceData } from "../components/OMOPTableParsing/visit_occurrence";
-import {
   extractYearFromDate,
   sqlToCSV,
   downloadCSV,
   downloadSQL,
   downloadExcludedData,
 } from "../utils/functions";
+import {
+  processObservationPeriods,
+  generateObservationPeriodSQL,
+} from "../components/OMOPTableParsing/observation_period";
+import { processPersonData } from "../components/OMOPTableParsing/person";
+import { processVisitOccurrenceData } from "../components/OMOPTableParsing/visit_occurrence";
+import { processObservationData } from "../components/OMOPTableParsing/observation";
 
 // import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
@@ -309,6 +310,45 @@ const OutputPage = () => {
                 mergedRecord[key][attribute] = record[field];
               }
             }
+            // console.log("rec", record);
+            // console.log("record field", record[field]);
+            // console.log("key", key);
+            // console.log("attr", attribute);
+
+            for (let rec in record) {
+              // console.log("rec", rec);
+              let nestedMapping = false; //use this to flag when nested objects exist
+              let domain;
+              if (record[rec].mapping_metadata) {
+                try {
+                  domain = record[rec].mapping_metadata[rec]["Domain ID"];
+                  nestedMapping = false;
+                } catch (error) {
+                  for (let id in record[rec].mapping_metadata) {
+                    domain = record[rec].mapping_metadata[id]["Domain ID"]
+                    nestedMapping = true;
+                  }
+                }
+                // console.log("domain", domain);
+                if (domain === "Observation" || domain === "Ethnicity") {
+                  // const firstKey = Object.keys(record[rec].mapping_metadata)[0];
+                  if (!mergedRecord["observation"])
+                  mergedRecord["observation"] = [];
+                if (!mergedRecord["observation"][rec])
+                  mergedRecord["observation"][rec] = {};
+
+                  if(nestedMapping){
+                    mergedRecord["observation"][rec].mapping_metadata =
+                    record[rec].mapping_metadata;
+                  }else{
+                    mergedRecord["observation"][rec].mapping_metadata =
+                    record[rec].mapping_metadata[rec];
+                  }
+                 
+                 
+                }
+              }
+            }
 
             if (storedDataDetails.concept_id) {
               const ogKey =
@@ -362,9 +402,9 @@ const OutputPage = () => {
 
   async function generateOutputFiles(data) {
     let personSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
-    let observationSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
     let observationPeriodSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
     let visit_occurrenceSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
+    let observationSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
 
     // Process person and observation period first
     for (const item of data) {
@@ -383,6 +423,13 @@ const OutputPage = () => {
     for (const item of data) {
       currentVisitOccurrenceId++;
       visit_occurrenceSQLContent += processVisitOccurrenceData(
+        item,
+        excludedItems,
+        observationPeriods,
+        currentVisitOccurrenceId
+      );
+
+      observationSQLContent += processObservationData(
         item,
         excludedItems,
         observationPeriods,
