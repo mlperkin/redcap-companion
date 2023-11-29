@@ -332,17 +332,22 @@ const OutputPage = () => {
                 // console.log("domain", domain);
                 if (domain === "Observation" || domain === "Ethnicity") {
                   // const firstKey = Object.keys(record[rec].mapping_metadata)[0];
+                  // console.log('found observation!', record[rec])
                   if (!mergedRecord["observation"])
                   mergedRecord["observation"] = [];
                 if (!mergedRecord["observation"][rec])
                   mergedRecord["observation"][rec] = {};
-
+                  
                   if(nestedMapping){
                     mergedRecord["observation"][rec].mapping_metadata =
                     record[rec].mapping_metadata;
+                    // console.log('nested', record[rec].redcap_value)
+                    mergedRecord["observation"][rec].redcap_value = record[rec].redcap_value;
                   }else{
                     mergedRecord["observation"][rec].mapping_metadata =
                     record[rec].mapping_metadata[rec];
+                    // console.log('not nested', record[rec])
+                    mergedRecord["observation"][rec].redcap_value = record[rec].redcap_value;
                   }
                  
                  
@@ -419,21 +424,22 @@ const OutputPage = () => {
       generateObservationPeriodSQL(observationPeriods);
 
     // Now remaining tables can be ETL'd
-    let currentVisitOccurrenceId = 0;
+    let incrementalID = 0;
+    // console.log('the data', data)
     for (const item of data) {
-      currentVisitOccurrenceId++;
+      incrementalID++;
       visit_occurrenceSQLContent += processVisitOccurrenceData(
         item,
         excludedItems,
         observationPeriods,
-        currentVisitOccurrenceId
+        incrementalID
       );
-
+        // console.log('the item', item)
       observationSQLContent += processObservationData(
         item,
         excludedItems,
         observationPeriods,
-        currentVisitOccurrenceId
+        incrementalID
       );
     }
 
@@ -441,7 +447,7 @@ const OutputPage = () => {
     observationSQLContent += "END $$;";
     observationPeriodSQLContent += "END $$;";
     visit_occurrenceSQLContent += "END $$;";
-    console.log("personsql", personSQLContent);
+    // console.log("personsql", personSQLContent);
     const tableConfig = {
       person: {
         SQL: personSQLContent,

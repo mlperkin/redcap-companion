@@ -241,14 +241,14 @@ function FilePicker(props) {
     }
   };
 
-  const handleREDCapAPIButtonClick = () => {
-    localStorage.setItem("dd_data", "");
+  // const handleREDCapAPIButtonClick = () => {
+  //   localStorage.setItem("dd_data", "");
 
-    setShowREDCapAPIInput(!showREDCapAPIInput);
-    setInitialLoad(false);
-    setSelectedFilename("");
-    setDDData([]);
-  };
+  //   setShowREDCapAPIInput(!showREDCapAPIInput);
+  //   setInitialLoad(false);
+  //   setSelectedFilename("");
+  //   setDDData([]);
+  // };
 
   const removeTable = (indexToRemove) => {
     setTablesData((prevData) =>
@@ -613,16 +613,16 @@ function FilePicker(props) {
             </Paper>
           </Grid>
           <Grid item xs={9}>
-            <Button variant="contained" onClick={handleREDCapAPIButtonClick}>
+            {/* <Button variant="contained" onClick={handleREDCapAPIButtonClick}>
               REDCap API
-            </Button>
+            </Button> */}
             <Button
               color="success"
               sx={{ margin: "10px" }}
               variant="contained"
               onClick={handleButtonClick}
             >
-              Add Local Mapped File
+              Add Mapped File
             </Button>
 
             {initialLoad ? (

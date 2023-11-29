@@ -2,9 +2,9 @@ export function processVisitOccurrenceData(
   item,
   excludedItems,
   observationPeriods,
-  currentVisitOccurrenceId
+  incrementalID
 ) {
-  console.log("processVisitOccurrenceData", item);
+  // console.log("processVisitOccurrenceData", item);
   let reasons = [];
   //DOCS https://ohdsi.github.io/CommonDataModel/cdm54.html#VISIT_OCCURRENCE
 
@@ -53,10 +53,10 @@ export function processVisitOccurrenceData(
 
   // Construct the SQL INSERT statement
   let sql = `INSERT INTO visit_occurrence (visit_occurrence_id, person_id, visit_concept_id, visit_start_date, visit_end_date, visit_type_concept_id) 
-VALUES (${currentVisitOccurrenceId}, ${item.person.person_id}, ${item.visit_occurrence.visit_concept_id}, '${item.visit_occurrence.start_date}', '${item.visit_occurrence.end_date}', ${item.visit_occurrence.visit_type_concept_id});\n`;
+VALUES (${incrementalID}, ${item.person.person_id}, ${item.visit_occurrence.visit_concept_id}, '${item.visit_occurrence.start_date}', '${item.visit_occurrence.end_date}', ${item.visit_occurrence.visit_type_concept_id});\n`;
 
   // Increment the visit_occurrence_id for the next record
-  currentVisitOccurrenceId++;
+  incrementalID++;
 
   return sql;
 }

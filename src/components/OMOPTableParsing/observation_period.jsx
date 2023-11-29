@@ -1,5 +1,5 @@
 export function processObservationPeriods(data, excludedItems) {
-  console.log("obs period data", data);
+  // console.log("obs period data", data);
 
   let includedItems = data.reduce((acc, item) => {
     let reasons = [];
@@ -50,7 +50,7 @@ export function processObservationPeriods(data, excludedItems) {
 
   // Convert the included items object back to an array
   includedItems = Object.values(includedItems);
-  console.log("included", includedItems);
+  // console.log("included", includedItems);
   // At this point, includedItems will contain only valid items
   // and excludedItems will contain all invalid items with their reasons
   return includedItems;
