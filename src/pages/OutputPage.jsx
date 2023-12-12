@@ -37,6 +37,7 @@ import {
 import { processPersonData } from "../components/OMOPTableParsing/person";
 import { processVisitOccurrenceData } from "../components/OMOPTableParsing/visit_occurrence";
 import { processObservationData } from "../components/OMOPTableParsing/observation";
+import { processVisitDetailData } from "../components/OMOPTableParsing/visit_detail";
 
 // import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
@@ -310,10 +311,7 @@ const OutputPage = () => {
                 mergedRecord[key][attribute] = record[field];
               }
             }
-            // console.log("rec", record);
-            // console.log("record field", record[field]);
-            // console.log("key", key);
-            // console.log("attr", attribute);
+ 
 
             for (let rec in record) {
               // console.log("rec", rec);
@@ -409,6 +407,7 @@ const OutputPage = () => {
     let personSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
     let observationPeriodSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
     let visit_occurrenceSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
+    let visit_detailSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
     let observationSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
 
     // Process person and observation period first
@@ -434,6 +433,12 @@ const OutputPage = () => {
         observationPeriods,
         incrementalID
       );
+      visit_detailSQLContent += processVisitDetailData(
+        item,
+        excludedItems,
+        observationPeriods,
+        incrementalID
+      );
         // console.log('the item', item)
       observationSQLContent += processObservationData(
         item,
@@ -447,7 +452,8 @@ const OutputPage = () => {
     observationSQLContent += "END $$;";
     observationPeriodSQLContent += "END $$;";
     visit_occurrenceSQLContent += "END $$;";
-    // console.log("personsql", personSQLContent);
+    visit_detailSQLContent += "END $$;";
+    console.log("detail", visit_detailSQLContent);
     const tableConfig = {
       person: {
         SQL: personSQLContent,
@@ -460,6 +466,10 @@ const OutputPage = () => {
       visit_occurrence: {
         SQL: visit_occurrenceSQLContent,
         CSV: sqlToCSV(visit_occurrenceSQLContent),
+      },
+      visit_detail: {
+        SQL: visit_detailSQLContent,
+        CSV: sqlToCSV(visit_detailSQLContent),
       },
       observation: {
         SQL: observationSQLContent,

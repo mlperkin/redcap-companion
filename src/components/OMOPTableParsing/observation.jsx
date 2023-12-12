@@ -2,12 +2,12 @@ export function processObservationData(
   item,
   excludedItems,
   observationPeriods,
-  currentObservationId,
+  currentObservationId
 ) {
   // console.log("item obs here", item);
   let reasons = [];
   // DOCS: https://ohdsi.github.io/CommonDataModel/cdm54.html#OBSERVATION
-  let person_id
+  let person_id;
   if (!item.observation) item.observation = {};
 
   // Check for required fields and handle missing data
@@ -20,7 +20,7 @@ export function processObservationData(
   // person_id: Identifies the person for whom the observation is recorded
   if (!item.person.person_id) {
     reasons.push("Missing person_id");
-  }else{
+  } else {
     person_id = item.person.person_id;
   }
 
@@ -55,9 +55,7 @@ export function processObservationData(
     }
 
     // Construct the SQL INSERT statement
-    let sql = `INSERT INTO observation (observation_id, person_id, observation_concept_id, observation_date, observation_type_concept_id) 
-               VALUES (${item.observation.observation_id}, ${person_id}, ${item.observation[obs].mapping_metadata.extraData.concept_id}, 
-                      '${item.observation_period.start_date.redcap_value}', ${item.observation[obs].observation_type_concept_id});\n`;
+    let sql = `INSERT INTO observation (observation_id, person_id, observation_concept_id, observation_date, observation_type_concept_id) VALUES (${item.observation.observation_id}, ${person_id}, ${item.observation[obs].mapping_metadata.extraData.concept_id}, '${item.observation_period.start_date.redcap_value}', ${item.observation[obs].observation_type_concept_id});\n`;
 
     // Increment the observation_id for the next record
     currentObservationId++;

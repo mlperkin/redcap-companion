@@ -56,6 +56,7 @@ const OMOPCheckboxes = () => {
     "person",
     "observation_period",
     "visit_occurrence",
+    "visit_detail",
     "condition_occurrence",
     "drug_exposure",
     "procedure_occurrence",
