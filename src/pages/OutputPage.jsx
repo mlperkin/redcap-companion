@@ -38,6 +38,7 @@ import { processPersonData } from "../components/OMOPTableParsing/person";
 import { processVisitOccurrenceData } from "../components/OMOPTableParsing/visit_occurrence";
 import { processObservationData } from "../components/OMOPTableParsing/observation";
 import { processVisitDetailData } from "../components/OMOPTableParsing/visit_detail";
+import { processConditionOccurrenceData } from "../components/OMOPTableParsing/condition_occurrence";
 
 // import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
@@ -409,6 +410,7 @@ const OutputPage = () => {
     let visit_occurrenceSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
     let visit_detailSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
     let observationSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
+    let conditionOccurrenceSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
 
     // Process person and observation period first
     for (const item of data) {
@@ -446,6 +448,12 @@ const OutputPage = () => {
         observationPeriods,
         incrementalID
       );
+      conditionOccurrenceSQLContent += processConditionOccurrenceData(
+        item,
+        excludedItems,
+        observationPeriods,
+        incrementalID
+      );
     }
 
     personSQLContent += "END $$;";
@@ -453,7 +461,8 @@ const OutputPage = () => {
     observationPeriodSQLContent += "END $$;";
     visit_occurrenceSQLContent += "END $$;";
     visit_detailSQLContent += "END $$;";
-    console.log("detail", visit_detailSQLContent);
+    conditionOccurrenceSQLContent += "END $$;";
+    
     const tableConfig = {
       person: {
         SQL: personSQLContent,
@@ -474,6 +483,10 @@ const OutputPage = () => {
       observation: {
         SQL: observationSQLContent,
         CSV: sqlToCSV(observationSQLContent),
+      },
+      condition_occurrence: {
+        SQL: conditionOccurrenceSQLContent,
+        CSV: sqlToCSV(conditionOccurrenceSQLContent),
       },
     };
 

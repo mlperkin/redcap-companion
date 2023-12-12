@@ -6,9 +6,9 @@ export function processConditionOccurrenceData(
     incrementalID
   ) {
     let reasons = [];
-  
+    console.log('cond_occ item', item)
     // Check for required fields
-    if (!item.person_id) {
+    if (!item.person.person_id) {
       reasons.push("Missing person_id");
     }
   
@@ -28,7 +28,7 @@ export function processConditionOccurrenceData(
     if (!item.condition_status_concept_id) {
       reasons.push("Missing condition_status_concept_id");
     }
-  
+    console.log('condocc reasons', reasons)
     // If any reasons were added to the list, mark this item as invalid
     if (reasons.length > 0) {
       item.invalid_reasons = reasons.join(", ");
@@ -69,7 +69,7 @@ export function processConditionOccurrenceData(
   
     // Construct the SQL INSERT statement
     let sql = `INSERT INTO condition_occurrence (condition_occurrence_id, person_id, condition_concept_id, condition_start_date, condition_type_concept_id, condition_status_concept_id, visit_occurrence_id, visit_detail_id) 
-  VALUES (${incrementalID}, ${item.person_id}, ${item.condition_concept_id}, '${item.condition_start_date}', ${item.condition_type_concept_id}, ${item.condition_status_concept_id}, ${
+  VALUES (${incrementalID}, ${item.person.person_id}, ${item.condition_concept_id}, '${item.condition_start_date}', ${item.condition_type_concept_id}, ${item.condition_status_concept_id}, ${
       visitOccurrenceId ? visitOccurrenceId : "NULL"
     }, ${visitDetailId ? visitDetailId : "NULL"});\n`;
   
