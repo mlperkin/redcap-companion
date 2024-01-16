@@ -313,7 +313,6 @@ const OutputPage = () => {
                 mergedRecord[key][attribute] = record[field];
               }
             }
- 
 
             for (let rec in record) {
               // console.log("rec", rec);
@@ -325,7 +324,7 @@ const OutputPage = () => {
                   nestedMapping = false;
                 } catch (error) {
                   for (let id in record[rec].mapping_metadata) {
-                    domain = record[rec].mapping_metadata[id]["Domain ID"]
+                    domain = record[rec].mapping_metadata[id]["Domain ID"];
                     nestedMapping = true;
                   }
                 }
@@ -334,23 +333,23 @@ const OutputPage = () => {
                   // const firstKey = Object.keys(record[rec].mapping_metadata)[0];
                   // console.log('found observation!', record[rec])
                   if (!mergedRecord["observation"])
-                  mergedRecord["observation"] = [];
-                if (!mergedRecord["observation"][rec])
-                  mergedRecord["observation"][rec] = {};
-                  
-                  if(nestedMapping){
+                    mergedRecord["observation"] = [];
+                  if (!mergedRecord["observation"][rec])
+                    mergedRecord["observation"][rec] = {};
+
+                  if (nestedMapping) {
                     mergedRecord["observation"][rec].mapping_metadata =
-                    record[rec].mapping_metadata;
+                      record[rec].mapping_metadata;
                     // console.log('nested', record[rec].redcap_value)
-                    mergedRecord["observation"][rec].redcap_value = record[rec].redcap_value;
-                  }else{
+                    mergedRecord["observation"][rec].redcap_value =
+                      record[rec].redcap_value;
+                  } else {
                     mergedRecord["observation"][rec].mapping_metadata =
-                    record[rec].mapping_metadata[rec];
+                      record[rec].mapping_metadata[rec];
                     // console.log('not nested', record[rec])
-                    mergedRecord["observation"][rec].redcap_value = record[rec].redcap_value;
+                    mergedRecord["observation"][rec].redcap_value =
+                      record[rec].redcap_value;
                   }
-                 
-                 
                 }
               }
             }
@@ -415,8 +414,9 @@ const OutputPage = () => {
     let drugExposureSQLContent = "DO $$ \nDECLARE \nBEGIN\n\n";
 
     // Process person and observation period first
+
     for (const item of data) {
-      personSQLContent += await processPersonData(item, excludedItems);
+      personSQLContent += processPersonData(item, excludedItems);
     }
 
     const observationPeriods = await processObservationPeriods(
@@ -428,40 +428,49 @@ const OutputPage = () => {
 
     // Now remaining tables can be ETL'd
     let incrementalID = 0;
-    // console.log('the data', data)
     for (const item of data) {
       incrementalID++;
-      visit_occurrenceSQLContent += processVisitOccurrenceData(
-        item,
-        excludedItems,
-        observationPeriods,
-        incrementalID
-      );
-      visit_detailSQLContent += processVisitDetailData(
-        item,
-        excludedItems,
-        observationPeriods,
-        incrementalID
-      );
-        // console.log('the item', item)
-      observationSQLContent += processObservationData(
-        item,
-        excludedItems,
-        observationPeriods,
-        incrementalID
-      );
-      conditionOccurrenceSQLContent += processConditionOccurrenceData(
-        item,
-        excludedItems,
-        observationPeriods,
-        incrementalID
-      );
-      drugExposureSQLContent += processDrugExposureData(
-        item,
-        excludedItems,
-        observationPeriods,
-        incrementalID
-      );
+      if (selectedOMOPTables.includes("visit_occurrence")) {
+        visit_occurrenceSQLContent += processVisitOccurrenceData(
+          item,
+          excludedItems,
+          observationPeriods,
+          incrementalID
+        );
+      }
+      if (selectedOMOPTables.includes("visit_detail")) {
+        visit_detailSQLContent += processVisitDetailData(
+          item,
+          excludedItems,
+          observationPeriods,
+          incrementalID
+        );
+      }
+
+      if (selectedOMOPTables.includes("observation")) {
+        observationSQLContent += processObservationData(
+          item,
+          excludedItems,
+          observationPeriods,
+          incrementalID
+        );
+      }
+      if (selectedOMOPTables.includes("condition_occurrence")) {
+        conditionOccurrenceSQLContent += processConditionOccurrenceData(
+          item,
+          excludedItems,
+          observationPeriods,
+          incrementalID
+        );
+      }
+      if (selectedOMOPTables.includes("drug_exposure")) {
+        drugExposureSQLContent += processDrugExposureData(
+          item,
+          excludedItems,
+          observationPeriods,
+          incrementalID
+        );
+      }
     }
 
     personSQLContent += "END $$;";
@@ -471,7 +480,7 @@ const OutputPage = () => {
     visit_detailSQLContent += "END $$;";
     conditionOccurrenceSQLContent += "END $$;";
     drugExposureSQLContent += "END $$;";
-    
+
     const tableConfig = {
       person: {
         SQL: personSQLContent,
