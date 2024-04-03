@@ -8,7 +8,7 @@ export function processVisitDetailData(
     console.log('item', item)
     // Check for required fields
     if (!item.person.person_id) {
-      reasons.push("Missing person_id");
+      reasons.push("Missing person_id4");
     }
   
     if (!item.visit_occurrence.visit_concept_id) {

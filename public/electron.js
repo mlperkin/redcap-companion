@@ -174,6 +174,28 @@ ipcMain.handle("getRedcapRecords", async (event, dataObj) => {
   }
 });
 
+ipcMain.handle("getRecordsFromJson", async (event, filePath) => {
+  console.log("get records from json", filePath);
+
+  return new Promise((resolve, reject) => {
+    // Ensure the file path is absolute or correctly relative to the main process file
+    const absoluteFilePath = path.resolve(filePath);
+
+    fs.readFile(absoluteFilePath, (error, data) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      try {
+        const records = JSON.parse(data);
+        resolve(records);
+      } catch (parseError) {
+        reject(parseError);
+      }
+    });
+  });
+});
 // Listen for an IPC event from the renderer process to get the store data
 ipcMain.handle("getStoreData", (event) => {
   return store.store;

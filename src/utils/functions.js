@@ -23,6 +23,22 @@ export function extractYearFromDate(dateValue, format) {
   }
 }
 
+export function createSQLBlob(sqlContent) {
+  return new Blob([sqlContent], { type: "text/plain;charset=utf-8;" });
+}
+
+export function createCSVBlob(content) {
+  return new Blob([content], { type: "text/csv;charset=utf-8;" });
+}
+
+// Adjusted to return a Blob for the excluded data
+export function createExcludedDataBlob(data) {
+  let _dataString = JSON.stringify(data, null, 2);
+  return new Blob([_dataString], { type: "application/json;charset=utf-8;" });
+}
+
+
+
 export function downloadSQL(sqlContent, fileName) {
   // Create a Blob with the SQL content
   const blob = new Blob([sqlContent], {

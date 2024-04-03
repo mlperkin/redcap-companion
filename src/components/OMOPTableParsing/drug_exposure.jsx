@@ -8,23 +8,23 @@ export function processDrugExposureData(
     console.log('drug_exposure item', item);
   
     // Check for required fields
-    if (!item.person_id) {
-      reasons.push("Missing person_id");
+    if (!item.person.person_id) {
+      reasons.push("Missing person_id3");
     }
   
-    if (!item.drug_concept_id) {
-      reasons.push("Missing drug_concept_id");
+    if (!item.observation.mapping_metadata.extraData.concept_id) {
+      reasons.push("Missing drug_concept_id.");
     }
   
-    if (!item.drug_exposure_start_date) {
+    if (!item.observation.mapping_metadata.extraData.valid_start_date) {
       reasons.push("Missing drug_exposure_start_date");
     }
   
-    if (!item.drug_exposure_end_date) {
+    if (!item.observation.mapping_metadata.extraData.valid_end_date) {
       reasons.push("Missing drug_exposure_end_date");
     }
   
-    if (!item.drug_type_concept_id) {
+    if (!item.observation.mapping_metadata.extraData.concept_id) {
       reasons.push("Missing drug_type_concept_id");
     }
   

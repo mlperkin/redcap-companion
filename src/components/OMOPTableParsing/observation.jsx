@@ -4,7 +4,7 @@ export function processObservationData(
   observationPeriods,
   currentObservationId
 ) {
-  // console.log("item obs here", item);
+  console.log("item obs here", item);
   let reasons = [];
   // DOCS: https://ohdsi.github.io/CommonDataModel/cdm54.html#OBSERVATION
   let person_id;
@@ -19,7 +19,7 @@ export function processObservationData(
 
   // person_id: Identifies the person for whom the observation is recorded
   if (!item.person.person_id) {
-    reasons.push("Missing person_id");
+    reasons.push("Missing person_ids");
   } else {
     person_id = item.person.person_id;
   }

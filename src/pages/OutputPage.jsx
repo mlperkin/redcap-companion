@@ -40,6 +40,13 @@ import { processObservationData } from "../components/OMOPTableParsing/observati
 import { processVisitDetailData } from "../components/OMOPTableParsing/visit_detail";
 import { processConditionOccurrenceData } from "../components/OMOPTableParsing/condition_occurrence";
 import { processDrugExposureData } from "../components/OMOPTableParsing/drug_exposure";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+import {
+  createSQLBlob,
+  createCSVBlob,
+  createExcludedDataBlob,
+} from "../utils/functions";
 
 // import { ConnectingAirportsOutlined } from "@mui/icons-material";
 
@@ -259,37 +266,75 @@ const OutputPage = () => {
   //the steps involved here
   // 1. get all redcap records for selected form
   async function getRedcapRecords() {
-    // Call the main process function via ipcRenderer
     let modFormData = { ...formData, formName: redcapFormName };
-    const redcapRecords = await ipcRenderer.invoke(
-      "getRedcapRecords",
-      modFormData
-    );
-    return redcapRecords;
+
+    // Example environment check
+    if (process.env.NODE_ENV === "development") {
+      console.log("env", process.env.NODE_ENV);
+      // In development, read from a CSV file
+      // The filePath should be determined as per your app's logic
+      const filePath = "./src/data/redcapMockData1.json";
+      const recordsFromCsv = await ipcRenderer.invoke(
+        "getRecordsFromJson",
+        filePath
+      );
+      return recordsFromCsv;
+    } else {
+      // In production, call the existing API
+      const redcapRecords = await ipcRenderer.invoke(
+        "getRedcapRecords",
+        modFormData
+      );
+      return redcapRecords;
+    }
   }
+
   // 2. match redcap records field_names with field_names from data dictionary
   async function matchAndMergeRedcapRecords(redCapRecords) {
+    console.log("redcaprecords", redCapRecords);
+    console.log("dddata", ddData);
     if (!redCapRecords) return;
 
     redCapRecords.forEach((obj1) => {
       ddData.forEach((obj2) => {
+        let annotationParsed = {};
+        // Attempt to parse field_annotation safely
+        try {
+          annotationParsed = JSON.parse(obj2.field_annotation);
+          console.log("annotparsed", annotationParsed);
+        } catch (error) {
+          console.error("Error parsing field_annotation:", error);
+          // Handle the parsing error, e.g., skip this iteration
+          return; // Skip to the next obj2 because this one is invalid
+        }
         for (const key in obj1) {
-          if (key === obj2.field_name) {
+          // Check directly against obj2.field_name
+          let directMatch = key === obj2.field_name;
+          // Check within field_annotation for a matching "Field Name"
+          let annotationMatch = Object.values(annotationParsed).some(
+            (annotation) => annotation["Field Name"] === key
+          );
+          if (directMatch) {
             obj1[key] = {
               redcap_value: obj1[key],
               mapping_metadata: JSON.parse(obj2.field_annotation),
             };
             // break; // No need to continue checking other keys for this pair of objects
+          } else if (annotationMatch) {
+            obj1[key] = {
+              redcap_value: annotationParsed[key].extraData.og_field_name_key,
+              mapping_metadata: annotationParsed[key],
+            };
           }
         }
       });
     });
 
-    console.log("mergedRedcapRecords", redCapRecords);
+    console.log("after redcapRecords", redCapRecords);
     let storedData = localStorage.getItem("extraMappedData");
     if (storedData) {
       storedData = JSON.parse(storedData);
-      // console.log("storedData (extraMapping", storedData);
+      console.log("storedData (extraMapping", storedData);
 
       const finalMergedDataArray = [];
 
@@ -315,10 +360,11 @@ const OutputPage = () => {
             }
 
             for (let rec in record) {
-              // console.log("rec", rec);
+             
               let nestedMapping = false; //use this to flag when nested objects exist
               let domain;
               if (record[rec].mapping_metadata) {
+                console.log("rec", rec);
                 try {
                   domain = record[rec].mapping_metadata[rec]["Domain ID"];
                   nestedMapping = false;
@@ -329,7 +375,12 @@ const OutputPage = () => {
                   }
                 }
                 // console.log("domain", domain);
-                if (domain === "Observation" || domain === "Ethnicity") {
+                if (
+                  domain === "Observation" ||
+                  domain === "Ethnicity" ||
+                  domain === "Gender" ||
+                  domain === "Drug"
+                ) {
                   // const firstKey = Object.keys(record[rec].mapping_metadata)[0];
                   // console.log('found observation!', record[rec])
                   if (!mergedRecord["observation"])
@@ -353,19 +404,32 @@ const OutputPage = () => {
                 }
               }
             }
-
+            console.log("storeddatadetails", storedDataDetails);
             if (storedDataDetails.concept_id) {
-              const ogKey =
+              let ogKey =
                 storedDataDetails.ogKey || storedDataDetails.fieldName || "";
               const ogValue = storedDataDetails.ogValue || "";
+
+              console.log("ourrec", record[ogKey]);
+
+              //try to use field name to get record due to how to redcap records are this is very difficult to determine what the field_name will be depending if checkbox or dropdown
+              if (!record[ogKey]) {
+                  ogKey = storedDataDetails.fieldName
+              }
+
+              console.log('do we have a record', record[ogKey])
+              console.log("ogkey", ogKey);
               //if we have the odd exception like birthdate
               if (
                 !storedDataDetails.ogKey &&
                 storedDataDetails.fieldName &&
-                storedDataDetails.format !== ""
+                storedDataDetails.format !== "" &&
+                storedDataDetails.format !== null
               ) {
                 // console.log("format", storedDataDetails.format);
                 //get date format and then get only the year
+                console.log("record", record);
+                console.log("ogkey", ogKey);
                 const dateValue = record[ogKey].redcap_value.toString();
                 const format = storedDataDetails.format;
                 let birthYear;
@@ -377,10 +441,18 @@ const OutputPage = () => {
                 }
                 mergedRecord[key][attribute] = birthYear;
               } else if (
-                record[ogKey] &&
-                record[ogKey].redcap_value.toString() === ogValue
+                (record[ogKey] &&
+                  record[ogKey].redcap_value.toString() === ogValue) ||
+                (record[ogKey] && record[ogKey].redcap_value.toString() !== "0")
               ) {
+                console.log("we try to set here", mergedRecord);
+                console.log("key", key + " " + attribute);
                 mergedRecord[key][attribute] = storedDataDetails.concept_id;
+              } else {
+                console.log(
+                  "we have something here that is doing nothing",
+                  record
+                );
               }
             }
           }
@@ -398,6 +470,8 @@ const OutputPage = () => {
   }
   // 4. iterate through this merged list to create SQL CSV files (for upsert on mysql and postgresql)
   async function generateOutput(matchedAndMergedRedcapRecords) {
+    console.log("match", matchedAndMergedRedcapRecords);
+    if (!matchedAndMergedRedcapRecords) return;
     if (!matchedAndMergedRedcapRecords.length) return;
     generateOutputFiles(matchedAndMergedRedcapRecords);
     setExecStatus(true);
@@ -519,15 +593,50 @@ const OutputPage = () => {
       ...mandatoryOMOPTables,
     ]);
 
+    // uniqueTables.forEach((table) => {
+    //   if (tableConfig.hasOwnProperty(table)) {
+    //     downloadFilesForTable(table, tableConfig[table]);
+    //   } else {
+    //     console.warn(`No configuration found for table: ${table}`);
+    //   }
+    // });
+
+    downloadAsZip(uniqueTables, tableConfig, checkedFormats, excludedItems);
+
+    // downloadExcludedData(excludedItems);
+  }
+
+  function downloadAsZip(
+    uniqueTables,
+    tableConfig,
+    checkedFormats,
+    excludedItems
+  ) {
+    const zip = new JSZip();
+
     uniqueTables.forEach((table) => {
       if (tableConfig.hasOwnProperty(table)) {
-        downloadFilesForTable(table, tableConfig[table]);
+        if (checkedFormats.SQL) {
+          const sqlBlob = createSQLBlob(tableConfig[table].SQL);
+          zip.file(`${table}.sql`, sqlBlob);
+        }
+        if (checkedFormats.CSV) {
+          const csvBlob = createCSVBlob(tableConfig[table].CSV);
+          zip.file(`${table}.csv`, csvBlob);
+        }
       } else {
         console.warn(`No configuration found for table: ${table}`);
       }
     });
 
-    downloadExcludedData(excludedItems);
+    // Include excluded data in the ZIP
+    const excludedDataBlob = createExcludedDataBlob(excludedItems);
+    zip.file("excludedData.json", excludedDataBlob);
+
+    // Generate ZIP file and trigger download
+    zip.generateAsync({ type: "blob" }).then(function (content) {
+      saveAs(content, "data-archive.zip");
+    });
   }
 
   // Generic download function

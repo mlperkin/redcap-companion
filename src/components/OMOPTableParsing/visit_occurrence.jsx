@@ -11,7 +11,7 @@ export function processVisitOccurrenceData(
   // Assuming item has properties that map to visit_occurrence columns like visit_concept_id, visit_start_date, etc.
   if (!item.visit_occurrence) item.visit_occurrence = {};
   if (!item.person.person_id) {
-    reasons.push("Missing person_id");
+    reasons.push("Missing person_id5");
   }
 
   // visit_occurrence_id	Use this to identify unique interactions between a person and the health care system. This identifier links across the other CDM event tables to associate events with a visit.

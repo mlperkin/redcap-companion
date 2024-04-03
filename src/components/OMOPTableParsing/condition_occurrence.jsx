@@ -9,7 +9,7 @@ export function processConditionOccurrenceData(
     console.log('cond_occ item', item)
     // Check for required fields
     if (!item.person.person_id) {
-      reasons.push("Missing person_id");
+      reasons.push("Missing person_id2");
     }
   
     if (!item.condition_concept_id) {

@@ -80,7 +80,7 @@ function FilePicker(props) {
         for (const property in parsedAnnotation) {
           const extraData = parsedAnnotation[property]?.extraData;
           const conceptId = extraData?.concept_id;
-          // console.log('extra', extraData)
+          console.log('extradata!', extraData)
           let ogValue = extraData?.og_field_name_key;
           let ogKey = extraData?.og_field_name;
           let fieldName = parsedAnnotation[property]["Field Name"];

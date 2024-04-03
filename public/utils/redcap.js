@@ -57,7 +57,6 @@ async function getRedcapRecords(dataObj) {
   try {
     const FormData = require("form-data");
     let data = new FormData();
-    console.log('dataobj', dataObj)
     data.append("token", dataObj.redcapAPIKey);
     data.append("content", "record");
     data.append("format", "json");
@@ -67,8 +66,8 @@ async function getRedcapRecords(dataObj) {
     data.append("rawOrLabel", "raw");
     data.append("rawOrLabelHeaders", "raw");
     //This will need to change for other users. We specifically use this field to set a unique for each patient
-    data.append("fields[0]", 'demguid')
-    data.append("fields[1]", 'imp_followup_date')
+    // data.append("fields[0]", 'demguid')
+    // data.append("fields[1]", 'imp_followup_date')
     data.append("forms[0]", dataObj.formName)
     // data.append("forms[0]", dataObj.formName);
 
@@ -99,7 +98,7 @@ async function getRedcapRecords(dataObj) {
       return false;
     }
   } catch (error) {
-    console.error("Error connecting to REDCap API to get records:", error.message);
+    console.error("Error connecting to REDCap API to get records:", error);
     return false;
   }
 }
