@@ -26,9 +26,9 @@ import Checkbox from "@mui/material/Checkbox";
 import {
   extractYearFromDate,
   sqlToCSV,
-  downloadCSV,
-  downloadSQL,
-  downloadExcludedData,
+  // downloadCSV,
+  // downloadSQL,
+  // downloadExcludedData,
 } from "../utils/functions";
 import {
   processObservationPeriods,
@@ -298,7 +298,7 @@ const OutputPage = () => {
     redCapRecords.forEach((obj1) => {
       ddData.forEach((obj2) => {
         let annotationParsed = {};
-        // Attempt to parse field_annotation safely
+        // Attempt to parse field_annotation safely, for special cases like checkbox where the field names differ
         try {
           annotationParsed = JSON.parse(obj2.field_annotation);
           console.log("annotparsed", annotationParsed);
@@ -318,12 +318,14 @@ const OutputPage = () => {
             obj1[key] = {
               redcap_value: obj1[key],
               mapping_metadata: JSON.parse(obj2.field_annotation),
+              field_type: obj2.field_type,
             };
             // break; // No need to continue checking other keys for this pair of objects
           } else if (annotationMatch) {
             obj1[key] = {
-              redcap_value: annotationParsed[key].extraData.og_field_name_key,
+              redcap_value: obj1[key],
               mapping_metadata: annotationParsed[key],
+              field_type: obj2.field_type,
             };
           }
         }
@@ -338,7 +340,7 @@ const OutputPage = () => {
 
       const finalMergedDataArray = [];
 
-      //finally merge redcapRecords with the extra mapping data we have
+      //finally we merge redcapRecords with the extra mapping data we have
       redCapRecords.forEach((record) => {
         const mergedRecord = {};
 
@@ -358,9 +360,8 @@ const OutputPage = () => {
                 mergedRecord[key][attribute] = record[field];
               }
             }
-
+            //create observation key and store data
             for (let rec in record) {
-             
               let nestedMapping = false; //use this to flag when nested objects exist
               let domain;
               if (record[rec].mapping_metadata) {
@@ -381,8 +382,6 @@ const OutputPage = () => {
                   domain === "Gender" ||
                   domain === "Drug"
                 ) {
-                  // const firstKey = Object.keys(record[rec].mapping_metadata)[0];
-                  // console.log('found observation!', record[rec])
                   if (!mergedRecord["observation"])
                     mergedRecord["observation"] = [];
                   if (!mergedRecord["observation"][rec])
@@ -404,21 +403,20 @@ const OutputPage = () => {
                 }
               }
             }
+
             console.log("storeddatadetails", storedDataDetails);
+            //here is where we handle the remainder of redcap API results and merging with our mapped data
             if (storedDataDetails.concept_id) {
               let ogKey =
                 storedDataDetails.ogKey || storedDataDetails.fieldName || "";
-              const ogValue = storedDataDetails.ogValue || "";
+              // const ogValue = storedDataDetails.ogValue || "";
 
               console.log("ourrec", record[ogKey]);
 
               //try to use field name to get record due to how to redcap records are this is very difficult to determine what the field_name will be depending if checkbox or dropdown
               if (!record[ogKey]) {
-                  ogKey = storedDataDetails.fieldName
+                ogKey = storedDataDetails.fieldName;
               }
-
-              console.log('do we have a record', record[ogKey])
-              console.log("ogkey", ogKey);
               //if we have the odd exception like birthdate
               if (
                 !storedDataDetails.ogKey &&
@@ -429,7 +427,8 @@ const OutputPage = () => {
                 // console.log("format", storedDataDetails.format);
                 //get date format and then get only the year
                 console.log("record", record);
-                console.log("ogkey", ogKey);
+
+                // console.log("ogkey", ogKey);
                 const dateValue = record[ogKey].redcap_value.toString();
                 const format = storedDataDetails.format;
                 let birthYear;
@@ -440,19 +439,77 @@ const OutputPage = () => {
                   console.error(error.message);
                 }
                 mergedRecord[key][attribute] = birthYear;
-              } else if (
-                (record[ogKey] &&
-                  record[ogKey].redcap_value.toString() === ogValue) ||
-                (record[ogKey] && record[ogKey].redcap_value.toString() !== "0")
-              ) {
-                console.log("we try to set here", mergedRecord);
-                console.log("key", key + " " + attribute);
-                mergedRecord[key][attribute] = storedDataDetails.concept_id;
-              } else {
-                console.log(
-                  "we have something here that is doing nothing",
-                  record
-                );
+              }
+              // Here is where we determine how to match up the Redcap API results keys and values with our mapped values, from the REDCap api result.
+              // Radio values appear to have only 1 key in the API result and the value is determined by which one gets selected the radio list(1, 2, 3..etc)
+              // Checkboxes behave differently, it creates multiple keys and appends 3 underscores and the value in the API appears to always be "1"
+              else {
+                let redcapValCompare = null;
+                let possibleKeyName = record[ogKey].redcap_value;
+                let skip = false;
+                if (record[ogKey].field_type === "checkbox") {
+                  redcapValCompare = "1";
+                } else {
+                  //handles the rest of field_types, like dropdown, radios
+                  console.log("recoRD!", record[ogKey].mapping_metadata);
+                  console.log("stuff", ogKey + "_" + possibleKeyName);
+                  try {
+                    redcapValCompare =
+                      record[ogKey].mapping_metadata[
+                        ogKey + "_" + possibleKeyName
+                      ].extraData.og_field_name_key;
+                  } catch (err) {
+                    skip = true;
+                    console.log("err getting key", err);
+                  }
+                }
+                console.log("record", record);
+                console.log("ogkey", ogKey);
+                console.log("recstuff", record[ogKey].redcap_value.toString());
+                console.log("redvalcompare", redcapValCompare);
+                console.log("key", key);
+                console.log("attrib", attribute);
+                console.log("storeddatadetails", storedDataDetails);
+                if (
+                  !skip &&
+                  record[ogKey] &&
+                  record[ogKey].redcap_value.toString() === redcapValCompare
+                ) {
+                  if (storedDataDetails.concept_id) {
+                    console.log("record!!!", record);
+                    // Ensure ogKey exists in record and it has mapping_metadata before proceeding
+                    if (record[ogKey] && record[ogKey].mapping_metadata) {
+                      // Build the dynamic key
+                      const dynamicKey = `${ogKey}_${possibleKeyName}`;
+                      // Extract mapping_metadata for easier access
+                      const mappingMetadata = record[ogKey].mapping_metadata;
+
+                      // Check if dynamicKey exists in mappingMetadata and has extraData
+                      if (
+                        mappingMetadata[dynamicKey] &&
+                        mappingMetadata[dynamicKey].extraData &&
+                        storedDataDetails.concept_id ===
+                          mappingMetadata[dynamicKey].extraData.concept_id
+                      ) {
+                        mergedRecord[key][attribute] =
+                          storedDataDetails.concept_id;
+                      }
+                      // Check if mappingMetadata itself directly has extraData with a matching concept_id
+                      else if (
+                        mappingMetadata.extraData &&
+                        storedDataDetails.concept_id ===
+                          mappingMetadata.extraData.concept_id
+                      ) {
+                        mergedRecord[key][attribute] =
+                          storedDataDetails.concept_id;
+                      }
+                    }
+                  } else {
+                    mergedRecord[key][attribute] = storedDataDetails.concept_id;
+                  }
+
+                  console.log("merged record now looks like", mergedRecord);
+                }
               }
             }
           }
@@ -640,14 +697,14 @@ const OutputPage = () => {
   }
 
   // Generic download function
-  function downloadFilesForTable(table, contentObj) {
-    if (checkedFormats.SQL) {
-      downloadSQL(contentObj.SQL, `${table}.sql`);
-    }
-    if (checkedFormats.CSV) {
-      downloadCSV(contentObj.CSV, `${table}.csv`);
-    }
-  }
+  // function downloadFilesForTable(table, contentObj) {
+  //   if (checkedFormats.SQL) {
+  //     downloadSQL(contentObj.SQL, `${table}.sql`);
+  //   }
+  //   if (checkedFormats.CSV) {
+  //     downloadCSV(contentObj.CSV, `${table}.csv`);
+  //   }
+  // }
 
   // Checkbox change handler
   const handleCheckboxChange = (event) => {
